@@ -11,44 +11,44 @@ export const CheckoutSuccess = () => {
     useEffect(() => {
         const processOrder = async () => {
             try {
-                // 1. Recuperar carrito pendiente
-                const pendingCartStr = localStorage.getItem('tanuki_pending_cart');
-
-                if (!pendingCartStr) {
-                    setIsProcessing(false);
+                // 1. Get pending cart
+                const pendingCartJson = localStorage.getItem('tanuki_pending_cart');
+                if (!pendingCartJson) {
+                    console.log('No pending cart found');
                     return;
                 }
 
-                const pendingCart = JSON.parse(pendingCartStr);
+                const pendingCart = JSON.parse(pendingCartJson);
 
-                // 2. Buscar membresías
-                const subItem = pendingCart.find((item: any) => item.id.startsWith('sub-'));
+                // 2. Identify subscription (membership)
+                const membershipItem = pendingCart.find((item: any) => item.isSubscription);
 
-                if (subItem) {
-                    const planId = subItem.id.replace('sub-', '');
+                if (membershipItem) {
+                    console.log('Procesando membresía:', membershipItem.name);
 
-                    // A. Actualizar LocalStorage
-                    const userStr = localStorage.getItem('tanuki_user');
-                    let user = userStr ? JSON.parse(userStr) : {};
+                    // 3. Update SESSION STORAGE (User)
+                    const savedUser = sessionStorage.getItem('tanuki_user');
+                    if (savedUser) {
+                        const userFn = JSON.parse(savedUser);
+                        const updatedUser = {
+                            ...userFn,
+                            membership: membershipItem.name, // 'Tanuki Sabio' etc
+                            isRegistered: true
+                        };
 
-                    user = {
-                        ...user,
-                        membership: planId,
-                        isRegistered: true // Asumimos registro si compró membresía
-                    };
+                        sessionStorage.setItem('tanuki_user', JSON.stringify(updatedUser)); // Update Session
 
-                    localStorage.setItem('tanuki_user', JSON.stringify(user));
-
-                    // B. Actualizar Supabase (si está logueado)
-                    if (user.id && user.id !== 'guest') {
-                        await supabase
-                            .from('profiles')
-                            .update({ membership: planId })
-                            .eq('id', user.id);
+                        // 4. Update Supabase Profile
+                        if (userFn.id && userFn.id !== 'guest') {
+                            // ... update DB logic same as before
+                            await supabase.from('profiles').update({
+                                membership: membershipItem.name
+                            }).eq('id', userFn.id);
+                        }
                     }
                 }
 
-                // 3. Limpiar carrito
+                // 5. Clear pending cart
                 localStorage.removeItem('tanuki_pending_cart');
                 // IMPORTANTE: Disparar evento para que el Navbar actualice el carrito a 0
                 // (Opcional, pero App.tsx suele leer de estado. Al recargar la página se limpia).

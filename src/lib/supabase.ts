@@ -8,4 +8,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
     console.error('Faltan las variables de entorno de Supabase. Asegúrate de configurar .env');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+    auth: {
+        storage: window.sessionStorage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+    }
+});

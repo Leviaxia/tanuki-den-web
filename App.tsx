@@ -50,7 +50,8 @@ const App: React.FC = () => {
   });
 
   const [user, setUser] = useState<UserType>(() => {
-    const saved = localStorage.getItem('tanuki_user');
+    // SWITCH TO SESSION STORAGE for volatile sessions
+    const saved = sessionStorage.getItem('tanuki_user');
     return saved ? JSON.parse(saved) : {
       id: 'guest',
       name: 'Viajero',
@@ -101,6 +102,11 @@ const App: React.FC = () => {
     localStorage.setItem('tanuki_favorites', JSON.stringify(favorites));
   }, [favorites]);
 
+  // Clean up OLD localStorage data to prevent conflicts
+  useEffect(() => {
+    localStorage.removeItem('tanuki_user');
+  }, []);
+
   // Fix for stale guest data in localStorage (only reset if using the old unsplash image)
   useEffect(() => {
     if (user.id === 'guest' && user.photo?.includes('unsplash.com')) {
@@ -144,7 +150,7 @@ const App: React.FC = () => {
           location: '',
           birthDate: ''
         });
-        localStorage.removeItem('tanuki_user');
+        sessionStorage.removeItem('tanuki_user');
       }
     });
 
@@ -154,7 +160,7 @@ const App: React.FC = () => {
   // Sync state when returning from checkout
   useEffect(() => {
     if (!isCheckout) {
-      const savedUser = localStorage.getItem('tanuki_user');
+      const savedUser = sessionStorage.getItem('tanuki_user');
       if (savedUser) {
         try {
           const parsed = JSON.parse(savedUser);
@@ -171,7 +177,7 @@ const App: React.FC = () => {
   }, [isCheckout]); // Depend only on route change context
 
   useEffect(() => {
-    localStorage.setItem('tanuki_user', JSON.stringify(user));
+    sessionStorage.setItem('tanuki_user', JSON.stringify(user));
   }, [user]);
 
   // Fetch Products from Supabase
@@ -792,7 +798,18 @@ const App: React.FC = () => {
                     location: '',
                     birthDate: ''
                   });
-                  localStorage.removeItem('tanuki_user');
+                  // Cleanup for pending cart if user logs out
+                  const pendingCart = localStorage.getItem('tanuki_pending_cart');
+                  if (pendingCart) {
+                    try {
+                      // Use session storage for cart too during checkout flow? user might reload.
+                      // Keep cart persistent for nice UX, but user auth volatile.
+                      // No change needed for cart unless user asked.
+                      localStorage.removeItem('tanuki_pending_cart');
+                      setCart([]);
+                    } catch (e) { }
+                  }
+                  sessionStorage.removeItem('tanuki_user'); // Changed from localStorage to sessionStorage
                   setIsProfileModalOpen(false);
                 }} className="w-full bg-transparent border-2 border-[#3A332F]/10 text-[#3A332F]/60 font-ghibli-title py-4 rounded-full hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all uppercase tracking-widest text-[10px]">CERRAR SESIÓN</button>
               </div>
