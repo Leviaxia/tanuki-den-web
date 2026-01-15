@@ -59,7 +59,8 @@ const App: React.FC = () => {
       isRegistered: false,
       membership: undefined,
       location: '',
-      birthDate: ''
+      birthDate: '',
+      lastUpdated: 0
     };
   });
 
@@ -125,20 +126,27 @@ const App: React.FC = () => {
           .eq('id', session.user.id)
           .single();
 
-        setUser(prev => ({
-          ...prev,
-          id: session.user.id,
-          // Protect all fields from race conditions (DB trigger delay vs local state)
-          name: profile?.full_name || (prev.id === session.user.id && prev.name !== 'Viajero' ? prev.name : (session.user.email?.split('@')[0] || 'Aventurero')),
-          photo: profile?.avatar_url || prev.photo,
-          isRegistered: true,
-          email: session.user.email,
-          membership: profile?.membership || (prev.id === session.user.id ? prev.membership : undefined),
-          location: profile?.location || (prev.id === session.user.id ? prev.location : ''),
-          birthDate: profile?.birth_date || (prev.id === session.user.id ? prev.birthDate : ''),
-          phone: profile?.phone || (prev.id === session.user.id ? prev.phone : ''),
-          realName: profile?.full_name || (prev.id === session.user.id ? prev.realName : '')
-        }));
+        setUser(prev => {
+          const now = Date.now();
+          // GRACE PERIOD: If local state was updated < 15 seconds ago, 
+          // trust local state over DB for membership (to allow DB propagation)
+          const isRecentUpdate = (now - (prev.lastUpdated || 0)) < 15000;
+
+          return {
+            ...prev,
+            id: session.user.id,
+            name: profile?.full_name || (prev.id === session.user.id && prev.name !== 'Viajero' ? prev.name : (session.user.email?.split('@')[0] || 'Aventurero')),
+            photo: profile?.avatar_url || prev.photo,
+            isRegistered: true,
+            email: session.user.email,
+            // If recent update, preferring PREV membership if it exists
+            membership: (isRecentUpdate && prev.membership) ? prev.membership : (profile?.membership || prev.membership),
+            location: profile?.location || (prev.id === session.user.id ? prev.location : ''),
+            birthDate: profile?.birth_date || (prev.id === session.user.id ? prev.birthDate : ''),
+            phone: profile?.phone || (prev.id === session.user.id ? prev.phone : ''),
+            realName: profile?.full_name || (prev.id === session.user.id ? prev.realName : '')
+          };
+        });
       } else if (event === 'SIGNED_OUT') {
         // Reset to guest
         setUser({
@@ -148,7 +156,9 @@ const App: React.FC = () => {
           isRegistered: false,
           membership: undefined,
           location: '',
-          birthDate: ''
+          location: '',
+          birthDate: '',
+          lastUpdated: 0
         });
         sessionStorage.removeItem('tanuki_user');
       }
