@@ -126,7 +126,8 @@ const App: React.FC = () => {
           photo: profile?.avatar_url || prev.photo,
           isRegistered: true,
           email: session.user.email,
-          membership: profile?.membership,
+          // If DB has no membership yet (race condition), keep local state if it belongs to same user
+          membership: profile?.membership || (prev.id === session.user.id ? prev.membership : undefined),
           location: profile?.location,
           birthDate: profile?.birth_date,
           phone: profile?.phone,

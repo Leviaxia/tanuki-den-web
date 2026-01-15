@@ -13,12 +13,8 @@ export const CheckoutSuccess = () => {
             try {
                 // 1. Recuperar carrito pendiente
                 const pendingCartStr = localStorage.getItem('tanuki_pending_cart');
-                // ALERT DEBUG
-                alert(`DEBUG: Pendiente: ${pendingCartStr}`);
 
                 if (!pendingCartStr) {
-                    console.error("No hay carrito pendiente");
-                    alert("ERROR: No se encontró el carrito temporal.");
                     setIsProcessing(false);
                     return;
                 }
@@ -27,7 +23,6 @@ export const CheckoutSuccess = () => {
 
                 // 2. Buscar membresías
                 const subItem = pendingCart.find((item: any) => item.id.startsWith('sub-'));
-                alert(`DEBUG: Item Suscripción: ${JSON.stringify(subItem)}`);
 
                 if (subItem) {
                     const planId = subItem.id.replace('sub-', '');
@@ -43,7 +38,6 @@ export const CheckoutSuccess = () => {
                     };
 
                     localStorage.setItem('tanuki_user', JSON.stringify(user));
-                    alert(`DEBUG: Usuario guardado: ${JSON.stringify(user)}`);
 
                     // B. Actualizar Supabase (si está logueado)
                     if (user.id && user.id !== 'guest') {
