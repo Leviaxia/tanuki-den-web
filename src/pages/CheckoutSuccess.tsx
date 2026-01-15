@@ -33,8 +33,7 @@ export const CheckoutSuccess = () => {
                         const updatedUser = {
                             ...userFn,
                             membership: membershipItem.name, // 'Tanuki Sabio' etc
-                            isRegistered: true,
-                            lastUpdated: Date.now() // Timestamp for race condition protection
+                            isRegistered: true
                         };
 
                         sessionStorage.setItem('tanuki_user', JSON.stringify(updatedUser)); // Update Session
