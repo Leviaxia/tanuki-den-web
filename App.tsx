@@ -122,16 +122,16 @@ const App: React.FC = () => {
         setUser(prev => ({
           ...prev,
           id: session.user.id,
-          name: profile?.full_name || session.user.email?.split('@')[0] || 'Aventurero',
+          // Protect all fields from race conditions (DB trigger delay vs local state)
+          name: profile?.full_name || (prev.id === session.user.id && prev.name !== 'Viajero' ? prev.name : (session.user.email?.split('@')[0] || 'Aventurero')),
           photo: profile?.avatar_url || prev.photo,
           isRegistered: true,
           email: session.user.email,
-          // If DB has no membership yet (race condition), keep local state if it belongs to same user
           membership: profile?.membership || (prev.id === session.user.id ? prev.membership : undefined),
-          location: profile?.location,
-          birthDate: profile?.birth_date,
-          phone: profile?.phone,
-          realName: profile?.full_name
+          location: profile?.location || (prev.id === session.user.id ? prev.location : ''),
+          birthDate: profile?.birth_date || (prev.id === session.user.id ? prev.birthDate : ''),
+          phone: profile?.phone || (prev.id === session.user.id ? prev.phone : ''),
+          realName: profile?.full_name || (prev.id === session.user.id ? prev.realName : '')
         }));
       } else if (event === 'SIGNED_OUT') {
         // Reset to guest
