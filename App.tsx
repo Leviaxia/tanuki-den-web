@@ -125,19 +125,22 @@ const App: React.FC = () => {
           .eq('id', session.user.id)
           .single();
 
+        // Use metadata as fallback if profile is empty (common immediately after signup)
+        const meta = session.user.user_metadata || {};
+
         setUser(prev => ({
           ...prev,
           id: session.user.id,
-          // Protect all fields from race conditions (DB trigger delay vs local state)
-          name: profile?.full_name || (prev.id === session.user.id && prev.name !== 'Viajero' ? prev.name : (session.user.email?.split('@')[0] || 'Aventurero')),
+          // Hierarchy: Profile (DB) -> Metadata (Auth) -> Previous Local -> Email Fallback
+          name: profile?.full_name || meta.full_name || meta.username || (prev.id === session.user.id && prev.name !== 'Viajero' ? prev.name : (session.user.email?.split('@')[0] || 'Aventurero')),
           photo: profile?.avatar_url || prev.photo,
           isRegistered: true,
           email: session.user.email,
           membership: profile?.membership || (prev.id === session.user.id ? prev.membership : undefined),
-          location: profile?.location || (prev.id === session.user.id ? prev.location : ''),
-          birthDate: profile?.birth_date || (prev.id === session.user.id ? prev.birthDate : ''),
-          phone: profile?.phone || (prev.id === session.user.id ? prev.phone : ''),
-          realName: profile?.full_name || (prev.id === session.user.id ? prev.realName : '')
+          location: profile?.location || meta.location || (prev.id === session.user.id ? prev.location : ''),
+          birthDate: profile?.birth_date || meta.birth_date || (prev.id === session.user.id ? prev.birthDate : ''),
+          phone: profile?.phone || meta.phone || (prev.id === session.user.id ? prev.phone : ''),
+          realName: profile?.full_name || meta.full_name || (prev.id === session.user.id ? prev.realName : '')
         }));
       } else if (event === 'SIGNED_OUT') {
         // Reset to guest
