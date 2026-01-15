@@ -787,7 +787,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-ghibli-title text-[#3A332F] leading-tight text-lg">{user.email || user.name}</h2>
+                  <h2 className="text-3xl font-ghibli-title text-[#3A332F] leading-tight">{user.name}</h2>
                   <p
                     className="font-black uppercase text-[10px] tracking-[0.2em]"
                     style={{ color: accentColor }}
@@ -797,8 +797,8 @@ const App: React.FC = () => {
                 </div>
                 <div className="bg-[#FDF5E6] p-6 rounded-[30px] text-left space-y-3 border-2 border-[#E6D5B8]">
                   <div className="flex items-center gap-3">
-                    <UserIcon size={16} className="text-[#C14B3A]" />
-                    <span className="text-xs font-bold text-[#3A332F]">{user.realName}</span>
+                    <Mail size={16} className="text-[#C14B3A]" />
+                    <span className="text-xs font-bold text-[#3A332F]">{user.email}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin size={16} className="text-[#C14B3A]" />
