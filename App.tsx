@@ -30,6 +30,9 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 const App: React.FC = () => {
+  const location = useLocation();
+  const isCheckout = location.pathname.includes('/checkout');
+
   const [activeTab, setActiveTab] = useState('inicio');
   const [selectedCollectionId, setSelectedCollectionId] = useState<number | null>(null);
   const [products, setProducts] = useState<Product[]>(() => {
@@ -146,6 +149,25 @@ const App: React.FC = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Sync state when returning from checkout
+  useEffect(() => {
+    if (!isCheckout) {
+      const savedUser = localStorage.getItem('tanuki_user');
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          // Only update if membership changed or wasn't set to avoid loops
+          if (parsed.membership !== user.membership) {
+            console.log("Syncing user state from storage:", parsed);
+            setUser(parsed);
+          }
+        } catch (e) {
+          console.error("Error syncing user state", e);
+        }
+      }
+    }
+  }, [isCheckout]); // Depend only on route change context
 
   useEffect(() => {
     localStorage.setItem('tanuki_user', JSON.stringify(user));
@@ -545,8 +567,6 @@ const App: React.FC = () => {
     setIsSubscriptionModalOpen(true);
   };
 
-  const location = useLocation();
-  const isCheckout = location.pathname.includes('/checkout');
 
   if (isCheckout) {
     return (
