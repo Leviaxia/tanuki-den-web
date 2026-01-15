@@ -289,6 +289,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
             <p className="text-center text-xs font-bold text-[#8C8279] mt-4">
               ¿Ya tienes cuenta? <button type="button" onClick={() => setStep('login')} className="text-[#C14B3A] hover:underline uppercase tracking-wide">Entra aquí</button>
             </p>
+            <div className="text-center mt-2">
+              <span className="text-[10px] text-gray-300 font-mono">v1.1 - Colombia Update</span>
+            </div>
           </form>
         )}
       </div>
