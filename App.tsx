@@ -710,13 +710,15 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[2000] bg-[#3A332F]/90 flex items-center justify-center p-4 md:p-6 backdrop-blur-sm">
           {(() => {
             const getColor = () => {
-              switch (user.membership) {
-                case 'bronze': return '#4A6741';
-                case 'silver': return '#5D4037';
-                case 'gold': return '#C14B3A';
-                case 'founder': return '#D4AF37';
-                default: return '#9CA3AF'; // Gris para gratis/null
-              }
+              // Normalize input to handle both ID (silver) and Name (Tanuki Guardian)
+              const mem = (user.membership || '').toLowerCase();
+
+              if (mem.includes('bronze') || mem.includes('sabio')) return '#4A6741';
+              if (mem.includes('silver') || mem.includes('guardian')) return '#5D4037';
+              if (mem.includes('gold') || mem.includes('anciano')) return '#C14B3A';
+              if (mem.includes('founder')) return '#D4AF37';
+
+              return '#9CA3AF'; // Gris para gratis/null
             };
             const accentColor = getColor();
 
