@@ -24,7 +24,8 @@ export const CheckoutSuccess = () => {
                 const membershipItem = pendingCart.find((item: any) => item.isSubscription);
 
                 if (membershipItem) {
-                    console.log('Procesando membresía:', membershipItem.name);
+                    const planId = membershipItem.id.replace('sub-', '');
+                    console.log('Procesando membresía ID:', planId);
 
                     // 3. Update SESSION STORAGE (User)
                     const savedUser = sessionStorage.getItem('tanuki_user');
@@ -32,7 +33,7 @@ export const CheckoutSuccess = () => {
                         const userFn = JSON.parse(savedUser);
                         const updatedUser = {
                             ...userFn,
-                            membership: membershipItem.name, // 'Tanuki Sabio' etc
+                            membership: planId, // 'gold', 'silver', etc.
                             isRegistered: true
                         };
 
@@ -45,7 +46,7 @@ export const CheckoutSuccess = () => {
                         if (userFn.id && userFn.id !== 'guest') {
                             // ... update DB logic same as before
                             await supabase.from('profiles').update({
-                                membership: membershipItem.name
+                                membership: planId
                             }).eq('id', userFn.id);
                         }
                     }
