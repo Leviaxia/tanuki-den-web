@@ -31,38 +31,41 @@ git push -u origin main
 
 ---
 
+
 ## Paso 2: Conectar con Vercel
 
 1.  Ve a [Vercel Dashboard](https://vercel.com/dashboard).
 2.  Dale a **"Add New..."** -> **"Project"**.
-3.  Verás tu lista de repositorios de GitHub. Importa **"tanuki-den-web"** (o como le hayas puesto).
-4.  **¡IMPORTANTE!** No le des a "Deploy" todavía. Baja a la sección **"Environment Variables"**.
+3.  Verás tu lista de repositorios de GitHub. Importa **"tanuki-den-web"** (o el nombre que le hayas puesto).
+4.  **¡IMPORTANTE!** Configuración del Proyecto:
+    *   **Framework Preset:** Vite (Debería detectarlo solo).
+    *   **Root Directory:** `./` (Déjalo como está).
+    *   **Build Command:** `vite build` (Automático).
+    *   **Output Directory:** `dist` (Automático).
 
-### Paso 2.1: Configurar Variables de Entorno (Claves Secretas)
+5.  **Environment Variables (Variables de Entorno)** - ¡CRUCIAL!
+    Despliega la sección y añade estas claves una por una (copia los valores de tu `.env` local):
 
-Vercel necesita saber tus claves de Supabase y Stripe. Copia los valores de tu archivo `.env` local y pégalos en Vercel:
-
-| Nombre (Key) | Valor (Value) |
+| Clave (Key) | Valor (Ejemplo/Fuente) |
 | :--- | :--- |
-| `VITE_SUPABASE_URL` | *(Copia del .env)* |
-| `VITE_SUPABASE_ANON_KEY` | *(Copia del .env)* |
-| `VITE_STRIPE_PUBLIC_KEY` | *(Copia del .env)* |
-| `STRIPE_SECRET_KEY` | *(Copia del .env)* |
-| `VITE_GOOGLE_API_KEY` | *(Si tienes la de Gemini, ponla también)* |
+| `VITE_SUPABASE_URL` | `https://...supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | `eyJ...` (Tu clave larga pública) |
+| `VITE_STRIPE_PUBLIC_KEY` | `pk_test_...` |
+| `STRIPE_SECRET_KEY` | `sk_test_...` (Necesaria para los pagos) |
+| `GEMINI_API_KEY` | *(Si tienes una clave de IA, si no, déjalo pendiente)* |
 
-5.  Ahora sí, dale al botón azul **"Deploy"**.
+6.  Dale al botón azul **"Deploy"**.
 
 ---
 
 ## Paso 3: ¡Éxito! 🎉
 
-Vercel construirá tu página en sus servidores. Tardará 1 minuto.
-Cuando termine, te dará una URL (ej: `tanuki-den.vercel.app`).
+Vercel construirá tu página. Si todo sale bien, verás confeti digital.
 
-**Ventajas:**
-*   **Automático:** Cada vez que hagas `git push`, Vercel actualizará la página solo.
-*   **HTTPS:** Certificado de seguridad gratis.
-*   **Rápido:** Servidores en todo el mundo (CDN).
+### ¿Qué acabo de mejorar en tu código?
+He migrado automáticamente la función de pagos (`create-checkout`) para que sea **nativa de Vercel**.
+*   Antes estaba configurada para Netlify (`.netlify/functions/...`).
+*   Ahora está en `/api/create-checkout` y lista para funcionar en Vercel.
 
----
-**Nota:** Si ves la pantalla blanca, revisa que hayas puesto **todas** las variables de entorno correctamente en Vercel y redesepliega (Redeploy).
+**Prueba tu deploy:**
+Entra a la URL que te da Vercel (ej: `tanuki-den.vercel.app`) e intenta añadir algo al carrito e ir a pagar. Debería llevarte a Stripe sin problemas.
