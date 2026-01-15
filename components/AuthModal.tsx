@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Mail, Lock, User, Phone, MapPin, Calendar, ArrowRight, Loader2 } from 'lucide-react';
+import { X, Sparkles, Mail, Lock, User, Phone, MapPin, Calendar, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 
 interface AuthModalProps {
@@ -9,9 +9,10 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplete }) => {
-  const [step, setStep] = useState<'login' | 'register'>('login');
+  const [step, setStep] = useState<'login' | 'register' | 'success'>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successData, setSuccessData] = useState<{ name: string; email: string; isAutoLogin: boolean } | null>(null);
 
   // Form States
   const [email, setEmail] = useState('');
@@ -94,32 +95,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
       if (data.user) {
         console.log('User created successfully:', data.user.id);
 
-        // ÉXITO: Mostramos alerta o cerramos
-        // Si no hay sesión (confirmación requerida), avisamos y cerramos.
-        if (!data.session) {
-          alert('¡Registro Exitoso! 🍃\n\nPor favor revisa tu correo para confirmar tu cuenta y poder entrar.');
-          setLoading(false);
-          onClose(); // Cerramos el modal para que no parezca "colgado"
-          return;
-        }
-
-        // Si hay sesión (Auto Confirm), entramos directo
-        onComplete({
-          id: data.user.id,
-          email,
-          name: fullName, // Apodo
-          photo: `https://api.dicebear.com/7.x/micah/svg?seed=${email}`,
-          membership: null,
-          location: fullLocation,
-          phone,
-          realName: fullName,
-          birthDate: validBirthDate
+        setSuccessData({
+          name: fullName,
+          email: email,
+          isAutoLogin: !!data.session
         });
-
-        // Feedback visual rápido
-        alert(`¡Bienvenido al Clan, ${fullName}! 🍂`);
+        setStep('success');
         setLoading(false);
-        onClose();
+
+        // Si hay sesión, preparamos los datos para cuando den click en continuar
+        if (data.session) {
+          // No llamamos onComplete aún, esperamos al usuario
+        }
 
       } else {
         setError('El servicio de identidad no respondió correctamente.');
@@ -133,6 +120,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
     }
   };
 
+  const handleSuccessContinue = () => {
+    if (successData?.isAutoLogin) {
+      // Construir objeto de usuario para autologin
+      const fullLocation = `${city}, ${department}`;
+      const validBirthDate = birthDate ? birthDate : null;
+
+      // Nota: El ID real lo obtendríamos de la sesión, pero aquí usamos un placeholder si no lo tenemos a mano
+      // En realidad, handleRegister ya verificó data.session. 
+      // Para simplificar, cerramos y dejamos que App.tsx detecte la sesión por onAuthStateChange, 
+      // O forzamos los datos que tenemos.
+
+      // Mejor: Cerramos modal. App.tsx detectará el evento SIGNED_IN de Supabase y actualizará todo.
+      onClose();
+    } else {
+      // Caso: Requiere confirmación de email
+      onClose();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[2000] bg-[#3A332F]/90 flex items-center justify-center p-4 backdrop-blur-sm">
       <div className="bg-white w-full max-w-lg rounded-[40px] p-8 md:p-12 relative animate-pop shadow-2xl border-4 border-[#D4AF37]">
@@ -140,10 +146,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
 
         <div className="text-center space-y-2 mb-8">
           <div className="w-16 h-16 bg-[#3A332F] rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-[#D4AF37]">
-            <Sparkles className="text-[#D4AF37]" size={28} />
+            {step === 'success' ? <CheckCircle2 className="text-[#81C784]" size={32} /> : <Sparkles className="text-[#D4AF37]" size={28} />}
           </div>
-          <h2 className="text-3xl font-ghibli-title text-[#3A332F] uppercase">{step === 'login' ? 'Regreso al Clan' : 'Únete a la Leyenda'}</h2>
-          <p className="text-[#8C8279] text-xs font-bold uppercase tracking-widest">{step === 'login' ? 'Bienvenido de nuevo, viajero' : 'Comienza tu viaje en el Tanuki Den'}</p>
+          <h2 className="text-3xl font-ghibli-title text-[#3A332F] uppercase">
+            {step === 'login' ? 'Regreso al Clan' : step === 'register' ? 'Únete a la Leyenda' : '¡Registro Exitoso!'}
+          </h2>
+          <p className="text-[#8C8279] text-xs font-bold uppercase tracking-widest">
+            {step === 'login' ? 'Bienvenido de nuevo, viajero' : step === 'register' ? 'Comienza tu viaje en el Tanuki Den' : 'Tu leyenda comienza ahora'}
+          </p>
         </div>
 
         {error && (
@@ -152,7 +162,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
           </div>
         )}
 
-        {step === 'login' ? (
+        {step === 'success' ? (
+          <div className="text-center space-y-6">
+            <div className="bg-[#FDF5E6] p-6 rounded-[30px] border-2 border-[#E6D5B8] space-y-4">
+              <p className="text-[#3A332F] font-bold text-lg">
+                ¡Bienvenido, <span className="text-[#C14B3A]">{successData?.name}</span>! 🍃
+              </p>
+              <p className="text-[#8C8279] text-sm leading-relaxed">
+                {successData?.isAutoLogin
+                  ? "Tu cuenta ha sido creada y los espíritus te han reconocido. Ya eres parte del Tanuki Den."
+                  : `Hemos enviado un pergamino de confirmación a ${successData?.email}. Por favor revísalo para activar tu entrada.`}
+              </p>
+            </div>
+
+            <button onClick={handleSuccessContinue} className="w-full bg-[#3A332F] text-white font-ghibli-title py-5 rounded-full text-base shadow-xl hover:bg-[#81C784] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
+              {successData?.isAutoLogin ? <>CONTINUAR MI VIAJE <ArrowRight size={20} /></> : <>ENTENDIDO <X size={20} /></>}
+            </button>
+          </div>
+        ) : step === 'login' ? (
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Correo Ancestral</label>
@@ -177,6 +204,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-hide">
+            {/* REGISTRATION FORM CONTENT (SAME AS BEFORE) */}
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Nombre de Usuario (Apodo)</label>
               <div className="relative">
