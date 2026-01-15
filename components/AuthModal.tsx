@@ -152,41 +152,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
         }
       });
 
+      // 30 second timeout safety (Supabase sometimes takes time)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Tiempo de espera agotado. Revisa tu conexión.')), 10000)
+        setTimeout(() => reject(new Error('Tardó demasiado')), 30000)
       );
 
       const { data, error: signUpError } = await Promise.race([signUpPromise, timeoutPromise]) as any;
 
       if (signUpError) {
         console.error('Sign up error:', signUpError);
-        setError(signUpError.message);
+        // Translate common errors
+        if (signUpError.message?.includes('registered')) {
+          setError('Este correo ya está registrado. Intenta iniciar sesión.');
+        } else {
+          setError(signUpError.message);
+        }
         setLoading(false);
         return;
       }
 
       if (data.user) {
         console.log('User created successfully:', data.user.id);
-
-        // Prepare success data safely
+        // ... (rest of success logic)
         setSuccessData({
           name: fullName || 'Viajero',
           email: email,
           isAutoLogin: !!data.session
         });
-
-        // Trigger success view
         setStep('success');
 
       } else if (!signUpError) {
-        // Defensive: If no user and no error (rare API edge case), show generic error
         setError('El servicio de identidad no respondió correctamente (Sin usuario).');
       }
 
     } catch (err: any) {
       console.error('Critical Register Error:', err);
-      // Fallback error if not handled
-      if (!error) setError(`Error inesperado: ${err.message || 'Intenta de nuevo'}`);
+      // Nice error for timeout
+      if (err.message === 'Tardó demasiado') {
+        setError('El servidor está lento. Es posible que tu registro sí se haya creado. Revisa tu correo o intenta entrar.');
+      } else {
+        if (!error) setError(`Error inesperado: ${err.message || 'Intenta de nuevo'}`);
+      }
     } finally {
       // FORCE stop loading no matter what
       setLoading(false);
