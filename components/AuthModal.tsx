@@ -29,6 +29,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
 
+  // Reset to Login when closed
+  React.useEffect(() => {
+    if (!isOpen) {
+      setStep('login');
+      setError(null);
+      setLoading(false);
+      setPhoneError(null);
+      setDateError(null);
+    }
+  }, [isOpen]);
+
   // Validar fecha de nacimiento
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
