@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Mail, Lock, User, Phone, MapPin, Calendar, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
+import { COLOMBIA_DATA } from '../src/data/colombia';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -24,9 +25,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
   const [city, setCity] = useState('');
   const [birthDate, setBirthDate] = useState('');
 
-  const DEPARTAMENTOS = [
-    'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bogotá D.C.', 'Bolívar', 'Boyacá', 'Caldas', 'Caquetá', 'Casanare', 'Cauca', 'Cesar', 'Chocó', 'Córdoba', 'Cundinamarca', 'Guainía', 'Guaviare', 'Huila', 'La Guajira', 'Magdalena', 'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío', 'Risaralda', 'San Andrés y Providencia', 'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada'
-  ];
+  // Validar fecha de nacimiento
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    const year = parseInt(val.split('-')[0]);
+    if (year < 1900 || year > 2100) return; // Prevent invalid years typing
+    setBirthDate(val);
+  };
+
+  const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setDepartment(e.target.value);
+    setCity(''); // Reset city when department changes
+  };
 
   if (!isOpen) return null;
 
@@ -61,6 +71,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Validaciones estrictas
+    if (!/^3\d{9}$/.test(phone)) {
+      setError("El número de celular debe ser colombiano (Empieza por 3 y tiene 10 dígitos).");
+      setLoading(false);
+      return;
+    }
+
+    const birthYear = parseInt(birthDate.split('-')[0]);
+    if (birthDate && (birthYear < 1900 || birthYear > 2100)) {
+      setError("Por favor ingresa un año de nacimiento válido (1900-2100).");
+      setLoading(false);
+      return;
+    }
 
     try {
       const fullLocation = `${city}, ${department}`;
@@ -230,14 +254,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Departamento</label>
-                <select required value={department} onChange={e => setDepartment(e.target.value)} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-2xl px-4 py-3 outline-none font-bold text-[#3A332F] text-xs transition-all appearance-none">
+                <select required value={department} onChange={handleDepartmentChange} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-2xl px-4 py-3 outline-none font-bold text-[#3A332F] text-xs transition-all appearance-none">
                   <option value="">Selecciona...</option>
-                  {DEPARTAMENTOS.map(d => <option key={d} value={d}>{d}</option>)}
+                  {Object.keys(COLOMBIA_DATA).map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Ciudad</label>
-                <input required type="text" value={city} onChange={e => setCity(e.target.value)} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-2xl px-4 py-3 outline-none font-bold text-[#3A332F] text-xs transition-all" placeholder="Ciudad" />
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Ciudad / Municipio</label>
+                <select required disabled={!department} value={city} onChange={e => setCity(e.target.value)} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-2xl px-4 py-3 outline-none font-bold text-[#3A332F] text-xs transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed">
+                  <option value="">{department ? 'Selecciona...' : 'Elige Depto primero'}</option>
+                  {department && COLOMBIA_DATA[department]?.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
             </div>
 
@@ -245,7 +272,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
               <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Fecha de Nacimiento</label>
               <div className="relative">
                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3A332F]/40" size={18} />
-                <input required type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-full pl-12 pr-6 py-3 outline-none font-bold text-[#3A332F] transition-all" />
+                <input required type="date" min="1900-01-01" max="2100-12-31" value={birthDate} onChange={handleDateChange} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-full pl-12 pr-6 py-3 outline-none font-bold text-[#3A332F] transition-all" />
               </div>
             </div>
             <div className="space-y-2">
