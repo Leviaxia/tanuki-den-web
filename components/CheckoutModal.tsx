@@ -210,8 +210,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                                     if (!res.ok) throw new Error('Error al conectar con el servidor de pagos');
 
                                                     const { url } = await res.json();
-                                                    if (url) window.location.href = url;
-                                                    else throw new Error('No se recibió la URL de pago');
+                                                    if (url) {
+                                                        localStorage.setItem('tanuki_pending_cart', JSON.stringify(cart));
+                                                        window.location.href = url;
+                                                    } else throw new Error('No se recibió la URL de pago');
 
                                                 } catch (err) {
                                                     console.error(err);
