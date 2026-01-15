@@ -1,0 +1,21 @@
+{
+    "name": "Tanuki Den - Web Edition",
+    "short_name": "Tanuki Den",
+    "description": "Tesoros y figuras de colección con alma.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FDF5E6",
+    "theme_color": "#3A332F",
+    "icons": [
+        {
+            "src": "pwa-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "pwa-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

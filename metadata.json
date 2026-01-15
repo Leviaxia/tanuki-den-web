@@ -1,0 +1,7 @@
+{
+  "name": "Tanuki Den - Web Edition",
+  "description": "Tienda boutique de anime con gestor de contenido integrado para edición libre de fotos y textos.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
