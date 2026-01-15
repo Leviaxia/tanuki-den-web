@@ -143,13 +143,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
 
       console.log('1. Starting registration with metadata:', metadata);
 
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // 10 second timeout safety
+      const signUpPromise = supabase.auth.signUp({
         email,
         password,
         options: {
           data: metadata
         }
       });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Tiempo de espera agotado. Revisa tu conexión.')), 10000)
+      );
+
+      const { data, error: signUpError } = await Promise.race([signUpPromise, timeoutPromise]) as any;
 
       if (signUpError) {
         console.error('Sign up error:', signUpError);
