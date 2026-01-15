@@ -23,14 +23,56 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
   // Location State
   const [department, setDepartment] = useState('');
   const [city, setCity] = useState('');
+
   const [birthDate, setBirthDate] = useState('');
+  // Validation States
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   // Validar fecha de nacimiento
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     const year = parseInt(val.split('-')[0]);
-    if (year < 1900 || year > 2100) return; // Prevent invalid years typing
+
     setBirthDate(val);
+
+    if (val && (year < 1900 || year > 2100)) {
+      setDateError("Año fuera de rango (1900-2100)");
+    } else {
+      setDateError(null);
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Allow only numbers
+    if (!/^\d*$/.test(val)) return;
+
+    setPhone(val);
+
+    if (val && !/^3\d{9}$/.test(val)) {
+      // Si ya tiene 10 dígitos pero no empieza por 3, o si es corto (opcional: validar longitud en blur o typing?)
+      // Para UX agresiva validamos "typing" pero quizá sea molesto si es muy estricto al inicio.
+      // Mejor: Validamos si la longitud > 3 y no empieza por 3. O cuando length == 10.
+      if (val.length > 0 && !val.startsWith('3')) {
+        setPhoneError("Debe empezar por 3");
+      } else if (val.length === 10 && !/^3\d{9}$/.test(val)) {
+        setPhoneError("Número inválido");
+      } else if (val.length > 10) {
+        setPhoneError("Demasiado largo");
+      } else {
+        setPhoneError(null);
+      }
+    } else {
+      setPhoneError(null);
+    }
+  };
+
+  // Custom validation on Blur for better UX (don't scream while typing too much)
+  const handlePhoneBlur = () => {
+    if (phone && !/^3\d{9}$/.test(phone)) {
+      setPhoneError("Debe ser un celular válido (3XXXXXXXXX)");
+    }
   };
 
   const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -246,9 +288,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Celular</label>
               <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3A332F]/40" size={18} />
-                <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-full pl-12 pr-4 py-3 outline-none font-bold text-[#3A332F] text-xs transition-all" placeholder="300..." />
+                <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 ${phoneError ? 'text-red-500' : 'text-[#3A332F]/40'}`} size={18} />
+                <input required type="tel" value={phone} onChange={handlePhoneChange} onBlur={handlePhoneBlur} className={`w-full bg-[#FDF5E6] border-2 ${phoneError ? 'border-red-500 focus:border-red-600' : 'border-transparent focus:border-[#C14B3A]'} rounded-full pl-12 pr-4 py-3 outline-none font-bold text-[#3A332F] text-xs transition-all`} placeholder="300..." />
               </div>
+              {phoneError && <p className="text-[10px] text-red-500 font-bold ml-4 animate-pulse">{phoneError}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -271,9 +314,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Fecha de Nacimiento</label>
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3A332F]/40" size={18} />
-                <input required type="date" min="1900-01-01" max="2100-12-31" value={birthDate} onChange={handleDateChange} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-full pl-12 pr-6 py-3 outline-none font-bold text-[#3A332F] transition-all" />
+                <Calendar className={`absolute left-4 top-1/2 -translate-y-1/2 ${dateError ? 'text-red-500' : 'text-[#3A332F]/40'}`} size={18} />
+                <input required type="date" min="1900-01-01" max="2100-12-31" value={birthDate} onChange={handleDateChange} className={`w-full bg-[#FDF5E6] border-2 ${dateError ? 'border-red-500 focus:border-red-600' : 'border-transparent focus:border-[#C14B3A]'} rounded-full pl-12 pr-6 py-3 outline-none font-bold text-[#3A332F] transition-all`} />
               </div>
+              {dateError && <p className="text-[10px] text-red-500 font-bold ml-4 animate-pulse">{dateError}</p>}
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Contraseña</label>
