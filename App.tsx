@@ -787,7 +787,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-ghibli-title text-[#3A332F] leading-tight">{user.name}</h2>
+                  <h2 className="text-3xl font-ghibli-title text-[#3A332F] leading-tight text-lg">{user.email || user.name}</h2>
                   <p
                     className="font-black uppercase text-[10px] tracking-[0.2em]"
                     style={{ color: accentColor }}
