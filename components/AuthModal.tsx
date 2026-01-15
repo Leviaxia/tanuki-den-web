@@ -95,27 +95,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
       if (data.user) {
         console.log('User created successfully:', data.user.id);
 
+        // Prepare success data safely
         setSuccessData({
-          name: fullName,
+          name: fullName || 'Viajero',
           email: email,
           isAutoLogin: !!data.session
         });
+
+        // Trigger success view
         setStep('success');
-        setLoading(false);
 
-        // Si hay sesión, preparamos los datos para cuando den click en continuar
-        if (data.session) {
-          // No llamamos onComplete aún, esperamos al usuario
-        }
-
-      } else {
-        setError('El servicio de identidad no respondió correctamente.');
-        setLoading(false);
+      } else if (!signUpError) {
+        // Defensive: If no user and no error (rare API edge case), show generic error
+        setError('El servicio de identidad no respondió correctamente (Sin usuario).');
       }
 
     } catch (err: any) {
       console.error('Critical Register Error:', err);
-      setError(`Error crítico: ${err.message || 'Error desconocido'}`);
+      // Fallback error if not handled
+      if (!error) setError(`Error inesperado: ${err.message || 'Intenta de nuevo'}`);
+    } finally {
+      // FORCE stop loading no matter what
       setLoading(false);
     }
   };
