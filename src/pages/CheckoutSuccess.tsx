@@ -59,11 +59,20 @@ export const CheckoutSuccess = () => {
             }
         };
 
+
+        const timeoutId = setTimeout(() => {
+            console.warn("Forzando fin de proceso por tiempo de espera.");
+            setIsProcessing(false);
+        }, 5000); // 5 segundos de seguridad
+
         if (sessionId) {
-            processOrder();
+            processOrder().finally(() => clearTimeout(timeoutId));
         } else {
+            clearTimeout(timeoutId);
             setIsProcessing(false);
         }
+
+        return () => clearTimeout(timeoutId);
     }, [sessionId]);
 
     return (
