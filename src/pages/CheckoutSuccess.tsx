@@ -38,6 +38,9 @@ export const CheckoutSuccess = () => {
 
                         sessionStorage.setItem('tanuki_user', JSON.stringify(updatedUser)); // Update Session
 
+                        // Force App.tsx to update immediately!
+                        window.dispatchEvent(new Event('tanuki_user_update'));
+
                         // 4. Update Supabase Profile
                         if (userFn.id && userFn.id !== 'guest') {
                             // ... update DB logic same as before

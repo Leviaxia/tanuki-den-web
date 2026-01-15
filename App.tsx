@@ -176,6 +176,25 @@ const App: React.FC = () => {
     }
   }, [isCheckout]); // Depend only on route change context
 
+  // Listen for internal state updates (from CheckoutSuccess, etc)
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      const saved = sessionStorage.getItem('tanuki_user');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          console.log("⚡ Evento recibido: Actualizando usuario en App:", parsed);
+          setUser(parsed);
+        } catch (e) {
+          console.error("Error parsing update event user", e);
+        }
+      }
+    };
+
+    window.addEventListener('tanuki_user_update', handleUserUpdate);
+    return () => window.removeEventListener('tanuki_user_update', handleUserUpdate);
+  }, []);
+
   useEffect(() => {
     sessionStorage.setItem('tanuki_user', JSON.stringify(user));
   }, [user]);
