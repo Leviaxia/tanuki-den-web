@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
 
         const line_items = cart.map(item => ({
             price_data: {
-                currency: 'usd',
+                currency: 'cop',
                 product_data: {
                     name: item.name,
                     images: item.image ? [item.image] : [],

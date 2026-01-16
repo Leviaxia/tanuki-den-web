@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Plus, Edit3, Trash2, Save, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Product } from '../../types';
+import { formatCurrency } from '../lib/utils';
 
 export const AdminDashboard = () => {
     const [products, setProducts] = useState<Product[]>([]);
@@ -116,7 +117,7 @@ export const AdminDashboard = () => {
                                         <h3 className="font-bold text-xl text-[#3A332F]">{product.name}</h3>
                                         <p className="text-[#8C8279] text-sm line-clamp-1">{product.description}</p>
                                         <div className="flex gap-4 mt-2 justify-center md:justify-start">
-                                            <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#C14B3A]">${product.price}</span>
+                                            <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#C14B3A]">{formatCurrency(product.price)}</span>
                                             <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#3A332F]">{product.stock} Unidades</span>
                                         </div>
                                     </div>

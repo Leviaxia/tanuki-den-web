@@ -14,6 +14,7 @@ import CheckoutModal from './components/CheckoutModal';
 import { PRODUCTS as INITIAL_PRODUCTS, heroText, collectionsContent } from './constants';
 import { getOtakuRecommendation } from './services/gemini';
 import { supabase } from './src/lib/supabase';
+import { formatCurrency } from './src/lib/utils';
 import { useLocation, Routes, Route } from 'react-router-dom';
 import { CheckoutSuccess } from './src/pages/CheckoutSuccess';
 import { CheckoutCancel } from './src/pages/CheckoutCancel';
@@ -710,15 +711,13 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[2000] bg-[#3A332F]/90 flex items-center justify-center p-4 md:p-6 backdrop-blur-sm">
           {(() => {
             const getColor = () => {
-              // Normalize input to handle both ID (silver) and Name (Tanuki Guardian)
-              const mem = (user.membership || '').toLowerCase();
-
-              if (mem.includes('bronze') || mem.includes('sabio')) return '#4A6741';
-              if (mem.includes('silver') || mem.includes('guardian')) return '#5D4037';
-              if (mem.includes('gold') || mem.includes('anciano')) return '#C14B3A';
-              if (mem.includes('founder')) return '#D4AF37';
-
-              return '#9CA3AF'; // Gris para gratis/null
+              switch (user.membership) {
+                case 'bronze': return '#4A6741';
+                case 'silver': return '#5D4037';
+                case 'gold': return '#C14B3A';
+                case 'founder': return '#D4AF37';
+                default: return '#9CA3AF'; // Gris para gratis/null
+              }
             };
             const accentColor = getColor();
 
@@ -851,10 +850,10 @@ const App: React.FC = () => {
               /* Vista de Usuario Suscrito */
               (() => {
                 const plans = [
-                  { name: 'Semilla', price: '9.99', period: 'Mensual', color: '#4A6741', id: 'bronze', benefits: ['Insignia del Clan', 'Chat Exclusivo', 'Soporte Prioritario', 'Preventas 24h'] },
-                  { name: 'Brote', price: '24.99', period: 'Trimestral', color: '#5D4037', id: 'silver', benefits: ['Todo lo Mensual', '5% OFF Base', 'Acceso al Taller Mágico', 'Sticker Pack Digital'] },
-                  { name: 'Rama', price: '44.99', period: 'Semestral', color: '#C14B3A', id: 'gold', benefits: ['Todo lo Trimestral', 'Regalo de Cumpleaños', 'Sorteos Exclusivos', 'Unboxing VIP'] },
-                  { name: 'Espíritu', price: '79.99', period: 'Anual', color: '#D4AF37', id: 'founder', featured: true, benefits: ['ENVÍOS GRATIS SIEMPRE', 'Todo lo Semestral', 'Carnet Físico Clan', 'Rango Leyenda VIP'] }
+                  { name: 'Semilla', price: '40000', period: 'Mensual', color: '#4A6741', id: 'bronze', benefits: ['Insignia del Clan', 'Chat Exclusivo', 'Soporte Prioritario', 'Preventas 24h'] },
+                  { name: 'Brote', price: '100000', period: 'Trimestral', color: '#5D4037', id: 'silver', benefits: ['Todo lo Mensual', '5% OFF Base', 'Acceso al Taller Mágico', 'Sticker Pack Digital'] },
+                  { name: 'Rama', price: '180000', period: 'Semestral', color: '#C14B3A', id: 'gold', benefits: ['Todo lo Trimestral', 'Regalo de Cumpleaños', 'Sorteos Exclusivos', 'Unboxing VIP'] },
+                  { name: 'Espíritu', price: '320000', period: 'Anual', color: '#D4AF37', id: 'founder', featured: true, benefits: ['ENVÍOS GRATIS SIEMPRE', 'Todo lo Semestral', 'Carnet Físico Clan', 'Rango Leyenda VIP'] }
                 ];
                 const currentPlan = plans.find(p => p.id === user.membership);
 
@@ -899,10 +898,10 @@ const App: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                   {[
-                    { name: 'Semilla', price: '9.99', period: 'Mensual', color: '#4A6741', id: 'bronze', benefits: ['Insignia del Clan', 'Chat Exclusivo', 'Soporte Prioritario', 'Preventas 24h'] },
-                    { name: 'Brote', price: '24.99', period: 'Trimestral', color: '#5D4037', id: 'silver', benefits: ['Todo lo Mensual', '5% OFF Base', 'Acceso al Taller Mágico', 'Sticker Pack Digital'] },
-                    { name: 'Rama', price: '44.99', period: 'Semestral', color: '#C14B3A', id: 'gold', benefits: ['Todo lo Trimestral', 'Regalo de Cumpleaños', 'Sorteos Exclusivos', 'Unboxing VIP'] },
-                    { name: 'Espíritu', price: '79.99', period: 'Anual', color: '#D4AF37', id: 'founder', featured: true, benefits: ['ENVÍOS GRATIS SIEMPRE', 'Todo lo Semestral', 'Carnet Físico Clan', 'Rango Leyenda VIP'] }
+                    { name: 'Semilla', price: '40000', period: 'Mensual', color: '#4A6741', id: 'bronze', benefits: ['Insignia del Clan', 'Chat Exclusivo', 'Soporte Prioritario', 'Preventas 24h'] },
+                    { name: 'Brote', price: '100000', period: 'Trimestral', color: '#5D4037', id: 'silver', benefits: ['Todo lo Mensual', '5% OFF Base', 'Acceso al Taller Mágico', 'Sticker Pack Digital'] },
+                    { name: 'Rama', price: '180000', period: 'Semestral', color: '#C14B3A', id: 'gold', benefits: ['Todo lo Trimestral', 'Regalo de Cumpleaños', 'Sorteos Exclusivos', 'Unboxing VIP'] },
+                    { name: 'Espíritu', price: '320000', period: 'Anual', color: '#D4AF37', id: 'founder', featured: true, benefits: ['ENVÍOS GRATIS SIEMPRE', 'Todo lo Semestral', 'Carnet Físico Clan', 'Rango Leyenda VIP'] }
                   ].map((plan) => (
                     <div key={plan.id} className={`relative bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border-4 border-[#3A332F] space-y-6 md:space-y-8 flex flex-col transition-all hover:-translate-y-4 shadow-xl ${plan.featured ? 'ring-4 ring-[#C14B3A]/20 scale-100 md:scale-105 z-10' : ''}`}>
                       {plan.featured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#C14B3A] text-white px-6 py-1 rounded-full text-[10px] font-ghibli-title uppercase tracking-widest shadow-lg">Más Popular</div>}
@@ -911,7 +910,7 @@ const App: React.FC = () => {
                         <h3 className="font-ghibli-title text-2xl uppercase text-[#3A332F] pt-2">{plan.name}</h3>
                         <p className="text-[10px] font-black uppercase text-[#8C8279] tracking-widest">{plan.period}</p>
                       </div>
-                      <div className="text-center"><p className="text-4xl md:text-5xl font-ghibli-title text-[#C14B3A] tracking-tighter"><span className="text-lg mr-1">$</span>{plan.price}</p></div>
+                      <div className="text-center"><p className="text-4xl md:text-5xl font-ghibli-title text-[#C14B3A] tracking-tighter">{formatCurrency(Number(plan.price))}</p></div>
                       <ul className="flex-grow space-y-3">
                         {plan.benefits.map((benefit, i) => (
                           <li key={i} className="flex items-center gap-3 text-left">
@@ -1029,7 +1028,7 @@ const App: React.FC = () => {
                     <div className="flex-grow space-y-2">
                       <h4 className="font-ghibli-title text-[#3A332F]">{item.name}</h4>
                       <div className="flex items-center justify-between">
-                        <span className="font-black text-[#C14B3A]">${item.price.toFixed(2)}</span>
+                        <span className="font-black text-[#C14B3A]">{formatCurrency(item.price)}</span>
                         <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-full border-2 border-[#E6D5B8]">
                           {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1)}><Minus size={14} /></button>}
                           <span className="font-black text-sm">{item.quantity}</span>
@@ -1044,7 +1043,7 @@ const App: React.FC = () => {
             </div>
             {cart.length > 0 && (
               <div className="p-8 bg-[#FDF5E6] space-y-6">
-                <div className="flex justify-between text-2xl font-ghibli-title"><span>TOTAL</span><div className="text-right"><span className="text-[#C14B3A]">${cart.reduce((a, c) => a + (c.price * c.quantity), 0).toFixed(2)}</span></div></div>
+                <div className="flex justify-between text-2xl font-ghibli-title"><span>TOTAL</span><div className="text-right"><span className="text-[#C14B3A]">{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span></div></div>
                 <button onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }} className="w-full bg-[#3A332F] text-white font-ghibli-title py-6 rounded-full text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest">FINALIZAR PEDIDO</button>
               </div>
             )}
@@ -1081,7 +1080,7 @@ const App: React.FC = () => {
                 <span className="bg-[#C14B3A] text-white text-[10px] font-ghibli-title px-6 py-2 rounded-full uppercase tracking-widest">{selectedProduct.category}</span>
                 <h2 className="text-4xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight uppercase">{selectedProduct.name}</h2>
                 <p className="text-[#8C8279] text-lg font-bold leading-relaxed">{selectedProduct.description}</p>
-                <div className="text-5xl font-ghibli-title text-[#3A332F] pt-6 border-t-4 border-[#FDF5E6]"><span className="text-[#C14B3A] text-2xl mr-2">$</span>{selectedProduct.price.toFixed(2)}</div>
+                <div className="text-5xl font-ghibli-title text-[#3A332F] pt-6 border-t-4 border-[#FDF5E6]">{formatCurrency(selectedProduct.price)}</div>
                 <div className="flex flex-col sm:flex-row gap-6 pt-10"><div className="flex items-center justify-between bg-[#FDF5E6] px-8 py-5 rounded-full border-4 border-[#E6D5B8] sm:w-48"><button onClick={() => setDetailQuantity(q => Math.max(1, q - 1))}><Minus size={20} /></button><span className="font-ghibli-title text-2xl">{detailQuantity}</span><button onClick={() => setDetailQuantity(q => q + 1)}><Plus size={20} /></button></div><button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-6 rounded-full text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-4">AÑADIR AL SACO <ArrowRight size={22} /></button></div>
               </div>
             </div>

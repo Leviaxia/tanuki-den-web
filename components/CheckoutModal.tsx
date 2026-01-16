@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, AlertCircle } from 'lucide-react';
 import { CartItem } from '../types';
+import { formatCurrency } from '../lib/utils';
 
 interface CheckoutModalProps {
     isOpen: boolean;
@@ -98,7 +99,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                                 <img src={item.image} className="w-16 h-16 rounded-xl object-cover" alt={item.name} />
                                                 <div className="flex-grow">
                                                     <h4 className="font-bold text-sm text-[#3A332F]">{item.name}</h4>
-                                                    <p className="text-[#C14B3A] font-black text-xs">${item.price}</p>
+                                                    <p className="text-[#C14B3A] font-black text-xs">{formatCurrency(item.price)}</p>
                                                     {item.benefits && (
                                                         <div className="mt-2 space-y-1 bg-[#FDF5E6]/50 p-2 rounded-xl">
                                                             <p className="text-[9px] uppercase font-black tracking-widest text-[#8C8279] mb-1">Tu Pacto Incluye:</p>
@@ -122,7 +123,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                     </div>
                                     <div className="flex justify-between items-center pt-6 border-t-2 border-[#FDF5E6]">
                                         <span className="font-ghibli-title text-xl">Total</span>
-                                        <span className="font-ghibli-title text-3xl text-[#C14B3A]">${total.toFixed(2)}</span>
+                                        <span className="font-ghibli-title text-3xl text-[#C14B3A]">{formatCurrency(total)}</span>
                                     </div>
                                     <button onClick={() => setStep('shipping')} className="w-full bg-[#3A332F] text-white font-ghibli-title py-5 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-4">IR A ENVÍO <ArrowRight size={20} /></button>
                                 </div>
@@ -227,7 +228,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                             {isProcessing ? (
                                                 <>CONECTANDO CON STRIPE...</>
                                             ) : (
-                                                <>IR A PAGAR ${total.toFixed(2)} <ShieldCheck size={20} /></>
+                                                <>IR A PAGAR {formatCurrency(total)} <ShieldCheck size={20} /></>
                                             )}
                                         </button>
                                     </div>
