@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, supabaseUrl } from '../lib/supabase';
+import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase';
 // ... (imports remain the same, just ensuring the replacement context is correct)
 // Actually I will just replace the specific lines in the render method to be safe.
 
@@ -119,6 +119,9 @@ export const AdminDashboard = () => {
             <div className="flex flex-col gap-3 mt-4">
                 <button onClick={fetchProducts} className="bg-[#3A332F] text-white px-8 py-3 rounded-full font-bold hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-2">
                     <Loader2 size={16} /> Reintentar
+                </button>
+                <button onClick={testConnection} className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                    📡 Probar Conexión (Ping)
                 </button>
                 <button onClick={() => { supabase.auth.signOut(); window.location.href = '/'; }} className="text-[#3A332F] underline text-sm hover:text-[#C14B3A]">
                     Cerrar Sesión y Volver al Inicio
