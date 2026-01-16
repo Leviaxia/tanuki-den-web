@@ -31,6 +31,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 const App: React.FC = () => {
+  console.log("TANUKI APP VERSION: 2.1 - CHECK ADMIN (BUILD " + new Date().toISOString() + ")");
   const location = useLocation();
 
   const isCheckout = location.pathname.includes('/checkout');
