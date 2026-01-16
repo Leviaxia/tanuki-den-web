@@ -1,26 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase';
-// ... (imports remain the same, just ensuring the replacement context is correct)
-// Actually I will just replace the specific lines in the render method to be safe.
-
-// Wait, I need to update the import statement first.
-// I'll do two replaces: one for import, one for usage.
-
 import { Plus, Edit3, Trash2, Save, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Product } from '../../types';
 import { formatCurrency } from '../lib/utils';
 
 export const AdminDashboard = () => {
     const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [newProduct, setNewProduct] = useState<Partial<Product>>({});
     const [isCreating, setIsCreating] = useState(false);
 
     const [error, setError] = useState<string | null>(null);
 
+    // Initial load: Do NOT fetch automatically to prevent loading loops
     useEffect(() => {
-        fetchProducts();
+        setLoading(false);
     }, []);
 
     const fetchProducts = async () => {
@@ -132,6 +127,12 @@ export const AdminDashboard = () => {
         }
     };
 
+    const loadMockData = () => {
+        setProducts([
+            { id: '1', name: 'Tanuki de Prueba', price: 50000, stock: 10, category: 'Test', description: 'Si ves esto, la interfaz funciona.', image: 'https://via.placeholder.com/150', created_at: new Date().toISOString() }
+        ]);
+        alert("Modo Prueba: Se han cargado datos falsos para verificar la interfaz.");
+    };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FDF5E6]"><Loader2 className="animate-spin text-[#C14B3A]" size={48} /></div>;
 
@@ -144,8 +145,8 @@ export const AdminDashboard = () => {
             <p className="text-red-600 font-bold max-w-md">{error}</p>
 
             <div className="bg-black/10 p-4 rounded-lg text-[10px] font-mono text-left space-y-1 w-full max-w-sm mx-auto">
-                <p><strong>Diagnosis (V3.2):</strong></p>
-                <p>Mode: RAW FETCH (Bypassing SDK)</p>
+                <p><strong>Diagnosis (V3.3):</strong></p>
+                <p>Mode: RAW FETCH (Manual Control)</p>
                 <p>Target: {supabaseUrl}</p>
                 <p>Auth State: {Boolean(supabase.auth.getSession()).toString()}</p>
                 <p>Timestamp: {new Date().toLocaleTimeString()}</p>
@@ -189,7 +190,16 @@ export const AdminDashboard = () => {
                         <h3 className="text-2xl font-ghibli-title text-[#3A332F] mb-2">No hay tesoros visibles</h3>
                         <p className="text-[#8C8279] font-bold">Si acabas de arreglar la base de datos, es posible que esté vacía.</p>
                         <p className="text-[#8C8279]">¡Prueba el botón "Nuevo Tesoro"!</p>
-                        <p className="mt-4 text-xs font-mono text-gray-400">Debug: Products Array Length = 0</p>
+                        <p className="mt-4 text-xs font-mono text-gray-400">Estado: Sin Datos (Haz clic abajo)</p>
+
+                        <div className="flex justify-center gap-4 mt-6">
+                            <button onClick={fetchProducts} className="bg-[#3A332F] text-white px-6 py-3 rounded-full font-bold hover:bg-[#C14B3A] transition-all flex items-center gap-2">
+                                <Loader2 size={16} /> Cargar de Supabase
+                            </button>
+                            <button onClick={loadMockData} className="bg-gray-200 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-300 transition-all">
+                                🛠️ Simular Datos
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-4">
