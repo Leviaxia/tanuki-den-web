@@ -104,7 +104,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
         email,
         password,
       });
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado. Revisa tu conexión o las variables env.')), 15000));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado (60s). Si es la primera vez, Supabase puede estar "despertando". Intenta de nuevo.')), 60000));
 
       const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
 

@@ -1,24 +1,27 @@
--- 1. Create the 'products' bucket if it doesn't exist (just in case)
+-- 1. Create the 'products' bucket if it doesn't exist
 insert into storage.buckets (id, name, public)
 values ('products', 'products', true)
 on conflict (id) do nothing;
 
--- 2. Enable RLS on storage.objects (Standard Supabase security)
-alter table storage.objects enable row level security;
+-- 2. (OMITIDO) No intentamos cambiar RLS porque ya suele estar activo y da error de permisos.
+-- alter table storage.objects enable row level security; <--- CAUSA ERROR 42501
 
--- 3. Policy: Allow PUBLIC (everyone) to SEE/DOWNLOAD images
--- This ensures your customers can actually see the product photos.
+-- 3. Limpiar políticas antiguas para evitar errores de "ya existe"
+drop policy if exists "Public Access to Products Images" on storage.objects;
+drop policy if exists "Authenticated can upload images" on storage.objects;
+drop policy if exists "Authenticated can delete images" on storage.objects;
+
+-- 4. Crear Política DE LECTURA (Pública)
 create policy "Public Access to Products Images"
 on storage.objects for select
 using ( bucket_id = 'products' );
 
--- 4. Policy: Allow AUTHENTICATED (LoggedIn Users) to UPLOAD
--- This allows you (since you are logged in) to send files.
+-- 5. Crear Política de SUBIDA (Solo Autenticados)
 create policy "Authenticated can upload images"
 on storage.objects for insert
 with check ( bucket_id = 'products' and auth.role() = 'authenticated' );
 
--- 5. Policy: Allow AUTHENTICATED to DELETE/UPDATE (Optional but good)
+-- 6. Crear Política de BORRADO (Solo Autenticados)
 create policy "Authenticated can delete images"
 on storage.objects for delete
 using ( bucket_id = 'products' and auth.role() = 'authenticated' );
