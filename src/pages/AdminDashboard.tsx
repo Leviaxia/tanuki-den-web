@@ -63,56 +63,118 @@ export const AdminDashboard = () => {
         }
     };
 
+    const getAuthToken = () => {
+        try {
+            // 1. Try SDK Session first (cleanest)
+            // const { data } = supabase.auth.getSession(); // Sync check impossible here, SDK is async. 
+            // We rely on localStorage backup strategy used in upload.
+
+            const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+            const key = `sb-${projectRef}-auth-token`;
+            const stored = localStorage.getItem(key);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                return parsed.access_token;
+            }
+        } catch (e) {
+            console.error("Error reading token", e);
+        }
+        return null;
+    };
+
     const handleSave = async (product: Partial<Product>) => {
         if (!product.name || !product.price) return alert('Nombre y Precio son requeridos');
+        setLoading(true);
 
-        if (product.id) {
-            // Update
-            const { error } = await supabase
-                .from('products')
-                .update({
-                    name: product.name,
-                    price: product.price,
-                    description: product.description,
-                    category: product.category,
-                    image: product.image,
-                    stock: product.stock
-                })
-                .eq('id', product.id);
+        try {
+            const token = getAuthToken();
+            if (!token) throw new Error("No hay sesión. Por favor reloguea.");
 
-            if (error) alert('Error actualizando: ' + error.message);
-            else {
-                setEditingId(null);
-                fetchProducts();
+            const headers: HeadersInit = {
+                'apikey': supabaseAnonKey || '',
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            };
+
+            let url = `${supabaseUrl}/rest/v1/products`;
+            let method = 'POST';
+
+            // Payload cleaning: remove undefined/nulls that Supabase dislikes? 
+            // Actually REST API handles JSON fine.
+            const payload = {
+                name: product.name,
+                price: product.price,
+                description: product.description,
+                category: product.category || 'General',
+                image: product.image || 'https://via.placeholder.com/300',
+                stock: product.stock || 0
+            };
+
+            if (product.id) {
+                // Update
+                url = `${supabaseUrl}/rest/v1/products?id=eq.${product.id}`;
+                method = 'PATCH';
             }
-        } else {
-            // Create
-            const { error } = await supabase
-                .from('products')
-                .insert([{
-                    name: product.name,
-                    price: product.price,
-                    description: product.description,
-                    category: product.category || 'General',
-                    image: product.image || 'https://via.placeholder.com/300',
-                    stock: product.stock || 0
-                }]);
 
-            if (error) alert('Error creando: ' + error.message);
-            else {
+            console.log(`Sending RAW ${method} to ${url}`);
+
+            const response = await fetch(url, {
+                method: method,
+                headers: headers,
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Error (${response.status}): ${errText}`);
+            }
+
+            console.log("Save Success");
+
+            if (product.id) {
+                setEditingId(null);
+            } else {
                 setIsCreating(false);
                 setNewProduct({});
-                fetchProducts();
             }
+            fetchProducts();
+
+        } catch (err: any) {
+            console.error(err);
+            alert('Error guardando: ' + err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleDelete = async (id: string) => {
         if (!confirm('¿Seguro que quieres borrar este tesoro?')) return;
+        setLoading(true);
 
-        const { error } = await supabase.from('products').delete().eq('id', id);
-        if (error) alert('Error borrando: ' + error.message);
-        else fetchProducts();
+        try {
+            const token = getAuthToken();
+            if (!token) throw new Error("No hay sesión.");
+
+            const response = await fetch(`${supabaseUrl}/rest/v1/products?id=eq.${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'apikey': supabaseAnonKey || '',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Error (${response.status}): ${errText}`);
+            }
+
+            fetchProducts();
+        } catch (err: any) {
+            alert('Error borrando: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const testConnection = async () => {
