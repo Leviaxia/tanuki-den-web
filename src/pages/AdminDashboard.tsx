@@ -27,8 +27,8 @@ export const AdminDashboard = () => {
         setLoading(true);
         setError(null);
         try {
-            // Timeout safety (10s)
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado al cargar productos. Verifica tu conexión.')), 10000));
+            // Timeout safety (25s) - Increased for cold starts
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado (25s). Verifica tu conexión o intenta Recargar la página.')), 25000));
 
             const fetchPromise = supabase
                 .from('products')
@@ -116,9 +116,14 @@ export const AdminDashboard = () => {
                 <p>Timestamp: {new Date().toLocaleTimeString()}</p>
             </div>
 
-            <button onClick={fetchProducts} className="bg-[#3A332F] text-white px-8 py-3 rounded-full font-bold hover:bg-[#C14B3A] transition-all flex items-center gap-2">
-                <Loader2 size={16} /> Reintentar
-            </button>
+            <div className="flex flex-col gap-3 mt-4">
+                <button onClick={fetchProducts} className="bg-[#3A332F] text-white px-8 py-3 rounded-full font-bold hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-2">
+                    <Loader2 size={16} /> Reintentar
+                </button>
+                <button onClick={() => { supabase.auth.signOut(); window.location.href = '/'; }} className="text-[#3A332F] underline text-sm hover:text-[#C14B3A]">
+                    Cerrar Sesión y Volver al Inicio
+                </button>
+            </div>
         </div>
     );
 
