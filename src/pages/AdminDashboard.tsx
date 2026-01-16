@@ -243,7 +243,10 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         try {
             setUploading(true);
+
+            // 0. Validación Básica
             if (!e.target.files || e.target.files.length === 0) {
+                setUploading(false);
                 return;
             }
 
@@ -252,20 +255,45 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
             const fileName = `${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
-            // 1. Upload to Supabase Storage
-            const { error: uploadError } = await supabase.storage.from('products').upload(filePath, file);
+            console.log("Iniciando subida RAW para:", fileName);
 
-            if (uploadError) {
-                throw uploadError;
+            // 1. Obtener Token de Sesión (Necesario para RLS)
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("No hay sesión activa. Recarga la página.");
+
+            // 2. Construir URL y Headers
+            // Endpoint: POST /storage/v1/object/{bucket}/{path}
+            const uploadUrl = `${supabaseUrl}/storage/v1/object/products/${fileName}`;
+
+            const headers: HeadersInit = {
+                'Authorization': `Bearer ${session.access_token}`,
+                'apikey': supabaseAnonKey || '',
+                // 'x-upsert': 'true' // Opcional
+            };
+
+            // 3. Raw Fetch (Sin SDK)
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: headers,
+                body: file // El navegador pone el Content-Type correcto automáticamente para blobs/files? 
+                // A veces sí, a veces no. Para Supabase Storage, enviar el body directo suele funcionar mejor que FormData si el endpoint espera binary.
+                // El endpoint /object/ espera el body del archivo.
+            });
+
+            console.log("Respuesta RAW:", response.status, response.statusText);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error en subida (${response.status}): ${errorText}`);
             }
 
-            // 2. Get Public URL
+            // 4. Construir URL Pública (Manual o vía SDK, el SDK es seguro para esto)
             const { data } = supabase.storage.from('products').getPublicUrl(filePath);
 
             setForm({ ...form, image: data.publicUrl });
         } catch (error: any) {
-            console.error(error);
-            alert(`Error subiendo imagen: ${error.message}\n\nSOLUCIÓN: Ejecuta el script "FIX_STORAGE_POLICY.sql" en Supabase para dar permisos de subida.`);
+            console.error('Raw Upload Error:', error);
+            alert(`Error subiendo imagen: ${error.message}\n\nSi es un error 403, revisa el script SQL.`);
         } finally {
             setUploading(false);
         }
