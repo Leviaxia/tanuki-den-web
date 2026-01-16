@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Mail, Lock, User, Phone, MapPin, Calendar, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
-import { supabase } from '../src/lib/supabase';
+import { supabase, supabaseUrl } from '../src/lib/supabase';
 import { COLOMBIA_DATA } from '../src/data/colombia';
 
 interface AuthModalProps {
@@ -112,7 +112,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
 
     try {
       // Check Env Vars
-      if (!supabase.supabaseUrl) throw new Error("Falta VITE_SUPABASE_URL en Vercel");
+      if (!supabaseUrl) throw new Error("Falta VITE_SUPABASE_URL en Vercel");
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
