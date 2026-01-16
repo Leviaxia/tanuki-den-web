@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, AlertCircle } from 'lucide-react';
 import { CartItem } from '../types';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency } from '../src/lib/utils';
 
 interface CheckoutModalProps {
     isOpen: boolean;

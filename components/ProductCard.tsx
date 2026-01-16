@@ -3,7 +3,7 @@ import React from 'react';
 import { ShoppingCart, Star, Heart, MessageSquare } from 'lucide-react';
 import { Product } from '../types';
 
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency } from '../src/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -25,8 +25,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onViewD
           onToggleFavorite();
         }}
         className={`absolute top-8 right-8 z-30 p-3 bg-white rounded-full transition-all shadow-xl border-2 active:scale-75 hover:scale-110 ${isFavorite
-            ? 'text-[#C14B3A] border-[#C14B3A] scale-110'
-            : 'text-[#3A332F] border-[#F0E6D2]'
+          ? 'text-[#C14B3A] border-[#C14B3A] scale-110'
+          : 'text-[#3A332F] border-[#F0E6D2]'
           }`}
         aria-label={isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"}
       >
