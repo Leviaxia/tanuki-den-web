@@ -155,7 +155,65 @@ const App: React.FC = () => {
     }
   }, [user.id, user.photo]);
 
-  // Supabase Auth Listener
+  // Manual Session Recovery (Bypass SDK Init)
+  useEffect(() => {
+    const recoverSession = async () => {
+      try {
+        const projectRef = import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0];
+              const key = `sb-${projectRef}-auth-token`;
+              const stored = localStorage.getItem(key);
+
+              if (stored) {
+          const session = JSON.parse(stored);
+              const now = Math.floor(Date.now() / 1000);
+          
+          if (session.expires_at && session.expires_at > now) {
+                console.log("Found valid manual session, restoring user...");
+
+              // Restore immediately to avoid flash of "Guest"
+              const user = session.user;
+              const meta = user.user_metadata || { };
+
+              // Fetch Profile manually
+              let profile = null;
+              try {
+                const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
+                headers: {
+                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${session.access_token}`
+                    }
+                });
+              if (res.ok) {
+                    const profiles = await res.json();
+                    if (profiles && profiles.length > 0) profile = profiles[0];
+                }
+             } catch (e) {
+                console.warn("Profile fetch failed during recovery", e);
+             }
+
+             setUser(prev => ({
+                ...prev,
+                id: user.id,
+              name: profile?.full_name || meta.full_name || meta.username || (user.email?.split('@')[0] || 'Aventurero'),
+              photo: profile?.avatar_url || prev.photo,
+              isRegistered: true,
+              email: user.email,
+              membership: profile?.membership || undefined,
+              location: profile?.location || meta.location || '',
+              birthDate: profile?.birth_date || meta.birth_date || '',
+              phone: profile?.phone || meta.phone || '',
+              realName: profile?.full_name || meta.full_name || ''
+             }));
+          }
+        }
+      } catch (e) {
+                console.error("Manual session recovery failed", e);
+      }
+    };
+              recoverSession();
+  }, []);
+
+  // Supabase Auth Listener (Keep as backup/sync)
   useEffect(() => {
     const {data: {subscription} } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
