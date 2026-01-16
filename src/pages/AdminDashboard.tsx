@@ -97,127 +97,129 @@ export const AdminDashboard = () => {
         const { error } = await supabase.from('products').delete().eq('id', id);
         if (error) alert('Error borrando: ' + error.message);
         else fetchProducts();
-        const testConnection = async () => {
-            try {
-                const start = Date.now();
-                const res = await fetch(`${supabaseUrl}/rest/v1/`, { method: 'HEAD', headers: { apikey: supabaseAnonKey || '' } });
-                const time = Date.now() - start;
-                alert(`Conexión Exitosa: ${res.status} OK (${time}ms)\nLa red funciona.`);
-            } catch (e: any) {
-                console.error(e);
-                alert(`Error de Conexión: ${e.message}\nEs posible que tu internet bloquee Supabase.`);
-            }
-        };
+    };
+
+    const testConnection = async () => {
+        try {
+            const start = Date.now();
+            const res = await fetch(`${supabaseUrl}/rest/v1/`, { method: 'HEAD', headers: { apikey: supabaseAnonKey || '' } });
+            const time = Date.now() - start;
+            alert(`Conexión Exitosa: ${res.status} OK (${time}ms)\nLa red funciona.`);
+        } catch (e: any) {
+            console.error(e);
+            alert(`Error de Conexión: ${e.message}\nEs posible que tu internet bloquee Supabase.`);
+        }
+    };
 
 
-        if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FDF5E6]"><Loader2 className="animate-spin text-[#C14B3A]" size={48} /></div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FDF5E6]"><Loader2 className="animate-spin text-[#C14B3A]" size={48} /></div>;
 
-        if (error) return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#FDF5E6] space-y-4 text-center p-8">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                    <Trash2 className="text-red-500" size={32} />
-                </div>
-                <h2 className="text-2xl font-ghibli-title text-[#3A332F]">Algo salió mal</h2>
-                <p className="text-red-600 font-bold max-w-md">{error}</p>
-
-                <div className="bg-black/10 p-4 rounded-lg text-[10px] font-mono text-left space-y-1 w-full max-w-sm mx-auto">
-                    <p><strong>Diagnosis:</strong></p>
-                    <p>Target: {supabaseUrl}</p>
-                    <p>Auth State: {Boolean(supabase.auth.getSession()).toString()}</p>
-                    <p>Timestamp: {new Date().toLocaleTimeString()}</p>
-                </div>
-
-                <div className="flex flex-col gap-3 mt-4">
-                    <button onClick={fetchProducts} className="bg-[#3A332F] text-white px-8 py-3 rounded-full font-bold hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-2">
-                        <Loader2 size={16} /> Reintentar
-                    </button>
-                    <button onClick={testConnection} className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-                        📡 Probar Conexión (Ping)
-                    </button>
-                    <button onClick={() => { supabase.auth.signOut(); window.location.href = '/'; }} className="text-[#3A332F] underline text-sm hover:text-[#C14B3A]">
-                        Cerrar Sesión y Volver al Inicio
-                    </button>
-                </div>
+    if (error) return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#FDF5E6] space-y-4 text-center p-8">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="text-red-500" size={32} />
             </div>
-        );
+            <h2 className="text-2xl font-ghibli-title text-[#3A332F]">Algo salió mal</h2>
+            <p className="text-red-600 font-bold max-w-md">{error}</p>
 
-        return (
-            <div className="min-h-screen bg-[#FDF5E6] p-8 md:p-12 font-sans">
-                <div className="max-w-6xl mx-auto space-y-8">
-                    <div className="flex justify-between items-center bg-white p-8 rounded-[40px] shadow-xl border-4 border-[#3A332F]">
-                        <div>
-                            <h1 className="text-4xl font-ghibli-title text-[#3A332F] uppercase">Panel de Control</h1>
-                            <p className="text-[#8C8279] font-bold">Gestiona los tesoros del Tanuki Den</p>
-                        </div>
-                        <button onClick={() => setIsCreating(true)} className="bg-[#C14B3A] text-white px-8 py-4 rounded-full font-bold flex items-center gap-2 hover:bg-[#3A332F] transition-all"><Plus /> Nuevo Tesoro</button>
+            <div className="bg-black/10 p-4 rounded-lg text-[10px] font-mono text-left space-y-1 w-full max-w-sm mx-auto">
+                <p><strong>Diagnosis:</strong></p>
+                <p>Target: {supabaseUrl}</p>
+                <p>Auth State: {Boolean(supabase.auth.getSession()).toString()}</p>
+                <p>Timestamp: {new Date().toLocaleTimeString()}</p>
+            </div>
+
+            <div className="flex flex-col gap-3 mt-4">
+                <button onClick={fetchProducts} className="bg-[#3A332F] text-white px-8 py-3 rounded-full font-bold hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-2">
+                    <Loader2 size={16} /> Reintentar
+                </button>
+                <button onClick={testConnection} className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                    📡 Probar Conexión (Ping)
+                </button>
+                <button onClick={() => { supabase.auth.signOut(); window.location.href = '/'; }} className="text-[#3A332F] underline text-sm hover:text-[#C14B3A]">
+                    Cerrar Sesión y Volver al Inicio
+                </button>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="min-h-screen bg-[#FDF5E6] p-8 md:p-12 font-sans">
+            <div className="max-w-6xl mx-auto space-y-8">
+                <div className="flex justify-between items-center bg-white p-8 rounded-[40px] shadow-xl border-4 border-[#3A332F]">
+                    <div>
+                        <h1 className="text-4xl font-ghibli-title text-[#3A332F] uppercase">Panel de Control</h1>
+                        <p className="text-[#8C8279] font-bold">Gestiona los tesoros del Tanuki Den</p>
                     </div>
+                    <button onClick={() => setIsCreating(true)} className="bg-[#C14B3A] text-white px-8 py-4 rounded-full font-bold flex items-center gap-2 hover:bg-[#3A332F] transition-all"><Plus /> Nuevo Tesoro</button>
+                </div>
 
-                    {isCreating && (
-                        <div className="bg-white p-8 rounded-[40px] shadow-xl border-4 border-[#C14B3A] animate-slide-in">
-                            <h2 className="text-xl font-bold mb-4">Crear Nuevo Producto</h2>
-                            <ProductForm product={newProduct} onSave={handleSave} onCancel={() => setIsCreating(false)} />
-                        </div>
-                    )}
+                {isCreating && (
+                    <div className="bg-white p-8 rounded-[40px] shadow-xl border-4 border-[#C14B3A] animate-slide-in">
+                        <h2 className="text-xl font-bold mb-4">Crear Nuevo Producto</h2>
+                        <ProductForm product={newProduct} onSave={handleSave} onCancel={() => setIsCreating(false)} />
+                    </div>
+                )}
 
-                    {products.length === 0 ? (
-                        <div className="bg-white p-12 rounded-[40px] shadow-xl border-4 border-[#3A332F] text-center opacity-80 mt-8">
-                            <ImageIcon className="mx-auto mb-4 text-[#C14B3A]" size={64} />
-                            <h3 className="text-2xl font-ghibli-title text-[#3A332F] mb-2">No hay tesoros visibles</h3>
-                            <p className="text-[#8C8279] font-bold">Si acabas de arreglar la base de datos, es posible que esté vacía.</p>
-                            <p className="text-[#8C8279]">¡Prueba el botón "Nuevo Tesoro"!</p>
-                            <p className="mt-4 text-xs font-mono text-gray-400">Debug: Products Array Length = 0</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                            {products.map(product => (
-                                <div key={product.id} className="bg-white p-6 rounded-[30px] shadow-md border-2 border-[#FDF5E6] flex flex-col md:flex-row gap-6 items-center">
-                                    <img src={product.image} className="w-24 h-24 rounded-2xl object-cover bg-gray-100" />
+                {products.length === 0 ? (
+                    <div className="bg-white p-12 rounded-[40px] shadow-xl border-4 border-[#3A332F] text-center opacity-80 mt-8">
+                        <ImageIcon className="mx-auto mb-4 text-[#C14B3A]" size={64} />
+                        <h3 className="text-2xl font-ghibli-title text-[#3A332F] mb-2">No hay tesoros visibles</h3>
+                        <p className="text-[#8C8279] font-bold">Si acabas de arreglar la base de datos, es posible que esté vacía.</p>
+                        <p className="text-[#8C8279]">¡Prueba el botón "Nuevo Tesoro"!</p>
+                        <p className="mt-4 text-xs font-mono text-gray-400">Debug: Products Array Length = 0</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                        {products.map(product => (
+                            <div key={product.id} className="bg-white p-6 rounded-[30px] shadow-md border-2 border-[#FDF5E6] flex flex-col md:flex-row gap-6 items-center">
+                                <img src={product.image} className="w-24 h-24 rounded-2xl object-cover bg-gray-100" />
 
-                                    {editingId === product.id ? (
-                                        <div className="flex-grow w-full">
-                                            <ProductForm product={product} onSave={handleSave} onCancel={() => setEditingId(null)} />
+                                {editingId === product.id ? (
+                                    <div className="flex-grow w-full">
+                                        <ProductForm product={product} onSave={handleSave} onCancel={() => setEditingId(null)} />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex-grow text-center md:text-left">
+                                            <h3 className="font-bold text-xl text-[#3A332F]">{product.name}</h3>
+                                            <p className="text-[#8C8279] text-sm line-clamp-1">{product.description}</p>
+                                            <div className="flex gap-4 mt-2 justify-center md:justify-start">
+                                                <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(product.price)}</span>
+                                                <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#3A332F]">{product.stock} Unidades</span>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <>
-                                            <div className="flex-grow text-center md:text-left">
-                                                <h3 className="font-bold text-xl text-[#3A332F]">{product.name}</h3>
-                                                <p className="text-[#8C8279] text-sm line-clamp-1">{product.description}</p>
-                                                <div className="flex gap-4 mt-2 justify-center md:justify-start">
-                                                    <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(product.price)}</span>
-                                                    <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#3A332F]">{product.stock} Unidades</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <button onClick={() => setEditingId(product.id)} className="p-3 hover:bg-[#FDF5E6] rounded-full text-[#3A332F] transition-colors"><Edit3 size={20} /></button>
-                                                <button onClick={() => handleDelete(product.id)} className="p-3 hover:bg-red-50 rounded-full text-red-500 transition-colors"><Trash2 size={20} /></button>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setEditingId(product.id)} className="p-3 hover:bg-[#FDF5E6] rounded-full text-[#3A332F] transition-colors"><Edit3 size={20} /></button>
+                                            <button onClick={() => handleDelete(product.id)} className="p-3 hover:bg-red-50 rounded-full text-red-500 transition-colors"><Trash2 size={20} /></button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
-        );
-    };
+        </div>
+    );
+};
 
-    const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>, onSave: (p: Partial<Product>) => void, onCancel: () => void }) => {
-        const [form, setForm] = useState(product);
+const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>, onSave: (p: Partial<Product>) => void, onCancel: () => void }) => {
+    const [form, setForm] = useState(product);
 
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                <input placeholder="Nombre" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
-                <input type="number" placeholder="Precio" value={form.price || ''} onChange={e => setForm({ ...form, price: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
-                <input placeholder="Categoría" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value as any })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
-                <input type="number" placeholder="Stock" value={form.stock || ''} onChange={e => setForm({ ...form, stock: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
-                <input placeholder="URL Imagen" value={form.image || ''} onChange={e => setForm({ ...form, image: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" />
-                <textarea placeholder="Descripción" value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" rows={3} />
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <input placeholder="Nombre" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
+            <input type="number" placeholder="Precio" value={form.price || ''} onChange={e => setForm({ ...form, price: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
+            <input placeholder="Categoría" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value as any })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
+            <input type="number" placeholder="Stock" value={form.stock || ''} onChange={e => setForm({ ...form, stock: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
+            <input placeholder="URL Imagen" value={form.image || ''} onChange={e => setForm({ ...form, image: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" />
+            <textarea placeholder="Descripción" value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" rows={3} />
 
-                <div className="flex gap-4 md:col-span-2 justify-end mt-4">
-                    <button onClick={onCancel} className="px-6 py-2 rounded-full border-2 border-[#3A332F]/10 font-bold hover:bg-gray-50">Cancelar</button>
-                    <button onClick={() => onSave(form)} className="px-6 py-2 rounded-full bg-[#3A332F] text-white font-bold hover:bg-[#C14B3A]">Guardar</button>
-                </div>
+            <div className="flex gap-4 md:col-span-2 justify-end mt-4">
+                <button onClick={onCancel} className="px-6 py-2 rounded-full border-2 border-[#3A332F]/10 font-bold hover:bg-gray-50">Cancelar</button>
+                <button onClick={() => onSave(form)} className="px-6 py-2 rounded-full bg-[#3A332F] text-white font-bold hover:bg-[#C14B3A]">Guardar</button>
             </div>
-        );
-    };
+        </div>
+    );
+};
