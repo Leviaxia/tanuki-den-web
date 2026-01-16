@@ -157,11 +157,25 @@ const App: React.FC = () => {
 
   // Manual Session Recovery (Bypass SDK Init)
   useEffect(() => {
-    const recoverSession = async () => {
       try {
-        const projectRef = import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0];
+                // ROBUST KEY GENERATION: Don't rely on URL splitting which can fail
+                // The key format is strictly: sb-<PROJECT_ID>-auth-token
+                // We will try the standard extraction, but also log it.
+
+                let projectRef = '';
+              const url = import.meta.env.VITE_SUPABASE_URL;
+              if (url) {
+             const matches = url.match(/https?:\/\/([^.]+)\./);
+              if (matches && matches[1]) projectRef = matches[1];
+        }
+
+              // Fallback for debugging if needed, but the regex should work for standard supabase URLs
+              if (!projectRef) console.warn("Could not extract Project Ref from URL:", url);
+
               const key = `sb-${projectRef}-auth-token`;
               const stored = localStorage.getItem(key);
+
+              console.log(`[DEBUG SESSION] Looking for key: ${key} -> Found: ${!!stored}`);
 
               if (stored) {
           const session = JSON.parse(stored);

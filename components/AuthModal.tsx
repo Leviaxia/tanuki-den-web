@@ -137,8 +137,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
 
       // 2. Manual Session Storage (Critical for app persistence)
       if (data.access_token) {
-        const projectRef = supabaseUrl.split('//')[1].split('.')[0];
+        let projectRef = '';
+        if (supabaseUrl) {
+          const matches = supabaseUrl.match(/https?:\/\/([^.]+)\./);
+          if (matches && matches[1]) projectRef = matches[1];
+        }
         const key = `sb-${projectRef}-auth-token`;
+        console.log("[AUTH] Saving session to:", key);
 
         const sessionObj = {
           access_token: data.access_token,
