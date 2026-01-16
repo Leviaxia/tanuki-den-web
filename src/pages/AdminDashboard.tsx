@@ -252,14 +252,11 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
             const fileName = `${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
-            // Timeout wrapper for upload
-            const uploadPromise = supabase.storage.from('products').upload(filePath, file);
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado (15s). Posiblemente falten permisos de "Storage".')), 15000));
+            // 1. Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage.from('products').upload(filePath, file);
 
-            const result: any = await Promise.race([uploadPromise, timeoutPromise]);
-
-            if (result.error) {
-                throw result.error;
+            if (uploadError) {
+                throw uploadError;
             }
 
             // 2. Get Public URL
