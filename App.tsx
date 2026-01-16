@@ -30,7 +30,14 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-console.log("TANUKI APP VERSION: 2.2 - LOGIN DEBUG (BUILD " + new Date().toISOString() + ")");
+console.log("TANUKI APP VERSION: 2.3 - FIXED OVERLAY (BUILD " + new Date().toISOString() + ")");
+
+// DEBUG OVERLAY
+const debugOverlay = (
+  <div style={{ position: 'fixed', bottom: '10px', right: '10px', backgroundColor: 'red', color: 'white', padding: '5px', zIndex: 9999, fontSize: '12px', fontWeight: 'bold' }}>
+    VER: 2.3 (Si ves esto, es la nueva)
+  </div>
+);
 
 // DEBUG CHECK ENV VARS
 if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
