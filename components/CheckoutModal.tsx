@@ -123,7 +123,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                     </div>
                                     <div className="flex justify-between items-center pt-6 border-t-2 border-[#FDF5E6]">
                                         <span className="font-ghibli-title text-xl">Total</span>
-                                        <span className="font-ghibli-title text-3xl text-[#C14B3A]">{formatCurrency(total)}</span>
+                                        <span className="font-ghibli-title text-3xl text-[#C14B3A]">
+                                            <span className="text-[#C14B3A]">$</span>{formatCurrency(total)}
+                                        </span>
                                     </div>
                                     <button onClick={() => setStep('shipping')} className="w-full bg-[#3A332F] text-white font-ghibli-title py-5 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-4">IR A ENVÍO <ArrowRight size={20} /></button>
                                 </div>

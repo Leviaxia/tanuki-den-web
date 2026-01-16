@@ -89,7 +89,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onViewD
 
         <div className="flex items-center justify-between pt-4 border-t-2 border-[#FDF5E6] mt-auto">
           <span className="text-xl font-ghibli-title text-[#3A332F]">
-            {formatCurrency(product.price)}
+            <span className="text-[#C14B3A] mr-1">$</span>{formatCurrency(product.price)}
           </span>
           <button
             onClick={(e) => {
