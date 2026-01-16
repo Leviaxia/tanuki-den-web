@@ -257,16 +257,47 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
 
             console.log("Iniciando subida RAW para:", fileName);
 
-            // 1. Obtener Token de Sesión (Necesario para RLS)
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) throw new Error("No hay sesión activa. Recarga la página.");
+            // 1. Obtener Token de Sesión (Manual para evitar errores del SDK)
+            let token = '';
+            try {
+                // Intento 1: SDK
+                const { data } = await supabase.auth.getSession();
+                token = data.session?.access_token || '';
+            } catch (err) {
+                console.warn("SDK getSession falló, intentando localStorage manual...");
+            }
+
+            // Intento 2: LocalStorage Manual
+            if (!token) {
+                console.log("Buscando token en LocalStorage...");
+                // El key suele ser: sb-<projectRef>-auth-token
+                // Extraemos projectRef de: https://<projectRef>.supabase.co
+                try {
+                    const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+                    const key = `sb-${projectRef}-auth-token`;
+                    const stored = localStorage.getItem(key);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        token = parsed.access_token;
+                    }
+                } catch (e) {
+                    console.error("Error parseando token manual", e);
+                }
+            }
+
+            if (!token) {
+                // Último recurso: Pedir al usuario que reloguee
+                alert("Tu sesión parece haber expirado o no se puede leer. Por favor sal y vuelve a entrar.");
+                setUploading(false);
+                return;
+            }
 
             // 2. Construir URL y Headers
             // Endpoint: POST /storage/v1/object/{bucket}/{path}
             const uploadUrl = `${supabaseUrl}/storage/v1/object/products/${fileName}`;
 
             const headers: HeadersInit = {
-                'Authorization': `Bearer ${session.access_token}`,
+                'Authorization': `Bearer ${token}`,
                 'apikey': supabaseAnonKey || '',
                 // 'x-upsert': 'true' // Opcional
             };
