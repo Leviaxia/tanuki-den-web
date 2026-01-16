@@ -12,6 +12,7 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplete }) => {
   const [step, setStep] = useState<'login' | 'register' | 'success'>('login');
   const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<{ name: string; email: string; isAutoLogin: boolean } | null>(null);
 
@@ -97,13 +98,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setStatusMsg('Conectando con el Clan...');
+
+    // Feedback Timer
+    const msgInterval = setInterval(() => {
+      setStatusMsg(prev => {
+        if (prev === 'Conectando con el Clan...') return 'Contactando a los espíritus (Supabase)...';
+        if (prev === 'Contactando a los espíritus (Supabase)...') return 'La conexión está lenta, ten paciencia...';
+        if (prev === 'La conexión está lenta, ten paciencia...') return 'Todavía intentando entrar... no cierres.';
+        return prev;
+      });
+    }, 4000);
 
     try {
-      // Timeout safety
+      // Check Env Vars
+      if (!supabase.supabaseUrl) throw new Error("Falta VITE_SUPABASE_URL en Vercel");
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      clearInterval(msgInterval);
 
       if (error) {
         throw error;
@@ -286,7 +302,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
               </div>
             </div>
             <button disabled={loading} type="submit" className="w-full bg-[#C14B3A] text-white font-ghibli-title py-5 rounded-full text-base shadow-xl hover:bg-[#3A332F] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">
-              {loading ? <Loader2 className="animate-spin" /> : <>ENTRAR AL DEN <ArrowRight size={20} /></>}
+              {loading ? (
+                <div className="flex flex-col items-center">
+                  <Loader2 className="animate-spin mb-1" />
+                  <span className="text-[10px] font-mono">{statusMsg}</span>
+                </div>
+              ) : <>ENTRAR AL DEN <ArrowRight size={20} /></>}
             </button>
             <p className="text-center text-xs font-bold text-[#8C8279] mt-4">
               ¿Aún no tienes clan? <button type="button" onClick={() => setStep('register')} className="text-[#C14B3A] hover:underline uppercase tracking-wide">Iníciate aquí</button>
