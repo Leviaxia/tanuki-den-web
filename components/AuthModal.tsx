@@ -100,13 +100,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
 
     try {
       // Timeout safety
-      const loginPromise = supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado (60s). Si es la primera vez, Supabase puede estar "despertando". Intenta de nuevo.')), 60000));
-
-      const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
 
       if (error) {
         throw error;
@@ -165,21 +162,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
 
       console.log('1. Starting registration with metadata:', metadata);
 
-      // 10 second timeout safety
-      const signUpPromise = supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: metadata
         }
       });
-
-      // 30 second timeout safety (Supabase sometimes takes time)
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Tardó demasiado')), 30000)
-      );
-
-      const { data, error: signUpError } = await Promise.race([signUpPromise, timeoutPromise]) as any;
 
       if (signUpError) {
         console.error('Sign up error:', signUpError);
