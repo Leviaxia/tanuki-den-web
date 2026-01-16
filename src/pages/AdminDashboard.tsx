@@ -11,23 +11,34 @@ export const AdminDashboard = () => {
     const [newProduct, setNewProduct] = useState<Partial<Product>>({});
     const [isCreating, setIsCreating] = useState(false);
 
+    const [error, setError] = useState<string | null>(null);
+
     useEffect(() => {
         fetchProducts();
     }, []);
 
     const fetchProducts = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('products')
-            .select('*')
-            .order('created_at', { ascending: false });
+        setError(null);
+        try {
+            // Timeout safety (10s)
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado al cargar productos. Verifica tu conexión.')), 10000));
 
-        if (error) {
-            console.error('Error fetching products:', error);
-        } else {
+            const fetchPromise = supabase
+                .from('products')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const { data, error: dbError } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+
+            if (dbError) throw dbError;
             setProducts(data || []);
+        } catch (err: any) {
+            console.error('Error fetching products:', err);
+            setError(err.message || 'Error desconocido');
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const handleSave = async (product: Partial<Product>) => {
@@ -82,7 +93,20 @@ export const AdminDashboard = () => {
         else fetchProducts();
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FDF5E6]"><Loader2 className="animate-spin text-[#C14B3A]" size={48} /></div>;
+
+    if (error) return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#FDF5E6] space-y-4 text-center p-8">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="text-red-500" size={32} />
+            </div>
+            <h2 className="text-2xl font-ghibli-title text-[#3A332F]">Algo salió mal</h2>
+            <p className="text-red-600 font-bold max-w-md">{error}</p>
+            <button onClick={fetchProducts} className="bg-[#3A332F] text-white px-8 py-3 rounded-full font-bold hover:bg-[#C14B3A] transition-all flex items-center gap-2">
+                <Loader2 size={16} /> Reintentar
+            </button>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-[#FDF5E6] p-8 md:p-12 font-sans">
