@@ -148,34 +148,44 @@ export const AdminDashboard = () => {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-4">
-                    {products.map(product => (
-                        <div key={product.id} className="bg-white p-6 rounded-[30px] shadow-md border-2 border-[#FDF5E6] flex flex-col md:flex-row gap-6 items-center">
-                            <img src={product.image} className="w-24 h-24 rounded-2xl object-cover bg-gray-100" />
+                {products.length === 0 ? (
+                    <div className="bg-white p-12 rounded-[40px] shadow-xl border-4 border-[#3A332F] text-center opacity-80 mt-8">
+                        <ImageIcon className="mx-auto mb-4 text-[#C14B3A]" size={64} />
+                        <h3 className="text-2xl font-ghibli-title text-[#3A332F] mb-2">No hay tesoros visibles</h3>
+                        <p className="text-[#8C8279] font-bold">Si acabas de arreglar la base de datos, es posible que esté vacía.</p>
+                        <p className="text-[#8C8279]">¡Prueba el botón "Nuevo Tesoro"!</p>
+                        <p className="mt-4 text-xs font-mono text-gray-400">Debug: Products Array Length = 0</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                        {products.map(product => (
+                            <div key={product.id} className="bg-white p-6 rounded-[30px] shadow-md border-2 border-[#FDF5E6] flex flex-col md:flex-row gap-6 items-center">
+                                <img src={product.image} className="w-24 h-24 rounded-2xl object-cover bg-gray-100" />
 
-                            {editingId === product.id ? (
-                                <div className="flex-grow w-full">
-                                    <ProductForm product={product} onSave={handleSave} onCancel={() => setEditingId(null)} />
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="flex-grow text-center md:text-left">
-                                        <h3 className="font-bold text-xl text-[#3A332F]">{product.name}</h3>
-                                        <p className="text-[#8C8279] text-sm line-clamp-1">{product.description}</p>
-                                        <div className="flex gap-4 mt-2 justify-center md:justify-start">
-                                            <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(product.price)}</span>
-                                            <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#3A332F]">{product.stock} Unidades</span>
+                                {editingId === product.id ? (
+                                    <div className="flex-grow w-full">
+                                        <ProductForm product={product} onSave={handleSave} onCancel={() => setEditingId(null)} />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex-grow text-center md:text-left">
+                                            <h3 className="font-bold text-xl text-[#3A332F]">{product.name}</h3>
+                                            <p className="text-[#8C8279] text-sm line-clamp-1">{product.description}</p>
+                                            <div className="flex gap-4 mt-2 justify-center md:justify-start">
+                                                <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(product.price)}</span>
+                                                <span className="bg-[#FDF5E6] px-3 py-1 rounded-full text-xs font-bold text-[#3A332F]">{product.stock} Unidades</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => setEditingId(product.id)} className="p-3 hover:bg-[#FDF5E6] rounded-full text-[#3A332F] transition-colors"><Edit3 size={20} /></button>
-                                        <button onClick={() => handleDelete(product.id)} className="p-3 hover:bg-red-50 rounded-full text-red-500 transition-colors"><Trash2 size={20} /></button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setEditingId(product.id)} className="p-3 hover:bg-[#FDF5E6] rounded-full text-[#3A332F] transition-colors"><Edit3 size={20} /></button>
+                                            <button onClick={() => handleDelete(product.id)} className="p-3 hover:bg-red-50 rounded-full text-red-500 transition-colors"><Trash2 size={20} /></button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -188,7 +198,7 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             <input placeholder="Nombre" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
             <input type="number" placeholder="Precio" value={form.price || ''} onChange={e => setForm({ ...form, price: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
-            <input placeholder="Categoría" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
+            <input placeholder="Categoría" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value as any })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
             <input type="number" placeholder="Stock" value={form.stock || ''} onChange={e => setForm({ ...form, stock: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
             <input placeholder="URL Imagen" value={form.image || ''} onChange={e => setForm({ ...form, image: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" />
             <textarea placeholder="Descripción" value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" rows={3} />
