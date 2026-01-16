@@ -238,6 +238,38 @@ export const AdminDashboard = () => {
 
 const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>, onSave: (p: Partial<Product>) => void, onCancel: () => void }) => {
     const [form, setForm] = useState(product);
+    const [uploading, setUploading] = useState(false);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        try {
+            setUploading(true);
+            if (!e.target.files || e.target.files.length === 0) {
+                return;
+            }
+
+            const file = e.target.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // 1. Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage.from('products').upload(filePath, file);
+
+            if (uploadError) {
+                throw uploadError;
+            }
+
+            // 2. Get Public URL
+            const { data } = supabase.storage.from('products').getPublicUrl(filePath);
+
+            setForm({ ...form, image: data.publicUrl });
+        } catch (error: any) {
+            console.error(error);
+            alert('Error subiendo imagen: ' + error.message + '\n\nNota: Asegúrate de haber creado el "Bucket" de almacenamiento llamado "products" en Supabase y que sea público.');
+        } finally {
+            setUploading(false);
+        }
+    };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
@@ -245,7 +277,32 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
             <input type="number" placeholder="Precio" value={form.price || ''} onChange={e => setForm({ ...form, price: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
             <input placeholder="Categoría" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value as any })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
             <input type="number" placeholder="Stock" value={form.stock || ''} onChange={e => setForm({ ...form, stock: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
-            <input placeholder="URL Imagen" value={form.image || ''} onChange={e => setForm({ ...form, image: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" />
+
+            <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-[#3A332F] mb-1 ml-2">Imagen del Tesoro</label>
+                <div className="flex gap-2">
+                    <input
+                        placeholder="URL de la imagen (o sube una 📸)"
+                        value={form.image || ''}
+                        onChange={e => setForm({ ...form, image: e.target.value })}
+                        className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold flex-grow"
+                    />
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            disabled={uploading}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className={`bg-[#3A332F] text-white px-4 py-3 rounded-xl font-bold hover:bg-[#C14B3A] transition-colors flex items-center justify-center ${uploading ? 'opacity-50' : ''}`}>
+                            {uploading ? <Loader2 className="animate-spin" size={24} /> : <div className="flex items-center gap-2"><ImageIcon size={20} /> <span className="hidden md:inline">Subir</span></div>}
+                        </div>
+                    </div>
+                </div>
+                {form.image && <img src={form.image} className="w-20 h-20 rounded-lg mt-2 object-cover border-2 border-[#3A332F]/10" alt="Preview" />}
+            </div>
+
             <textarea placeholder="Descripción" value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" rows={3} />
 
             <div className="flex gap-4 md:col-span-2 justify-end mt-4">
