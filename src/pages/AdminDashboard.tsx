@@ -27,17 +27,38 @@ export const AdminDashboard = () => {
         setLoading(true);
         setError(null);
         try {
-            // Timeout safety (25s) - Increased for cold starts
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado (25s). Verifica tu conexión o intenta Recargar la página.')), 25000));
+            console.log("Attempting RAW FETCH to bypass SDK...");
 
-            const fetchPromise = supabase
-                .from('products')
-                .select('*')
-                .order('created_at', { ascending: false });
+            // 1. Get Session Token
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
 
-            const { data, error: dbError } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+            // 2. Prepare Headers
+            const headers: HeadersInit = {
+                'apikey': supabaseAnonKey || '',
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            };
 
-            if (dbError) throw dbError;
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            // 3. Raw Fetch Request
+            const response = await fetch(`${supabaseUrl}/rest/v1/products?select=*&order=created_at.desc`, {
+                method: 'GET',
+                headers: headers
+            });
+
+            // 4. Handle HTTP Errors Explicitly
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error del Servidor (${response.status}): ${errorText}`);
+            }
+
+            const data = await response.json();
+            console.log("Raw Fetch Success:", data);
+
             setProducts(data || []);
         } catch (err: any) {
             console.error('Error fetching products:', err);
@@ -123,7 +144,8 @@ export const AdminDashboard = () => {
             <p className="text-red-600 font-bold max-w-md">{error}</p>
 
             <div className="bg-black/10 p-4 rounded-lg text-[10px] font-mono text-left space-y-1 w-full max-w-sm mx-auto">
-                <p><strong>Diagnosis:</strong></p>
+                <p><strong>Diagnosis (V3.2):</strong></p>
+                <p>Mode: RAW FETCH (Bypassing SDK)</p>
                 <p>Target: {supabaseUrl}</p>
                 <p>Auth State: {Boolean(supabase.auth.getSession()).toString()}</p>
                 <p>Timestamp: {new Date().toLocaleTimeString()}</p>
