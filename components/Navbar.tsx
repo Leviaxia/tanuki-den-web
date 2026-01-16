@@ -78,6 +78,15 @@ const Navbar: React.FC<NavbarProps> = ({
                   )}
                 </button>
               ))}
+              {user.email === 'kaieke37@gmail.com' && (
+                <button
+                  onClick={() => window.location.href = '/admin'}
+                  className="w-10 h-10 bg-[#3A332F] rounded-full flex items-center justify-center text-[#D4AF37] hover:bg-[#C14B3A] hover:text-white transition-all shadow-lg animate-pulse"
+                  title="Panel de Administración"
+                >
+                  <Crown size={20} />
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">

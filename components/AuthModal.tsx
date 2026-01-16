@@ -98,25 +98,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
     setLoading(true);
     setError(null);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      // Timeout safety
+      const loginPromise = supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado. Revisa tu conexión o las variables env.')), 15000));
 
-    if (error) {
-      setError(error.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : error.message);
-      setLoading(false);
-    } else {
-      // Fetch profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
 
-      onComplete({ ...data.user, ...profile, id: data.user.id, name: profile?.full_name || data.user.email });
+      if (error) {
+        throw error;
+      }
+
+      if (data?.user) {
+        // Fetch profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        onComplete({ ...data.user, ...profile, id: data.user.id, name: profile?.full_name || data.user.email });
+        onClose(); // Close FIRST
+      }
+    } catch (err: any) {
+      console.error("Login Error:", err);
+      setError(err.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : (err.message || 'Error desconocido al iniciar sesión'));
+    } finally {
       setLoading(false);
-      onClose();
     }
   };
 
