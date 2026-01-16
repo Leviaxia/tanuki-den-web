@@ -24,9 +24,8 @@ export const AdminDashboard = () => {
         try {
             console.log("Attempting RAW FETCH to bypass SDK...");
 
-            // 1. Get Session Token
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
+            // 1. Get Session Token (Use Helper)
+            const token = getAuthToken();
 
             // 2. Prepare Headers
             const headers: HeadersInit = {
@@ -39,10 +38,11 @@ export const AdminDashboard = () => {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            // 3. Raw Fetch Request
+            // 3. Raw Fetch Request (No Cache)
             const response = await fetch(`${supabaseUrl}/rest/v1/products?select=*&order=created_at.desc`, {
                 method: 'GET',
-                headers: headers
+                headers: headers,
+                cache: 'no-store'
             });
 
             // 4. Handle HTTP Errors Explicitly
@@ -66,8 +66,8 @@ export const AdminDashboard = () => {
     const getAuthToken = () => {
         try {
             // 1. Try SDK Session first (cleanest)
-            // const { data } = supabase.auth.getSession(); // Sync check impossible here, SDK is async. 
-            // We rely on localStorage backup strategy used in upload.
+            // But we can't await here easily, and SDK might hang. 
+            // Better to rely on localStorage which is synchronous and reliable if user is logged in.
 
             const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
             const key = `sb-${projectRef}-auth-token`;
@@ -138,6 +138,8 @@ export const AdminDashboard = () => {
                 setIsCreating(false);
                 setNewProduct({});
             }
+
+            // Wait a bit before fetching to let DB propagate? Usually not needed for single writer.
             fetchProducts();
 
         } catch (err: any) {
@@ -207,10 +209,9 @@ export const AdminDashboard = () => {
             <p className="text-red-600 font-bold max-w-md">{error}</p>
 
             <div className="bg-black/10 p-4 rounded-lg text-[10px] font-mono text-left space-y-1 w-full max-w-sm mx-auto">
-                <p><strong>Diagnosis (V3.3):</strong></p>
-                <p>Mode: RAW FETCH (Manual Control)</p>
+                <p><strong>Diagnosis (V5.1):</strong></p>
+                <p>Mode: FULL RAW FETCH</p>
                 <p>Target: {supabaseUrl}</p>
-                <p>Auth State: {Boolean(supabase.auth.getSession()).toString()}</p>
                 <p>Timestamp: {new Date().toLocaleTimeString()}</p>
             </div>
 
@@ -315,65 +316,49 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
             const file = e.target.files[0];
             const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
+            const uploadUrl = `${supabaseUrl}/storage/v1/object/products/${fileName}`;
 
             console.log("Iniciando subida RAW para:", fileName);
 
             // 1. Obtener Token de Sesión (Manual para evitar errores del SDK)
             let token = '';
+
+            // INTENTO 1: SDK con Timeout agresivo (2s)
             try {
-                // Intento 1: SDK
-                const { data } = await supabase.auth.getSession();
-                token = data.session?.access_token || '';
+                const sdkPromise = supabase.auth.getSession();
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject('SDK Timeout'), 2000));
+
+                const { data }: any = await Promise.race([sdkPromise, timeoutPromise]);
+                token = data?.session?.access_token || '';
             } catch (err) {
-                console.warn("SDK getSession falló, intentando localStorage manual...");
+                console.warn("SDK getSession falló o tardó demasiado, usando localStorage...");
             }
 
-            // Intento 2: LocalStorage Manual
+            // INTENTO 2: LocalStorage Manual
             if (!token) {
-                console.log("Buscando token en LocalStorage...");
-                // El key suele ser: sb-<projectRef>-auth-token
-                // Extraemos projectRef de: https://<projectRef>.supabase.co
-                try {
-                    const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
-                    const key = `sb-${projectRef}-auth-token`;
-                    const stored = localStorage.getItem(key);
-                    if (stored) {
-                        const parsed = JSON.parse(stored);
-                        token = parsed.access_token;
-                    }
-                } catch (e) {
-                    console.error("Error parseando token manual", e);
+                const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+                const key = `sb-${projectRef}-auth-token`;
+                const stored = localStorage.getItem(key);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    token = parsed.access_token;
                 }
             }
 
-            if (!token) {
-                // Último recurso: Pedir al usuario que reloguee
-                alert("Tu sesión parece haber expirado o no se puede leer. Por favor sal y vuelve a entrar.");
-                setUploading(false);
-                return;
-            }
+            if (!token) throw new Error("No hay sesión válida. Recarga la página.");
 
-            // 2. Construir URL y Headers
-            // Endpoint: POST /storage/v1/object/{bucket}/{path}
-            const uploadUrl = `${supabaseUrl}/storage/v1/object/products/${fileName}`;
 
             const headers: HeadersInit = {
                 'Authorization': `Bearer ${token}`,
                 'apikey': supabaseAnonKey || '',
-                // 'x-upsert': 'true' // Opcional
             };
 
             // 3. Raw Fetch (Sin SDK)
             const response = await fetch(uploadUrl, {
                 method: 'POST',
                 headers: headers,
-                body: file // El navegador pone el Content-Type correcto automáticamente para blobs/files? 
-                // A veces sí, a veces no. Para Supabase Storage, enviar el body directo suele funcionar mejor que FormData si el endpoint espera binary.
-                // El endpoint /object/ espera el body del archivo.
+                body: file
             });
-
-            console.log("Respuesta RAW:", response.status, response.statusText);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -381,12 +366,13 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
             }
 
             // 4. Construir URL Pública (Manual o vía SDK, el SDK es seguro para esto)
-            const { data } = supabase.storage.from('products').getPublicUrl(filePath);
+            // Re-derive path or just rely on convention
+            const publicUrl = `${supabaseUrl}/storage/v1/object/public/products/${fileName}`;
 
-            setForm({ ...form, image: data.publicUrl });
+            setForm({ ...form, image: publicUrl });
         } catch (error: any) {
             console.error('Raw Upload Error:', error);
-            alert(`Error subiendo imagen: ${error.message}\n\nSi es un error 403, revisa el script SQL.`);
+            alert(`Error subiendo imagen: ${error.message}`);
         } finally {
             setUploading(false);
         }
@@ -398,6 +384,7 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
             <input type="number" placeholder="Precio" value={form.price || ''} onChange={e => setForm({ ...form, price: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
             <input placeholder="Categoría" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value as any })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
             <input type="number" placeholder="Stock" value={form.stock || ''} onChange={e => setForm({ ...form, stock: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
+
 
             <div className="md:col-span-2">
                 <label className="block text-sm font-bold text-[#3A332F] mb-1 ml-2">Imagen del Tesoro</label>
