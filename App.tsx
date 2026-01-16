@@ -242,16 +242,25 @@ const App: React.FC = () => {
               realName: profile?.full_name || meta.full_name || (prev.id === session.user.id ? prev.realName : '')
         }));
       } else if (event === 'SIGNED_OUT') {
-                // Reset to guest
-                setUser({
-                  id: 'guest',
-                  name: 'Viajero',
-                  photo: '/assets/default_avatar.png',
-                  isRegistered: false,
-                  membership: undefined,
-                  location: '',
-                  birthDate: ''
-                });
+          // CHECK MANUAL TOKEN BEFORE RESETTING
+          const projectRef = import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0];
+              const key = `sb-${projectRef}-auth-token`;
+              const stored = localStorage.getItem(key);
+              if (stored) {
+                console.log("SDK sent SIGNED_OUT, but Manual Token exists. Ignoring reset to protect session.");
+              return;
+          }
+
+              // Reset to guest
+              setUser({
+                id: 'guest',
+              name: 'Viajero',
+              photo: '/assets/default_avatar.png',
+              isRegistered: false,
+              membership: undefined,
+              location: '',
+              birthDate: ''
+          });
               sessionStorage.removeItem('tanuki_user');
       }
     });
