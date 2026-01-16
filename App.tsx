@@ -37,8 +37,6 @@ const App: React.FC = () => {
   const isAdmin = location.pathname.includes('/admin');
 
   const [activeTab, setActiveTab] = useState('inicio');
-
-  const [activeTab, setActiveTab] = useState('inicio');
   const [selectedCollectionId, setSelectedCollectionId] = useState<number | null>(null);
   const [products, setProducts] = useState<Product[]>(() => {
     const savedReviews = localStorage.getItem('tanuki_all_reviews');
@@ -610,6 +608,12 @@ const App: React.FC = () => {
           <Shield size={64} className="text-[#C14B3A]" />
           <h1 className="text-4xl uppercase tracking-widest">Acceso Denegado</h1>
           <p className="font-bold text-center max-w-md opacity-80">Este santuario está protegido. Solo el guardián designado puede entrar.</p>
+          <div className="text-[10px] text-white/30 font-mono bg-black/20 p-4 rounded-lg">
+            DEBUG INFO:<br />
+            Email: {user.email || 'No email detected'}<br />
+            ID: {user.id}<br />
+            Auth Status: {user.isRegistered ? 'Registered' : 'Guest'}
+          </div>
           <button onClick={() => window.location.href = '/'} className="bg-[#FDF5E6] text-[#3A332F] py-3 px-8 rounded-full font-black uppercase text-xs tracking-widest hover:bg-[#C14B3A] hover:text-white transition-all">Volver al Bosque</button>
         </div>
       );
