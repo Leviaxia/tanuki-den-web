@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseUrl } from '../lib/supabase';
+// ... (imports remain the same, just ensuring the replacement context is correct)
+// Actually I will just replace the specific lines in the render method to be safe.
+
+// Wait, I need to update the import statement first.
+// I'll do two replaces: one for import, one for usage.
+
 import { Plus, Edit3, Trash2, Save, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Product } from '../../types';
 import { formatCurrency } from '../lib/utils';
@@ -102,6 +108,14 @@ export const AdminDashboard = () => {
             </div>
             <h2 className="text-2xl font-ghibli-title text-[#3A332F]">Algo salió mal</h2>
             <p className="text-red-600 font-bold max-w-md">{error}</p>
+
+            <div className="bg-black/10 p-4 rounded-lg text-[10px] font-mono text-left space-y-1 w-full max-w-sm mx-auto">
+                <p><strong>Diagnosis:</strong></p>
+                <p>Target: {supabaseUrl}</p>
+                <p>Auth State: {Boolean(supabase.auth.getSession()).toString()}</p>
+                <p>Timestamp: {new Date().toLocaleTimeString()}</p>
+            </div>
+
             <button onClick={fetchProducts} className="bg-[#3A332F] text-white px-8 py-3 rounded-full font-bold hover:bg-[#C14B3A] transition-all flex items-center gap-2">
                 <Loader2 size={16} /> Reintentar
             </button>
