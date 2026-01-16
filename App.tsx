@@ -1130,7 +1130,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 opacity-40">
-            <p className="text-[8px] font-bold uppercase tracking-[0.4em]">© 2024 TANUKI DEN COLOMBIA - ESPÍRITU DE COLECCIÓN</p>
+            <p className="text-[8px] font-bold uppercase tracking-[0.4em]">© 2024 TANUKI DEN COLOMBIA - ESPÍRITU DE COLECCIÓN (v2.0 COP)</p>
             <div className="flex gap-4"><Shield size={16} /><Truck size={16} /><CreditCard size={16} /></div>
           </div>
         </div>
