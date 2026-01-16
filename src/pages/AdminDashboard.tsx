@@ -252,11 +252,14 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
             const fileName = `${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
-            // 1. Upload to Supabase Storage
-            const { error: uploadError } = await supabase.storage.from('products').upload(filePath, file);
+            // Timeout wrapper for upload
+            const uploadPromise = supabase.storage.from('products').upload(filePath, file);
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado (15s). Posiblemente falten permisos de "Storage".')), 15000));
 
-            if (uploadError) {
-                throw uploadError;
+            const result: any = await Promise.race([uploadPromise, timeoutPromise]);
+
+            if (result.error) {
+                throw result.error;
             }
 
             // 2. Get Public URL
@@ -265,7 +268,7 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
             setForm({ ...form, image: data.publicUrl });
         } catch (error: any) {
             console.error(error);
-            alert('Error subiendo imagen: ' + error.message + '\n\nNota: Asegúrate de haber creado el "Bucket" de almacenamiento llamado "products" en Supabase y que sea público.');
+            alert(`Error subiendo imagen: ${error.message}\n\nSOLUCIÓN: Ejecuta el script "FIX_STORAGE_POLICY.sql" en Supabase para dar permisos de subida.`);
         } finally {
             setUploading(false);
         }
