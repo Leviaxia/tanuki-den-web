@@ -603,6 +603,17 @@ const App: React.FC = () => {
 
 
   if (isAdmin) {
+    // SECURITY: Only allow specific email
+    if (user.email !== 'kaieke37@gmail.com') {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[#3A332F] text-[#FDF5E6] font-ghibli-title space-y-6">
+          <Shield size={64} className="text-[#C14B3A]" />
+          <h1 className="text-4xl uppercase tracking-widest">Acceso Denegado</h1>
+          <p className="font-bold text-center max-w-md opacity-80">Este santuario está protegido. Solo el guardián designado puede entrar.</p>
+          <button onClick={() => window.location.href = '/'} className="bg-[#FDF5E6] text-[#3A332F] py-3 px-8 rounded-full font-black uppercase text-xs tracking-widest hover:bg-[#C14B3A] hover:text-white transition-all">Volver al Bosque</button>
+        </div>
+      );
+    }
     return (
       <Routes>
         <Route path="/admin" element={<AdminDashboard />} />
