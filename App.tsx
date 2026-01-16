@@ -32,7 +32,11 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 const App: React.FC = () => {
   const location = useLocation();
+
   const isCheckout = location.pathname.includes('/checkout');
+  const isAdmin = location.pathname.includes('/admin');
+
+  const [activeTab, setActiveTab] = useState('inicio');
 
   const [activeTab, setActiveTab] = useState('inicio');
   const [selectedCollectionId, setSelectedCollectionId] = useState<number | null>(null);
@@ -597,6 +601,14 @@ const App: React.FC = () => {
     setIsSubscriptionModalOpen(true);
   };
 
+
+  if (isAdmin) {
+    return (
+      <Routes>
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
+    );
+  }
 
   if (isCheckout) {
     return (
