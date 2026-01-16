@@ -31,7 +31,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 const App: React.FC = () => {
-  console.log("TANUKI APP VERSION: 2.4 - SYNTAX FIXED (BUILD " + new Date().toISOString() + ")");
+  console.log("TANUKI APP VERSION: 2.5 - STABILITY UPDATE (BUILD " + new Date().toISOString() + ")");
 
   // DEBUG OVERLAY
   const debugOverlay = (
@@ -222,24 +222,36 @@ const App: React.FC = () => {
   // Fetch Products from Supabase
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        console.log("Fetching public catalog via RAW FETCH...");
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/products?select=*&order=created_at.desc`, {
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          cache: 'no-store'
+        });
 
-      if (!error && data && data.length > 0) {
-        // Merge with local reviews if needed, or just set
-        const savedReviews = localStorage.getItem('tanuki_all_reviews');
-        const reviewsMap = savedReviews ? JSON.parse(savedReviews) : {};
+        if (!response.ok) throw new Error('Catalog fetch failed');
 
-        setProducts(data.map(p => ({
-          ...p,
-          reviews: reviewsMap[p.id] || [],
-          // Ensure compatibility with Product type if DB has missing fields
-          category: p.category || 'General',
-          rating: p.rating || 5.0,
-          collectionId: p.collectionId || null
-        })));
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+          // Merge with local reviews if needed, or just set
+          const savedReviews = localStorage.getItem('tanuki_all_reviews');
+          const reviewsMap = savedReviews ? JSON.parse(savedReviews) : {};
+
+          setProducts(data.map((p: any) => ({
+            ...p,
+            reviews: reviewsMap[p.id] || [],
+            // Ensure compatibility with Product type if DB has missing fields
+            category: p.category || 'General',
+            rating: p.rating || 5.0,
+            collectionId: p.collectionId || null
+          })));
+        }
+      } catch (err) {
+        console.error("Error loading catalog:", err);
       }
     };
     fetchProducts();
