@@ -768,7 +768,7 @@ const App: React.FC = () => {
       <main className="flex-grow relative z-10">{renderContent()}</main>
 
       {isChatOpen && (
-        <div className="fixed bottom-24 md:bottom-40 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-96 h-[500px] max-h-[calc(100vh-8rem)] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
+        <div className="fixed bottom-24 md:bottom-40 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-96 h-[380px] md:h-[500px] max-h-[60vh] md:max-h-[calc(100vh-8rem)] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
           <div className="bg-[#3A332F] p-6 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#C14B3A] rounded-full flex items-center justify-center border-2 border-white"><Sparkles size={18} /></div>
@@ -1049,17 +1049,17 @@ const App: React.FC = () => {
       )}
 
       {isRouletteOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-start md:items-center justify-center p-4 pt-24 md:p-6 overflow-y-auto backdrop-blur-md">
-          <div className="bg-[#FDF5E6] w-full max-w-2xl rounded-[60px] p-8 md:p-14 relative animate-pop text-center space-y-10 border-8 border-[#3A332F] shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-            <button onClick={() => setIsRouletteOpen(false)} className="absolute top-8 right-8 hover:rotate-90 transition-transform bg-white/80 p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X size={32} /></button>
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-ghibli-title text-[#3A332F] uppercase leading-tight">Sorteo del <span className="text-[#C14B3A]">Bosque</span></h2>
-              <p className="text-[#8C8279] font-black uppercase tracking-[0.2em] text-[10px] md:text-xs">Invocando la sabiduría del Gremio Tanuki</p>
+        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-center justify-center p-4 backdrop-blur-md">
+          <div className="bg-[#FDF5E6] w-full max-w-sm md:max-w-2xl rounded-[40px] md:rounded-[60px] p-6 md:p-14 relative animate-pop text-center space-y-4 md:space-y-10 border-4 md:border-8 border-[#3A332F] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setIsRouletteOpen(false)} className="absolute top-4 right-4 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-1.5 md:p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X size={24} className="md:w-8 md:h-8" /></button>
+            <div className="space-y-2 md:space-y-4">
+              <h2 className="text-2xl md:text-5xl font-ghibli-title text-[#3A332F] uppercase leading-tight">Sorteo del <span className="text-[#C14B3A]">Bosque</span></h2>
+              <p className="text-[#8C8279] font-black uppercase tracking-[0.2em] text-[8px] md:text-xs">Invocando la sabiduría del Gremio Tanuki</p>
             </div>
-            <div className="relative mx-auto w-72 h-72 md:w-96 md:h-96 flex items-center justify-center">
-              <div className="absolute -inset-6 rounded-full border-4 border-[#D4AF37]/20 border-dotted animate-spin-slow"></div>
+            <div className="relative mx-auto w-56 h-56 md:w-96 md:h-96 flex items-center justify-center mb-4 md:mb-0">
+              <div className="absolute -inset-4 md:-inset-6 rounded-full border-4 border-[#D4AF37]/20 border-dotted animate-spin-slow"></div>
               <div className="absolute -inset-2 rounded-full border-2 border-[#3A332F]/10"></div>
-              <div className="absolute inset-0 rounded-full border-[20px] border-[#3A332F] shadow-[inset_0_0_30px_rgba(0,0,0,0.6),0_20px_40px_rgba(0,0,0,0.2)] z-10"></div>
+              <div className="absolute inset-0 rounded-full border-[12px] md:border-[20px] border-[#3A332F] shadow-[inset_0_0_30px_rgba(0,0,0,0.6),0_20px_40px_rgba(0,0,0,0.2)] z-10"></div>
 
               {/* The Wheel */}
               <div className="relative w-full h-full rounded-full overflow-hidden transition-transform duration-[4000ms] cubic-bezier(0.1, 0, 0.1, 1) bg-[#3A332F]" style={{ transform: `rotate(${rotation}deg)` }}>
