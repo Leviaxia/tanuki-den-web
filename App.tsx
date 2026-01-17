@@ -757,11 +757,10 @@ const App: React.FC = () => {
           <button
             key={item.id}
             onClick={() => handleNavClick(item.id)}
-            className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all relative ${activeTab === item.id ? 'text-[#D4AF37] -translate-y-4' : 'text-white/40 hover:text-white/80'}`}
+            className={`flex items-center justify-center w-14 h-14 rounded-full transition-all duration-300 relative ${activeTab === item.id ? 'text-[#3A332F] scale-110' : 'text-white/40 hover:text-white/80'}`}
           >
-            <div className={`absolute inset-0 bg-[#3A332F] rounded-full -z-10 transition-all duration-300 ${activeTab === item.id ? 'opacity-100 scale-100 shadow-lg border border-[#D4AF37]/30' : 'opacity-0 scale-50'}`}></div>
-            <item.icon size={activeTab === item.id ? 24 : 22} className="transition-all" />
-            <span className={`text-[9px] font-bold mt-1 uppercase tracking-widest transition-all ${activeTab === item.id ? 'opacity-100 translate-y-0 font-ghibli-title' : 'opacity-0 translate-y-2 hidden'}`}>{item.label}</span>
+            <div className={`absolute inset-0 bg-[#D4AF37] rounded-full -z-10 transition-all duration-300 ${activeTab === item.id ? 'opacity-100 scale-100 shadow-lg border-2 border-white' : 'opacity-0 scale-50'}`}></div>
+            <item.icon size={activeTab === item.id ? 26 : 24} className="transition-all relative z-10" />
           </button>
         ))}
       </div>

@@ -133,7 +133,7 @@ const Navbar: React.FC<NavbarProps> = ({
       </nav>
 
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[999] bg-white pt-24 px-6 lg:hidden animate-fade-in flex flex-col">
+        <div className="fixed inset-0 z-[9999] bg-white pt-24 px-6 lg:hidden animate-fade-in flex flex-col">
           <div className="flex flex-col gap-6">
             {navItems.map((item) => (
               <button
