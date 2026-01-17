@@ -212,7 +212,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                         <img
                                             src="/assets/nequi-qr.png"
                                             alt="Nequi QR"
-                                            className="w-[280px] h-auto mx-auto object-contain block"
+                                            className="w-[200px] h-auto mx-auto object-contain block p-2"
                                         />
                                     </div>
 
