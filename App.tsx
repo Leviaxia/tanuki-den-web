@@ -33,7 +33,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 const App: React.FC = () => {
-  console.log("TANUKI APP VERSION: 2.6 - DEBUG MODE (BUILD " + new Date().toISOString() + ")");
+  console.log("TANUKI APP VERSION: 2.8 - DEBUG TOP HEADER (BUILD " + new Date().toISOString() + ")");
 
 
 
@@ -733,9 +733,9 @@ const App: React.FC = () => {
         onOpenSubscription={handleSubscriptionClick}
       />
 
-      {/* DEBUG FOOTER */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black text-[#00FF00] font-mono text-xs p-2 z-[9999] opacity-90 border-t-2 border-[#00FF00] pointer-events-none">
-        🚧 DEBUG: {debugInfo}
+      {/* DEBUG HEADER - IMPOSSIBLE TO MISS */}
+      <div className="fixed top-0 left-0 right-0 bg-red-600 text-white font-mono text-xs p-2 z-[9999] opacity-100 border-b-2 border-white pointer-events-none font-bold text-center">
+        🚨 DEBUG NETWORK: {debugInfo} 🚨
       </div>
 
       {appliedDiscount > 0 && (

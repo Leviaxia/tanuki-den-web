@@ -179,105 +179,104 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
           window.location.reload();
         }, 500);
         return;
+
+        // 3. User & Profile Handling
+        const user = data.user;
+
+        // Fetch profile (Still try SDK, if fails, fallback to basic user data)
+        let profile = null;
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          profile = profileData;
+        } catch (e) {
+          console.warn("No se pudo cargar perfil extra con SDK, usando datos básicos", e);
+        }
+
+        onComplete({ ...user, ...profile, id: user.id, name: profile?.full_name || user.email });
+        onClose();
+      } else {
+        throw new Error("El servidor no devolvió un token válido.");
       }
 
-      // 3. User & Profile Handling
-      const user = data.user;
+    } catch (err: any) {
+      console.error("Login Error:", err);
+      setError(err.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : (err.message || 'Error desconocido al iniciar sesión'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Fetch profile (Still try SDK, if fails, fallback to basic user data)
-      let profile = null;
-      try {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        profile = profileData;
-      } catch (e) {
-        console.warn("No se pudo cargar perfil extra con SDK, usando datos básicos", e);
-      }
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-      onComplete({ ...user, ...profile, id: user.id, name: profile?.full_name || user.email });
-      onClose();
-    } else {
-      throw new Error("El servidor no devolvió un token válido.");
+    // Validaciones estrictas
+    if (!/^3\d{9}$/.test(phone)) {
+      setError("El número de celular debe ser colombiano (Empieza por 3 y tiene 10 dígitos).");
+      setLoading(false);
+      return;
     }
 
-  } catch (err: any) {
-    console.error("Login Error:", err);
-    setError(err.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : (err.message || 'Error desconocido al iniciar sesión'));
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleRegister = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError(null);
-
-  // Validaciones estrictas
-  if (!/^3\d{9}$/.test(phone)) {
-    setError("El número de celular debe ser colombiano (Empieza por 3 y tiene 10 dígitos).");
-    setLoading(false);
-    return;
-  }
-
-  const birthYear = parseInt(birthDate.split('-')[0]);
-  if (birthDate && (birthYear < 1900 || birthYear > 2100)) {
-    setError("Por favor ingresa un año de nacimiento válido (1900-2100).");
-    setLoading(false);
-    return;
-  }
-
-  try {
-    if (!supabaseUrl || !supabaseAnonKey) throw new Error("Falta configuración de Supabase (URL/Key)");
-    console.log("Iniciando Registro RAW...");
-
-    const fullLocation = `${city}, ${department}`;
-    const validBirthDate = birthDate ? birthDate : null;
-
-    // Metadata for user
-    const metadata = {
-      username: fullName,
-      full_name: fullName,
-      phone: phone || "",
-      location: fullLocation,
-      birth_date: validBirthDate,
-    };
-
-    // 1. Raw Signup Request
-    const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
-      method: 'POST',
-      headers: {
-        'apikey': supabaseAnonKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password,
-        data: metadata
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      // Translate common errors
-      const msg = errorData.msg || errorData.error_description || "Error al registrarse";
-      if (msg.includes('registered') || msg.includes('already exists')) {
-        throw new Error('Este correo ya está registrado. Intenta iniciar sesión.');
-      }
-      throw new Error(msg);
+    const birthYear = parseInt(birthDate.split('-')[0]);
+    if (birthDate && (birthYear < 1900 || birthYear > 2100)) {
+      setError("Por favor ingresa un año de nacimiento válido (1900-2100).");
+      setLoading(false);
+      return;
     }
 
-    const data = await response.json();
+    try {
+      if (!supabaseUrl || !supabaseAnonKey) throw new Error("Falta configuración de Supabase (URL/Key)");
+      console.log("Iniciando Registro RAW...");
 
-    // 2. Handle Success
-    if (data.user) {
-      console.log('User created successfully:', data.user.id);
+      const fullLocation = `${city}, ${department}`;
+      const validBirthDate = birthDate ? birthDate : null;
 
-      // If auto-confirm is on (Supabase default usually off for email, but off for phone), we might get a session.
-      if (data.access_token) {
+      // Metadata for user
+      const metadata = {
+        username: fullName,
+        full_name: fullName,
+        phone: phone || "",
+        location: fullLocation,
+        birth_date: validBirthDate,
+      };
+
+      // 1. Raw Signup Request
+      const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          data: metadata
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        // Translate common errors
+        const msg = errorData.msg || errorData.error_description || "Error al registrarse";
+        if (msg.includes('registered') || msg.includes('already exists')) {
+          throw new Error('Este correo ya está registrado. Intenta iniciar sesión.');
+        }
+        throw new Error(msg);
+      }
+
+      const data = await response.json();
+
+      // 2. Handle Success
+      if (data.user) {
+        console.log('User created successfully:', data.user.id);
+
+        // If auto-confirm is on (Supabase default usually off for email, but off for phone), we might get a session.
+
         // 2. Manual Session Storage
         if (data.access_token) {
           let projectRef = '';
