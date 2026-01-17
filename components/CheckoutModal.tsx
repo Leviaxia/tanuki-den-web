@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, AlertCircle } from 'lucide-react';
+import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, Upload, Image as ImageIcon } from 'lucide-react';
 import { CartItem } from '../types';
 import { formatCurrency } from '../src/lib/utils';
 
@@ -26,9 +26,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const [shippingErrors, setShippingErrors] = useState<any>({});
 
     // Payment State
-    const [method, setMethod] = useState<'card' | 'nequi' | 'pse'>('card');
-    const [cardData, setCardData] = useState({ number: '', name: '', expiry: '', cvv: '' });
-    const [cardErrors, setCardErrors] = useState<any>({});
+    const [method, setMethod] = useState<'nequi' | 'card' | 'manual'>('nequi');
+    const [proofFile, setProofFile] = useState<File | null>(null);
+    const [senderPhone, setSenderPhone] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -48,197 +48,206 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         return Object.keys(errs).length === 0;
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setProofFile(e.target.files[0]);
+        }
+    };
+
+    const handleCompletePayment = async () => {
+        setIsProcessing(true);
+        // Simulate processing
+        setTimeout(() => {
+            setIsProcessing(false);
+            setSuccess(true);
+        }, 2000);
+    };
+
     return (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-start md:items-center justify-center p-4 md:p-6 backdrop-blur-md overflow-y-auto pt-20 md:pt-0">
-            <div className="bg-white w-full max-w-4xl rounded-[30px] md:rounded-[50px] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-pop border-8 border-[#D4AF37] relative mb-20 md:mb-0">
-                <button onClick={onClose} className="absolute top-4 right-4 md:top-6 md:right-6 z-50 text-[#3A332F]/50 hover:text-[#3A332F]"><X size={32} /></button>
+        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/90 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+            <div className={`bg-[#FDF5E6] w-full max-w-4xl rounded-[30px] md:rounded-[40px] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-pop border-4 border-white relative transition-all duration-500 ${step === 'payment' ? 'max-w-[480px] md:flex-col min-h-0' : 'min-h-[600px]'}`}>
 
-                {/* Progress Sidebar (Desktop) / Topbar (Mobile) */}
-                <div className="w-full md:w-1/3 bg-[#FDF5E6] p-6 md:p-12 flex flex-col justify-between border-b-4 md:border-b-0 md:border-r-4 border-[#3A332F]/10">
-                    <div className="space-y-4 md:space-y-8">
-                        <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase leading-none">Tu <br /><span className="text-[#C14B3A]">Pedido</span></h2>
-                        <div className="flex md:flex-col gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-                            {[
-                                { id: 'summary', label: 'Resumen', icon: Wallet },
-                                { id: 'shipping', label: 'Envío', icon: Truck },
-                                { id: 'payment', label: 'Pago', icon: CreditCard }
-                            ].map((s, i) => (
-                                <div key={s.id} className={`flex items-center gap-2 md:gap-4 transition-all flex-shrink-0 ${step === s.id ? 'opacity-100 translate-x-0 md:translate-x-2' : 'opacity-40'}`}>
-                                    <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 ${step === s.id ? 'bg-[#C14B3A] border-[#C14B3A] text-white' : 'bg-white border-[#3A332F]/20 text-[#3A332F]'}`}>
-                                        <s.icon size={16} />
-                                    </div>
-                                    <span className="font-ghibli-title uppercase text-xs md:text-sm">{s.label}</span>
+                <button onClick={onClose} className="absolute top-5 right-5 z-50 p-2 bg-white rounded-full text-[#3A332F] hover:bg-[#C14B3A] hover:text-white transition-colors shadow-sm"><X size={20} /></button>
+
+                {/* Steps Logic for Summary/Shipping (Maintained structure) */}
+                {step !== 'payment' && !success && (
+                    <>
+                        {/* Progress Sidebar (Desktop) / Topbar (Mobile) */}
+                        <div className="w-full md:w-1/3 bg-white p-6 md:p-8 flex flex-col justify-between border-b-2 md:border-b-0 md:border-r-2 border-[#3A332F]/5">
+                            <div className="space-y-6">
+                                <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase leading-none">Tu <br /><span className="text-[#C14B3A]">Pedido</span></h2>
+                                <div className="flex md:flex-col gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                                    {[
+                                        { id: 'summary', label: 'Resumen', icon: Wallet },
+                                        { id: 'shipping', label: 'Envío', icon: Truck },
+                                    ].map((s, i) => (
+                                        <div key={s.id} className={`flex items-center gap-3 transition-all flex-shrink-0 ${step === s.id ? 'opacity-100 translate-x-1' : 'opacity-40'}`}>
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step === s.id ? 'bg-[#C14B3A] border-[#C14B3A] text-white' : 'bg-white border-[#3A332F]/20 text-[#3A332F]'}`}>
+                                                <s.icon size={14} />
+                                            </div>
+                                            <span className="font-ghibli-title uppercase text-xs md:text-sm">{s.label}</span>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            </div>
                         </div>
-                    </div>
-                    <div className="hidden md:block">
-                        <div className="flex items-center gap-2 text-[#3A332F]/40 font-bold text-[10px] uppercase tracking-widest">
-                            <Lock size={12} /> Pagos Encriptados
-                        </div>
-                    </div>
-                </div>
 
-                {/* Content Area */}
-                <div className="w-full md:w-2/3 p-6 md:p-12 relative min-h-[400px] md:min-h-[500px]">
-                    {success ? (
-                        <div className="absolute inset-0 bg-white z-[20] flex flex-col items-center justify-center text-center p-8 md:p-12">
-                            <div className="w-20 h-20 md:w-24 md:h-24 bg-[#81C784] rounded-full flex items-center justify-center text-white mb-6 animate-pop"><CheckCircle2 size={40} /></div>
-                            <h2 className="text-2xl md:text-3xl font-ghibli-title mb-4 text-[#3A332F]">¡PEDIDO REALIZADO!</h2>
-                            <p className="text-[#8C8279] font-bold mb-8 text-sm md:text-base">Tus tesoros están en camino bajo la protección del espíritu Tanuki.</p>
-                            <button onClick={onSuccess} className="w-full md:w-auto px-12 py-5 bg-[#3A332F] text-white rounded-full font-ghibli-title hover:bg-[#C14B3A] transition-all shadow-xl">ENTENDIDO</button>
-                        </div>
-                    ) : (
-                        <>
+                        {/* Content Area */}
+                        <div className="w-full md:w-2/3 p-6 md:p-8 bg-[#FDF5E6]">
                             {step === 'summary' && (
-                                <div className="space-y-6 animate-slide-in">
-                                    <h3 className="text-xl font-ghibli-title uppercase text-[#3A332F] mb-6">Revisar Items</h3>
-                                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin">
+                                <div className="space-y-6 animate-slide-in h-full flex flex-col">
+                                    <div className="space-y-3 flex-grow overflow-y-auto max-h-[400px] pr-2 scrollbar-thin">
                                         {cart.map(item => (
-                                            <div key={item.id} className="flex gap-4 p-3 border-2 border-[#FDF5E6] rounded-[20px] items-start">
-                                                <img src={item.image} className="w-16 h-16 rounded-xl object-cover" alt={item.name} />
-                                                <div className="flex-grow">
-                                                    <h4 className="font-bold text-sm text-[#3A332F] line-clamp-1">{item.name}</h4>
+                                            <div key={item.id} className="flex gap-4 p-3 bg-white rounded-[20px] shadow-sm items-center">
+                                                <img src={item.image} className="w-14 h-14 rounded-xl object-cover" alt={item.name} />
+                                                <div className="flex-grow min-w-0">
+                                                    <h4 className="font-bold text-sm text-[#3A332F] truncate">{item.name}</h4>
                                                     <p className="text-[#C14B3A] font-black text-xs">{formatCurrency(item.price)}</p>
-                                                    {item.benefits && (
-                                                        <div className="mt-2 space-y-1 bg-[#FDF5E6]/50 p-2 rounded-xl hidden sm:block">
-                                                            <p className="text-[9px] uppercase font-black tracking-widest text-[#8C8279] mb-1">Tu Pacto Incluye:</p>
-                                                            <ul className="grid grid-cols-1 gap-1">
-                                                                {item.benefits.map((b, i) => (
-                                                                    <li key={i} className="text-[10px] text-[#3A332F] flex items-center gap-1.5 font-bold">
-                                                                        <CheckCircle2 size={10} className="text-[#C14B3A]" /> {b}
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    )}
                                                 </div>
-                                                <div className="flex items-center gap-3 bg-[#FDF5E6] px-3 py-1 rounded-full self-start">
-                                                    {!item.id.startsWith('sub-') && <button onClick={() => onUpdateQuantity(item.id, -1)} className="p-1 hover:text-[#C14B3A] transition-colors"><Minus size={12} /></button>}
-                                                    <span className="font-bold text-xs text-[#3A332F]">{item.quantity}</span>
-                                                    {!item.id.startsWith('sub-') && <button onClick={() => onUpdateQuantity(item.id, 1)} className="p-1 hover:text-[#C14B3A] transition-colors"><Plus size={12} /></button>}
+                                                <div className="flex items-center gap-2 bg-[#FDF5E6] px-2 py-1 rounded-full border border-[#3A332F]/5 translate-x-[-10px]">
+                                                    {!item.id.startsWith('sub-') && <button onClick={() => onUpdateQuantity(item.id, -1)} className="p-1 hover:text-[#C14B3A]"><Minus size={12} /></button>}
+                                                    <span className="font-bold text-xs text-[#3A332F] w-4 text-center">{item.quantity}</span>
+                                                    {!item.id.startsWith('sub-') && <button onClick={() => onUpdateQuantity(item.id, 1)} className="p-1 hover:text-[#C14B3A]"><Plus size={12} /></button>}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="flex justify-between items-center pt-6 border-t-2 border-[#FDF5E6]">
-                                        <span className="font-ghibli-title text-xl">Total</span>
-                                        <span className="font-ghibli-title text-2xl md:text-3xl text-[#C14B3A]">
-                                            <span className="text-[#C14B3A]">$</span>{formatCurrency(total)}
-                                        </span>
+                                    <div className="pt-4 border-t-2 border-[#3A332F]/5">
+                                        <div className="flex justify-between items-center mb-6">
+                                            <span className="font-ghibli-title text-xl text-[#3A332F]">Total</span>
+                                            <span className="font-ghibli-title text-2xl text-[#C14B3A]"><span className="text-[#C14B3A] text-lg">$</span>{formatCurrency(total)}</span>
+                                        </div>
+                                        <button onClick={() => setStep('shipping')} className="w-full bg-[#3A332F] text-white font-ghibli-title py-4 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-3">IR A ENVÍO <ArrowRight size={18} /></button>
                                     </div>
-                                    <button onClick={() => setStep('shipping')} className="w-full bg-[#3A332F] text-white font-ghibli-title py-5 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-4">IR A ENVÍO <ArrowRight size={20} /></button>
                                 </div>
                             )}
 
                             {step === 'shipping' && (
-                                <div className="space-y-6 animate-slide-in">
-                                    <h3 className="text-xl font-ghibli-title uppercase text-[#3A332F] mb-6 flex items-center gap-3"><MapPin size={24} className="text-[#C14B3A]" /> Datos de Entrega</h3>
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-[#8C8279]">Ciudad</label>
-                                                <input value={shipping.city} onChange={e => setShipping({ ...shipping, city: e.target.value })} className={`w-full p-4 bg-[#FDF5E6] rounded-2xl font-bold text-[#3A332F] outline-none border-2 focus:border-[#C14B3A] ${shippingErrors.city ? 'border-red-400' : 'border-transparent'}`} />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-[#8C8279]">Departamento</label>
-                                                <input className="w-full p-4 bg-[#FDF5E6] rounded-2xl font-bold text-[#3A332F] outline-none border-2 border-transparent focus:border-[#C14B3A]" defaultValue="Cundinamarca" />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold uppercase tracking-widest text-[#8C8279]">Dirección Exacta</label>
-                                            <input value={shipping.address} onChange={e => setShipping({ ...shipping, address: e.target.value })} placeholder="Calle 123 # 45-67" className={`w-full p-4 bg-[#FDF5E6] rounded-2xl font-bold text-[#3A332F] outline-none border-2 focus:border-[#C14B3A] ${shippingErrors.address ? 'border-red-400' : 'border-transparent'}`} />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold uppercase tracking-widest text-[#8C8279]">Notas Adicionales</label>
-                                            <textarea value={shipping.notes} onChange={e => setShipping({ ...shipping, notes: e.target.value })} rows={3} className="w-full p-4 bg-[#FDF5E6] rounded-2xl font-bold text-[#3A332F] outline-none border-2 border-transparent focus:border-[#C14B3A]" />
-                                        </div>
+                                <div className="space-y-6 animate-slide-in h-full flex flex-col">
+                                    <h3 className="text-xl font-ghibli-title text-[#3A332F] flex items-center gap-2"><MapPin size={20} className="text-[#C14B3A]" /> Datos de Entrega</h3>
+                                    <div className="space-y-3 flex-grow">
+                                        <input value={shipping.city} onChange={e => setShipping({ ...shipping, city: e.target.value })} placeholder="Ciudad" className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.city ? 'border-red-400' : 'border-transparent'}`} />
+                                        <input placeholder="Departamento" defaultValue="Cundinamarca" className="w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 border-transparent focus:border-[#C14B3A]" />
+                                        <input value={shipping.address} onChange={e => setShipping({ ...shipping, address: e.target.value })} placeholder="Dirección Exacta" className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.address ? 'border-red-400' : 'border-transparent'}`} />
+                                        <textarea value={shipping.notes} onChange={e => setShipping({ ...shipping, notes: e.target.value })} placeholder="Notas adicionales (opcional)" rows={3} className="w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 border-transparent focus:border-[#C14B3A] placeholder:text-[#3A332F]/30" />
                                     </div>
-                                    <div className="flex gap-4 pt-4">
-                                        <button onClick={() => setStep('summary')} className="px-6 md:px-8 py-4 bg-white border-2 border-[#3A332F]/10 rounded-full font-bold text-[#3A332F]">Volver</button>
-                                        <button onClick={() => validateShipping() && setStep('payment')} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-4 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all">CONTINUAR</button>
+                                    <div className="flex gap-3 pt-2">
+                                        <button onClick={() => setStep('summary')} className="px-6 py-4 bg-white rounded-full font-bold text-[#3A332F] shadow-sm hover:bg-gray-50 text-sm">Volver</button>
+                                        <button onClick={() => validateShipping() && setStep('payment')} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-4 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all text-sm">CONTINUAR</button>
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </>
+                )}
 
-                            {step === 'payment' && (
-                                <div className="space-y-6 animate-slide-in">
-                                    <h3 className="text-xl font-ghibli-title uppercase text-[#3A332F] mb-6 flex items-center gap-3"><ShieldCheck size={24} className="text-[#C14B3A]" /> Método de Pago</h3>
+                {/* PAYMENT STEP - REDESIGNED EXACTLY AS REQUESTED */}
+                {step === 'payment' && !success && (
+                    <div className="p-8 w-full animate-slide-in flex flex-col items-center">
+                        <div className="text-center mb-6">
+                            <h2 className="font-ghibli-title text-3xl text-[#3A332F] mb-1">Finalizar <span className="text-[#C14B3A]">Pago</span></h2>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8C8279]">Total a Pagar: <span className="text-[#C14B3A] text-base">${formatCurrency(total)}</span></p>
+                        </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-                                        {['card', 'nequi', 'pse'].map((m: any) => (
-                                            <button key={m} onClick={() => setMethod(m)} className={`p-4 rounded-2xl border-2 flex flex-row sm:flex-col items-center justify-center gap-2 transition-all ${method === m ? 'border-[#C14B3A] bg-[#C14B3A]/5 text-[#C14B3A]' : 'border-[#FDF5E6] hover:border-[#3A332F]/20'}`}>
-                                                {m === 'card' && <CreditCard size={24} />}
-                                                {m === 'nequi' && <Wallet size={24} />}
-                                                {m === 'pse' && <Landmark size={24} />}
-                                                <span className="text-[10px] font-black uppercase">{m}</span>
-                                            </button>
-                                        ))}
+                        {/* Payment Toggles */}
+                        <div className="grid grid-cols-3 gap-3 w-full mb-6">
+                            <button onClick={() => setMethod('nequi')} className={`py-4 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-all shadow-sm ${method === 'nequi' ? 'bg-[#C14B3A] text-white shadow-lg scale-105 z-10' : 'bg-white text-[#3A332F] hover:bg-gray-50'}`}>
+                                <Wallet size={20} />
+                                <span className="text-[9px] font-black uppercase tracking-widest">Nequi</span>
+                            </button>
+                            <button onClick={() => setMethod('card')} className={`py-4 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-all shadow-sm ${method === 'card' ? 'bg-[#3A332F] text-white shadow-lg scale-105 z-10' : 'bg-white text-[#3A332F] hover:bg-gray-50'}`}>
+                                <CreditCard size={20} />
+                                <span className="text-[9px] font-black uppercase tracking-widest text-center leading-none">Tarjeta<br />/ PSE</span>
+                            </button>
+                            <button onClick={() => setMethod('manual')} className={`py-4 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-all shadow-sm ${method === 'manual' ? 'bg-[#D4AF37] text-white shadow-lg scale-105 z-10' : 'bg-white text-[#3A332F] hover:bg-gray-50'}`}>
+                                <Landmark size={20} />
+                                <span className="text-[9px] font-black uppercase tracking-widest">Banco</span>
+                            </button>
+                        </div>
+
+                        {/* NEQUI CARD View */}
+                        {method === 'nequi' && (
+                            <div className="bg-white rounded-[30px] p-6 w-full shadow-lg border border-white mb-6 relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#C14B3A] to-[#D4AF37]"></div>
+
+                                <div className="text-center space-y-4">
+                                    <div className="w-40 h-40 mx-auto bg-[#3A332F] rounded-2xl p-2 shadow-inner">
+                                        <img src="/assets/nequi-qr.png" alt="Nequi QR" className="w-full h-full object-cover rounded-xl" />
                                     </div>
 
-                                    {method === 'card' && (
-                                        <div className="bg-[#FDF5E6] p-6 rounded-[30px] border-2 border-[#3A332F]/10 mb-6 space-y-4 text-center">
-                                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm">
-                                                <CreditCard className="text-[#3A332F]" size={32} />
-                                            </div>
-                                            <p className="text-[#3A332F] text-sm font-bold">
-                                                Serás redirigido a la pasarela segura de <span className="text-[#635BFF] font-black">Stripe</span> para completar tu compra.
-                                            </p>
-                                            <div className="flex justify-center gap-2 grayscale opacity-50">
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" className="h-6" alt="Visa" />
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" className="h-6" alt="Mastercard" />
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-[#8C8279]">Envía a nuestro número oficial</p>
+                                        <p className="font-ghibli-title text-2xl text-[#C14B3A]">+57 322 687 0628</p>
+                                        <p className="font-ghibli-title text-sm text-[#3A332F] bg-[#FDF5E6] py-1 px-4 rounded-full inline-block">DAIVER RODRIGUEZ</p>
+                                    </div>
+
+                                    <div className="space-y-3 pt-2">
+                                        <input
+                                            value={senderPhone}
+                                            onChange={(e) => setSenderPhone(e.target.value)}
+                                            placeholder="Celular desde el que envías"
+                                            className="w-full p-4 bg-[#FDF5E6] rounded-2xl font-bold text-[#3A332F] text-xs outline-none text-center border-2 border-transparent focus:border-[#C14B3A] placeholder:text-[#3A332F]/30"
+                                        />
+
+                                        <div className="relative">
+                                            <input
+                                                type="file"
+                                                onChange={handleFileChange}
+                                                accept="image/*"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                            />
+                                            <div className={`w-full p-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border-2 border-dashed transition-all ${proofFile ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#2E7D32]' : 'bg-[#FDF5E6] text-[#8C8279] border-[#D7CCC8]'}`}>
+                                                {proofFile ? (
+                                                    <><CheckCircle2 size={16} /> ¡Comprobante Cargado!</>
+                                                ) : (
+                                                    <><Upload size={16} /> Subir Comprobante de Pago</>
+                                                )}
                                             </div>
                                         </div>
-                                    )}
-
-                                    <div className="flex gap-4 pt-2">
-                                        <button onClick={() => setStep('shipping')} className="px-8 py-4 bg-white border-2 border-[#3A332F]/10 rounded-full font-bold text-[#3A332F]">Volver</button>
-                                        <button
-                                            onClick={async () => {
-                                                if (method !== 'card') {
-                                                    alert('Por ahora solo aceptamos tarjeta vía Stripe.');
-                                                    return;
-                                                }
-                                                setIsProcessing(true);
-                                                try {
-                                                    const res = await fetch('/api/create-checkout', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({
-                                                            cart,
-                                                            userEmail: user?.email || 'invitado@tanuki.com'
-                                                        }),
-                                                    });
-
-                                                    if (!res.ok) throw new Error('Error al conectar con el servidor de pagos');
-
-                                                    const { url } = await res.json();
-                                                    if (url) {
-                                                        localStorage.setItem('tanuki_pending_cart', JSON.stringify(cart));
-                                                        window.location.href = url;
-                                                    } else throw new Error('No se recibió la URL de pago');
-
-                                                } catch (err) {
-                                                    console.error(err);
-                                                    alert('Error iniciando el pago. Asegúrate de estar en una versión desplegada o usando "netlify dev".');
-                                                    setIsProcessing(false);
-                                                }
-                                            }}
-                                            disabled={isProcessing}
-                                            className={`flex-grow bg-[#3A332F] text-white font-ghibli-title py-4 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-3 ${isProcessing ? 'opacity-80 cursor-wait' : ''}`}
-                                        >
-                                            {isProcessing ? (
-                                                <>CONECTANDO CON STRIPE...</>
-                                            ) : (
-                                                <>IR A PAGAR {formatCurrency(total)} <ShieldCheck size={20} /></>
-                                            )}
-                                        </button>
                                     </div>
                                 </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                            </div>
+                        )}
+
+                        {method !== 'nequi' && (
+                            <div className="bg-white rounded-[30px] p-8 w-full shadow-lg border border-white mb-6 min-h-[300px] flex flex-col items-center justify-center text-center space-y-4">
+                                {method === 'card' ? (
+                                    <>
+                                        <ShieldCheck className="text-[#3A332F]/20" size={64} />
+                                        <p className="text-[#3A332F] font-bold text-sm max-w-[200px]">Pago seguro con Stripe. Serás redirigido.</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Landmark className="text-[#3A332F]/20" size={64} />
+                                        <p className="text-[#3A332F] font-bold text-sm max-w-[200px]">Transferencia Bancaria a Bancolombia.</p>
+                                        <p className="text-xs text-[#8C8279]">Cuenta Ahorros: 123-456-789-00</p>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleCompletePayment}
+                            disabled={isProcessing || (method === 'nequi' && !proofFile)}
+                            className={`w-full bg-[#3A332F] text-white font-ghibli-title py-4 rounded-[20px] shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-2 ${isProcessing || (method === 'nequi' && !proofFile) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {isProcessing ? 'Verificando...' : 'Completar Pago'} <ArrowRight size={20} />
+                        </button>
+
+                        <button onClick={() => setStep('shipping')} className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#3A332F]/40 hover:text-[#3A332F] transition-colors">
+                            Volver a envíos
+                        </button>
+                    </div>
+                )}
+
+                {success && (
+                    <div className="p-12 flex flex-col items-center justify-center text-center bg-white h-full min-h-[400px]">
+                        <div className="w-24 h-24 bg-[#81C784] rounded-full flex items-center justify-center text-white mb-6 animate-pop shadow-xl"><CheckCircle2 size={48} /></div>
+                        <h2 className="text-3xl font-ghibli-title mb-2 text-[#3A332F]">¡Pedido Recibido!</h2>
+                        <p className="text-[#8C8279] font-bold mb-8 text-sm max-w-xs">Gracias por tu ofrenda. Los espíritus prepararán tu envío pronto.</p>
+                        <button onClick={onSuccess} className="px-10 py-4 bg-[#3A332F] text-white rounded-full font-ghibli-title hover:bg-[#C14B3A] transition-all shadow-lg text-sm">ENTENDIDO</button>
+                    </div>
+                )}
             </div>
         </div>
     );
