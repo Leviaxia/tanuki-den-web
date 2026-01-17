@@ -67,26 +67,19 @@ const App: React.FC = () => {
 
 
 
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    const saved = localStorage.getItem('tanuki_favorites');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  // 1. Initialize User FIRST so other states can depend on user.id
   const [user, setUser] = useState<UserType>(() => {
-    // 1. Try Session Storage (Fastest, latest state)
+    // 1. Try Session Storage (Fastest)
     const savedSession = sessionStorage.getItem('tanuki_user');
     if (savedSession) {
       try { return JSON.parse(savedSession); } catch (e) { }
     }
-
-    // 2. Try Local Storage (Persistent, backup) - IMMEDIATE RECOVERY
+    // 2. Try Local Storage (Persistent)
     const savedLocal = localStorage.getItem('tanuki-auth-token');
     if (savedLocal) {
       try {
         const session = JSON.parse(savedLocal);
-        // We have a token! Try to construct a basic user object immediately
         const meta = session.user.user_metadata || {};
-        console.log("[INIT] Found token, hydrating user immediately.");
         return {
           id: session.user.id,
           email: session.user.email,
@@ -99,14 +92,9 @@ const App: React.FC = () => {
           birthDate: meta.birth_date || '',
           phone: meta.phone || ''
         };
-      } catch (e) {
-        console.error("[INIT] Token parse error", e);
-      }
-    } else {
-      console.warn("[INIT] No tanuki-auth-token found in localStorage");
+      } catch (e) { console.error("Token parse error", e); }
     }
-
-    // 3. Guest (Default)
+    // 3. Guest
     return {
       id: 'guest',
       name: 'Viajero',
@@ -118,26 +106,35 @@ const App: React.FC = () => {
     };
   });
 
-
+  // 2. Initialize User-Scoped States
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`tanuki_favorites_${user.id}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isRouletteOpen, setIsRouletteOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const [hasSpunFirst, setHasSpunFirst] = useState(() => localStorage.getItem('tanuki_has_spun') === 'true');
-  const [appliedDiscount, setAppliedDiscount] = useState<number>(() => Number(localStorage.getItem('tanuki_discount') || 0));
+  const [hasSpunFirst, setHasSpunFirst] = useState(() => localStorage.getItem(`tanuki_has_spun_${user.id}`) === 'true');
+
+  const [appliedDiscount, setAppliedDiscount] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(`tanuki_discount_${user.id}`);
+      return saved ? Number(saved) : 0;
+    } catch { return 0; }
+  });
+
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
-      const saved = localStorage.getItem('tanuki_cart');
+      const saved = localStorage.getItem(`tanuki_cart_${user.id}`);
       return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.warn("Error loading cart:", e);
-      return [];
-    }
+    } catch { return []; }
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -184,9 +181,26 @@ const App: React.FC = () => {
     }
   }, [chatMessages, isTyping]);
 
+  // PERMANENCE ENGINE: User-Scoped Data Sync
   useEffect(() => {
-    localStorage.setItem('tanuki_favorites', JSON.stringify(favorites));
-  }, [favorites]);
+    // When ID changes (Login/Logout), reload THEIR specific data
+    const loadUserData = () => {
+      try {
+        console.log(`[STORAGE] Loading data for scope: ${user.id}`);
+        setFavorites(JSON.parse(localStorage.getItem(`tanuki_favorites_${user.id}`) || '[]'));
+        setAppliedDiscount(Number(localStorage.getItem(`tanuki_discount_${user.id}`) || 0));
+        setCart(JSON.parse(localStorage.getItem(`tanuki_cart_${user.id}`) || '[]'));
+        setHasSpunFirst(localStorage.getItem(`tanuki_has_spun_${user.id}`) === 'true');
+      } catch (e) { console.error("Data load error", e); }
+    };
+    loadUserData();
+  }, [user.id]);
+
+  // Savers
+  useEffect(() => { localStorage.setItem(`tanuki_favorites_${user.id}`, JSON.stringify(favorites)); }, [favorites, user.id]);
+  useEffect(() => { localStorage.setItem(`tanuki_discount_${user.id}`, appliedDiscount.toString()); }, [appliedDiscount, user.id]);
+  useEffect(() => { localStorage.setItem(`tanuki_cart_${user.id}`, JSON.stringify(cart)); }, [cart, user.id]);
+  useEffect(() => { localStorage.setItem(`tanuki_has_spun_${user.id}`, String(hasSpunFirst)); }, [hasSpunFirst, user.id]);
 
   // Clean up OLD localStorage data to prevent conflicts
   useEffect(() => {
@@ -289,10 +303,6 @@ const App: React.FC = () => {
     window.addEventListener('tanuki_user_update', handleUserUpdate);
     return () => window.removeEventListener('tanuki_user_update', handleUserUpdate);
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem('tanuki_cart', JSON.stringify(cart));
-  }, [cart]);
 
   useEffect(() => {
     sessionStorage.setItem('tanuki_user', JSON.stringify(user));
@@ -427,10 +437,10 @@ const App: React.FC = () => {
       const result = segments[randomSegmentIndex];
       if (result.value > 0) {
         setAppliedDiscount(result.value);
-        localStorage.setItem('tanuki_discount', result.value.toString());
+        localStorage.setItem(`tanuki_discount_${user.id}`, result.value.toString());
       }
       setHasSpunFirst(true);
-      localStorage.setItem('tanuki_has_spun', 'true');
+      localStorage.setItem(`tanuki_has_spun_${user.id}`, 'true');
     }, 4000);
   };
 
