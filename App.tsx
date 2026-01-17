@@ -78,9 +78,38 @@ const App: React.FC = () => {
   });
 
   const [user, setUser] = useState<UserType>(() => {
-    // SWITCH TO SESSION STORAGE for volatile sessions
-    const saved = sessionStorage.getItem('tanuki_user');
-    return saved ? JSON.parse(saved) : {
+    // 1. Try Session Storage (Fastest, latest state)
+    const savedSession = sessionStorage.getItem('tanuki_user');
+    if (savedSession) {
+      try { return JSON.parse(savedSession); } catch (e) { }
+    }
+
+    // 2. Try Local Storage (Persistent, backup) - IMMEDIATE RECOVERY
+    const savedLocal = localStorage.getItem('tanuki-auth-token');
+    if (savedLocal) {
+      try {
+        const session = JSON.parse(savedLocal);
+        // We have a token! Try to construct a basic user object immediately
+        // so the UI shows "Logged In" while we fetch the full profile in the background.
+        const meta = session.user.user_metadata || {};
+        console.log("[INIT] Found token, hydrating user immediately.");
+        return {
+          id: session.user.id,
+          email: session.user.email,
+          name: meta.full_name || meta.username || (session.user.email?.split('@')[0] || 'Aventurero'),
+          realName: meta.full_name || '',
+          isRegistered: true,
+          photo: meta.avatar_url || '/assets/default_avatar.png',
+          membership: undefined, // Will be fetched by effect
+          location: meta.location || '',
+          birthDate: meta.birth_date || '',
+          phone: meta.phone || ''
+        };
+      } catch (e) { console.error("[INIT] Token parse error", e); }
+    }
+
+    // 3. Guest (Default)
+    return {
       id: 'guest',
       name: 'Viajero',
       photo: '/assets/default_avatar.png',
