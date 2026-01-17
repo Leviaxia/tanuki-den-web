@@ -33,7 +33,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 const App: React.FC = () => {
-  console.log("TANUKI APP VERSION: 2.8 - DEBUG TOP HEADER (BUILD " + new Date().toISOString() + ")");
+  console.log("TANUKI APP VERSION: 2.9 - STABLE (BUILD " + new Date().toISOString() + ")");
 
 
 
@@ -118,14 +118,7 @@ const App: React.FC = () => {
     };
   });
 
-  const [debugInfo, setDebugInfo] = useState<string>('');
 
-  useEffect(() => {
-    const token = localStorage.getItem('tanuki-auth-token');
-    const tokenStatus = token ? `FOUND (${token.substring(0, 10)}...)` : 'MISSING';
-    const userStatus = user.id === 'guest' ? 'GUEST' : `LOGGED IN (${user.id})`;
-    setDebugInfo(`TOKEN: ${tokenStatus} | USER: ${userStatus} | TIME: ${new Date().toLocaleTimeString()}`);
-  }, [user]);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
@@ -733,10 +726,7 @@ const App: React.FC = () => {
         onOpenSubscription={handleSubscriptionClick}
       />
 
-      {/* DEBUG HEADER - IMPOSSIBLE TO MISS */}
-      <div className="fixed top-0 left-0 right-0 bg-red-600 text-white font-mono text-xs p-2 z-[9999] opacity-100 border-b-2 border-white pointer-events-none font-bold text-center">
-        🚨 DEBUG NETWORK: {debugInfo} 🚨
-      </div>
+
 
       {appliedDiscount > 0 && (
         <div className="bg-[#C14B3A] text-white py-2 text-center font-ghibli-title text-[10px] tracking-widest uppercase animate-pulse z-[50]">
