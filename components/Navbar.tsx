@@ -133,24 +133,31 @@ const Navbar: React.FC<NavbarProps> = ({
       </nav>
 
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[9999] bg-white pt-24 px-6 lg:hidden animate-fade-in flex flex-col">
-          <div className="flex flex-col gap-6">
-            {navItems.map((item) => (
+        <div className="fixed inset-0 z-[9999] bg-[#FDF5E6] pt-32 px-6 lg:hidden animate-fade-in flex flex-col items-center">
+          <div className="flex flex-col gap-8 w-full max-w-xs">
+            {navItems.map((item, index) => (
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`text-2xl font-ghibli-title text-left py-4 border-b-2 ${activeTab === item.id ? 'text-[#C14B3A] border-[#C14B3A]' : 'text-[#8C8279] border-[#FDF5E6]'
+                style={{ animationDelay: `${index * 100}ms` }}
+                className={`text-4xl font-ghibli-title text-center py-2 animate-slide-up opacity-0 [animation-fill-mode:forwards] transition-all duration-300 ${activeTab === item.id ? 'text-[#C14B3A] scale-110' : 'text-[#3A332F]/40 hover:text-[#3A332F]'
                   }`}
               >
                 {item.label}
               </button>
             ))}
+
+            <div className="h-4"></div>
+
             <button
               onClick={() => { onOpenSubscription(); setIsMenuOpen(false); }}
-              className={`mt-4 py-6 rounded-2xl font-ghibli-title text-xl flex items-center justify-center gap-4 ${user.membership ? 'bg-[#3A332F] text-[#D4AF37]' : 'bg-[#D4AF37] text-white'
+              style={{ animationDelay: `${navItems.length * 100}ms` }}
+              className={`py-5 px-8 rounded-full font-ghibli-title text-xl flex items-center justify-center gap-3 shadow-2xl animate-slide-up opacity-0 [animation-fill-mode:forwards] relative overflow-hidden group active:scale-95 transition-all duration-300 ${user.membership ? 'bg-[#3A332F] text-[#D4AF37]' : 'bg-[#C14B3A] text-white hover:bg-[#3A332F]'
                 }`}
             >
-              <Crown size={24} /> {user.membership ? 'ESTATUS DE CLAN' : 'UNIRSE AL CLAN'}
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+              <Crown size={24} className={user.membership ? "" : "animate-bounce"} />
+              <span className="relative z-10">{user.membership ? 'MI ESTATUS' : 'UNIRSE AL CLAN'}</span>
             </button>
           </div>
         </div>
