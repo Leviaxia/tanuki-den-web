@@ -50,6 +50,7 @@ const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState('inicio');
   const [selectedCollectionId, setSelectedCollectionId] = useState<number | null>(null);
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>(() => {
     const savedReviews = localStorage.getItem('tanuki_all_reviews');
     const reviewsMap = savedReviews ? JSON.parse(savedReviews) : {};
@@ -1185,28 +1186,28 @@ const App: React.FC = () => {
 
       {isCartOpen && (
         <div className="fixed inset-0 z-[2000] bg-[#3A332F]/80 backdrop-blur-sm flex justify-end">
-          <div className="w-full md:w-[500px] h-full bg-white shadow-2xl animate-slide-in flex flex-col border-l-8 border-[#D4AF37]">
-            <div className="p-8 border-b-4 border-[#FDF5E6] flex items-center justify-between">
-              <h2 className="text-3xl font-ghibli-title text-[#3A332F] uppercase">Mi Carrito</h2>
-              <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-[#FDF5E6] rounded-full transition-all"><X size={28} /></button>
+          <div className="w-[85vw] max-w-[360px] md:w-[500px] h-full bg-white shadow-2xl animate-slide-in flex flex-col border-l-4 md:border-l-8 border-[#D4AF37] rounded-l-[30px] md:rounded-l-none overflow-hidden">
+            <div className="p-6 md:p-8 border-b-4 border-[#FDF5E6] flex items-center justify-between">
+              <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase">Mi Carrito</h2>
+              <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-[#FDF5E6] rounded-full transition-all"><X size={24} className="md:w-7 md:h-7" /></button>
             </div>
-            <div className="flex-grow overflow-y-auto p-8 space-y-6">
+            <div className="flex-grow overflow-y-auto p-4 md:p-8 space-y-4 md:space-y-6">
               {cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-40"><ShoppingBag size={80} strokeWidth={1} /><p className="font-ghibli-title text-xl">Tu saco está vacío</p></div>
               ) : (
                 cart.map(item => (
-                  <div key={item.id} className="flex gap-6 p-4 bg-[#FDF5E6]/30 rounded-[30px] border-2 border-transparent hover:border-[#C14B3A]/20 transition-all">
-                    <img src={item.image} className="w-24 h-24 object-cover rounded-[20px] shadow-md" alt={item.name} />
+                  <div key={item.id} className="flex gap-4 md:gap-6 p-4 bg-[#FDF5E6]/30 rounded-[20px] md:rounded-[30px] border-2 border-transparent hover:border-[#C14B3A]/20 transition-all">
+                    <img src={item.image} className="w-16 h-16 md:w-24 md:h-24 object-cover rounded-[15px] md:rounded-[20px] shadow-md" alt={item.name} />
                     <div className="flex-grow space-y-2">
-                      <h4 className="font-ghibli-title text-[#3A332F]">{item.name}</h4>
+                      <h4 className="font-ghibli-title text-[#3A332F] text-sm md:text-base leading-tight">{item.name}</h4>
                       <div className="flex items-center justify-between">
-                        <span className="font-black text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(item.price)}</span>
-                        <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-full border-2 border-[#E6D5B8]">
-                          {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1)}><Minus size={14} /></button>}
-                          <span className="font-black text-sm">{item.quantity}</span>
-                          {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, 1)}><Plus size={14} /></button>}
+                        <span className="font-black text-[#C14B3A] text-xs md:text-base"><span className="text-[#C14B3A]">$</span>{formatCurrency(item.price)}</span>
+                        <div className="flex items-center gap-2 md:gap-4 bg-white px-2 md:px-4 py-1 md:py-2 rounded-full border-2 border-[#E6D5B8]">
+                          {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1)}><Minus size={12} className="md:w-4 md:h-4" /></button>}
+                          <span className="font-black text-xs md:text-sm">{item.quantity}</span>
+                          {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, 1)}><Plus size={12} className="md:w-4 md:h-4" /></button>}
                         </div>
-                        <button onClick={() => removeFromCart(item.id)} className="text-[#3A332F]/20 hover:text-red-500 transition-colors"><Trash2 size={20} /></button>
+                        <button onClick={() => removeFromCart(item.id)} className="text-[#3A332F]/20 hover:text-red-500 transition-colors"><Trash2 size={16} className="md:w-5 md:h-5" /></button>
                       </div>
                     </div>
                   </div>
@@ -1214,9 +1215,9 @@ const App: React.FC = () => {
               )}
             </div>
             {cart.length > 0 && (
-              <div className="p-8 bg-[#FDF5E6] space-y-6">
-                <div className="flex justify-between text-2xl font-ghibli-title"><span>TOTAL</span><div className="text-right"><span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span></div></div>
-                <button onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }} className="w-full bg-[#3A332F] text-white font-ghibli-title py-6 rounded-full text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest">FINALIZAR PEDIDO</button>
+              <div className="p-6 md:p-8 bg-[#FDF5E6] space-y-4 md:space-y-6">
+                <div className="flex justify-between text-xl md:text-2xl font-ghibli-title"><span>TOTAL</span><div className="text-right"><span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span></div></div>
+                <button onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }} className="w-full bg-[#3A332F] text-white font-ghibli-title py-4 md:py-6 rounded-full text-base md:text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest">FINALIZAR PEDIDO</button>
               </div>
             )}
           </div>
@@ -1244,16 +1245,27 @@ const App: React.FC = () => {
 
       {selectedProduct && (
         <div className="fixed inset-0 z-[2100] bg-[#3A332F]/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8">
-          <div className="bg-white w-full max-w-5xl h-fit max-h-[90vh] rounded-[60px] overflow-hidden flex flex-col md:flex-row border-8 border-white shadow-2xl animate-pop">
-            <div className="w-full md:w-1/2 h-64 md:h-auto bg-[#FDF5E6] relative"><img src={selectedProduct.image} className="w-full h-full object-cover" alt={selectedProduct.name} /><button onClick={() => setSelectedProduct(null)} className="md:hidden absolute top-6 right-6 p-3 bg-white/90 rounded-full"><X size={24} /></button></div>
-            <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col overflow-y-auto">
+          <div className="bg-white w-full max-w-5xl h-fit max-h-[90vh] rounded-[30px] md:rounded-[60px] overflow-hidden flex flex-col md:flex-row border-4 md:border-8 border-white shadow-2xl animate-pop">
+            <div className="w-full md:w-1/2 h-64 md:h-auto bg-[#FDF5E6] relative group">
+              <img
+                src={selectedProduct.image}
+                className="w-full h-full object-cover cursor-zoom-in active:scale-105 transition-transform duration-500"
+                alt={selectedProduct.name}
+                onClick={() => setFullScreenImage(selectedProduct.image)}
+              />
+              <div className="absolute top-4 left-4 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none md:hidden flex items-center gap-1">
+                <Sparkles size={10} /> Toca para Zoom
+              </div>
+              <button onClick={() => setSelectedProduct(null)} className="md:hidden absolute top-4 right-4 p-2 bg-white/90 rounded-full shadow-md z-10"><X size={20} /></button>
+            </div>
+            <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col overflow-y-auto">
               <button onClick={() => setSelectedProduct(null)} className="hidden md:block self-end p-3 hover:bg-[#FDF5E6] rounded-full transition-all mb-8"><X size={32} /></button>
-              <div className="space-y-8 flex-grow">
-                <span className="bg-[#C14B3A] text-white text-[10px] font-ghibli-title px-6 py-2 rounded-full uppercase tracking-widest">{selectedProduct.category}</span>
-                <h2 className="text-4xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight uppercase">{selectedProduct.name}</h2>
-                <p className="text-[#8C8279] text-lg font-bold leading-relaxed">{selectedProduct.description}</p>
-                <div className="text-5xl font-ghibli-title text-[#3A332F] pt-6 border-t-4 border-[#FDF5E6]"><span className="text-[#C14B3A] text-2xl mr-2">$</span>{formatCurrency(selectedProduct.price)}</div>
-                <div className="flex flex-col sm:flex-row gap-6 pt-10"><div className="flex items-center justify-between bg-[#FDF5E6] px-8 py-5 rounded-full border-4 border-[#E6D5B8] sm:w-48"><button onClick={() => setDetailQuantity(q => Math.max(1, q - 1))}><Minus size={20} /></button><span className="font-ghibli-title text-2xl">{detailQuantity}</span><button onClick={() => setDetailQuantity(q => q + 1)}><Plus size={20} /></button></div><button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-6 rounded-full text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-4">AÑADIR AL SACO <ArrowRight size={22} /></button></div>
+              <div className="space-y-4 md:space-y-8 flex-grow">
+                <span className="bg-[#C14B3A] text-white text-[10px] font-ghibli-title px-4 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-widest">{selectedProduct.category}</span>
+                <h2 className="text-3xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight uppercase">{selectedProduct.name}</h2>
+                <p className="text-[#8C8279] text-sm md:text-lg font-bold leading-relaxed">{selectedProduct.description}</p>
+                <div className="text-3xl md:text-5xl font-ghibli-title text-[#3A332F] pt-4 md:pt-6 border-t-4 border-[#FDF5E6]"><span className="text-[#C14B3A] text-xl md:text-2xl mr-2">$</span>{formatCurrency(selectedProduct.price)}</div>
+                <div className="flex flex-col sm:flex-row gap-4 md:gap-6 pt-6 md:pt-10"><div className="flex items-center justify-between bg-[#FDF5E6] px-6 py-4 md:px-8 md:py-5 rounded-full border-4 border-[#E6D5B8] sm:w-48"><button onClick={() => setDetailQuantity(q => Math.max(1, q - 1))}><Minus size={18} className="md:w-5 md:h-5" /></button><span className="font-ghibli-title text-xl md:text-2xl">{detailQuantity}</span><button onClick={() => setDetailQuantity(q => q + 1)}><Plus size={18} className="md:w-5 md:h-5" /></button></div><button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-4 md:py-6 rounded-full text-base md:text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-4">AÑADIR AL SACO <ArrowRight size={20} className="md:w-6 md:h-6" /></button></div>
               </div>
             </div>
           </div>
@@ -1310,6 +1322,14 @@ const App: React.FC = () => {
 
 
 
+      {/* Fullscreen Image Overlay */}
+      {fullScreenImage && (
+        <div className="fixed inset-0 z-[3000] bg-black/95 flex items-center justify-center p-2 animate-fade-in" onClick={() => setFullScreenImage(null)}>
+          <button className="absolute top-4 right-4 text-white bg-white/10 p-2 rounded-full hover:bg-white/20 transition-all"><X size={32} /></button>
+          <img src={fullScreenImage} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl scale-100 animate-pop" alt="Zoom" />
+        </div>
+      )}
+
       <style>{`
         @keyframes slide-up { from { transform: translateY(80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
@@ -1319,6 +1339,7 @@ const App: React.FC = () => {
         @keyframes shine { from { transform: translateX(-150%) rotate(45deg); } to { transform: translateX(250%) rotate(45deg); } }
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
         .animate-slide-in { animation: slide-in 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
         .animate-pop { animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -1327,6 +1348,7 @@ const App: React.FC = () => {
         .animate-shine { animation: shine 3s infinite linear; }
         .animate-spin-slow { animation: spin-slow 12s linear infinite; }
         .animate-bounce-subtle { animation: bounce-subtle 4s ease-in-out infinite; }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .clip-path-triangle { clip-path: polygon(50% 50%, 0% 100%, 100% 100%); }
