@@ -85,7 +85,6 @@ const App: React.FC = () => {
       try {
         const session = JSON.parse(savedLocal);
         // We have a token! Try to construct a basic user object immediately
-        // so the UI shows "Logged In" while we fetch the full profile in the background.
         const meta = session.user.user_metadata || {};
         console.log("[INIT] Found token, hydrating user immediately.");
         return {
@@ -95,12 +94,16 @@ const App: React.FC = () => {
           realName: meta.full_name || '',
           isRegistered: true,
           photo: meta.avatar_url || '/assets/default_avatar.png',
-          membership: undefined, // Will be fetched by effect
+          membership: undefined,
           location: meta.location || '',
           birthDate: meta.birth_date || '',
           phone: meta.phone || ''
         };
-      } catch (e) { console.error("[INIT] Token parse error", e); }
+      } catch (e) {
+        console.error("[INIT] Token parse error", e);
+      }
+    } else {
+      console.warn("[INIT] No tanuki-auth-token found in localStorage");
     }
 
     // 3. Guest (Default)
@@ -114,6 +117,15 @@ const App: React.FC = () => {
       birthDate: ''
     };
   });
+
+  const [debugInfo, setDebugInfo] = useState<string>('');
+
+  useEffect(() => {
+    const token = localStorage.getItem('tanuki-auth-token');
+    const tokenStatus = token ? `FOUND (${token.substring(0, 10)}...)` : 'MISSING';
+    const userStatus = user.id === 'guest' ? 'GUEST' : `LOGGED IN (${user.id})`;
+    setDebugInfo(`TOKEN: ${tokenStatus} | USER: ${userStatus} | TIME: ${new Date().toLocaleTimeString()}`);
+  }, [user]);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
@@ -721,8 +733,10 @@ const App: React.FC = () => {
         onOpenSubscription={handleSubscriptionClick}
       />
 
-
-
+      {/* DEBUG FOOTER */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black text-[#00FF00] font-mono text-xs p-2 z-[9999] opacity-90 border-t-2 border-[#00FF00] pointer-events-none">
+        🚧 DEBUG: {debugInfo}
+      </div>
 
       {appliedDiscount > 0 && (
         <div className="bg-[#C14B3A] text-white py-2 text-center font-ghibli-title text-[10px] tracking-widest uppercase animate-pulse z-[50]">
