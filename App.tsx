@@ -1050,16 +1050,18 @@ const App: React.FC = () => {
 
       {isRouletteOpen && (
         <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-center justify-center p-4 backdrop-blur-md">
-          <div className="bg-[#FDF5E6] w-full max-w-sm md:max-w-2xl rounded-[40px] md:rounded-[60px] p-6 md:p-14 relative animate-pop text-center space-y-4 md:space-y-10 border-4 md:border-8 border-[#3A332F] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setIsRouletteOpen(false)} className="absolute top-4 right-4 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-1.5 md:p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X size={24} className="md:w-8 md:h-8" /></button>
-            <div className="space-y-2 md:space-y-4">
-              <h2 className="text-2xl md:text-5xl font-ghibli-title text-[#3A332F] uppercase leading-tight">Sorteo del <span className="text-[#C14B3A]">Bosque</span></h2>
+          <div className="bg-[#FDF5E6] w-full max-w-[340px] md:max-w-2xl rounded-[30px] md:rounded-[60px] p-5 md:p-14 relative animate-pop text-center flex flex-col justify-between border-4 md:border-8 border-[#3A332F] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-h-[85vh] md:max-h-none overflow-hidden">
+            <button onClick={() => setIsRouletteOpen(false)} className="absolute top-3 right-3 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-1.5 md:p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X size={20} className="md:w-8 md:h-8" /></button>
+
+            <div className="space-y-1 md:space-y-4 mb-2 md:mb-0 shrink-0">
+              <h2 className="text-xl md:text-5xl font-ghibli-title text-[#3A332F] uppercase leading-tight">Sorteo del <span className="text-[#C14B3A]">Bosque</span></h2>
               <p className="text-[#8C8279] font-black uppercase tracking-[0.2em] text-[8px] md:text-xs">Invocando la sabiduría del Gremio Tanuki</p>
             </div>
-            <div className="relative mx-auto w-56 h-56 md:w-96 md:h-96 flex items-center justify-center mb-4 md:mb-0">
-              <div className="absolute -inset-4 md:-inset-6 rounded-full border-4 border-[#D4AF37]/20 border-dotted animate-spin-slow"></div>
-              <div className="absolute -inset-2 rounded-full border-2 border-[#3A332F]/10"></div>
-              <div className="absolute inset-0 rounded-full border-[12px] md:border-[20px] border-[#3A332F] shadow-[inset_0_0_30px_rgba(0,0,0,0.6),0_20px_40px_rgba(0,0,0,0.2)] z-10"></div>
+
+            <div className="relative mx-auto w-60 h-60 md:w-96 md:h-96 flex items-center justify-center my-2 md:my-6 shrink-0">
+              <div className="absolute -inset-3 md:-inset-6 rounded-full border-4 border-[#D4AF37]/20 border-dotted animate-spin-slow"></div>
+              <div className="absolute -inset-1 md:-inset-2 rounded-full border-2 border-[#3A332F]/10"></div>
+              <div className="absolute inset-0 rounded-full border-[10px] md:border-[20px] border-[#3A332F] shadow-[inset_0_0_30px_rgba(0,0,0,0.6),0_20px_40px_rgba(0,0,0,0.2)] z-10"></div>
 
               {/* The Wheel */}
               <div className="relative w-full h-full rounded-full overflow-hidden transition-transform duration-[4000ms] cubic-bezier(0.1, 0, 0.1, 1) bg-[#3A332F]" style={{ transform: `rotate(${rotation}deg)` }}>
@@ -1073,42 +1075,43 @@ const App: React.FC = () => {
                       backgroundColor: s.color
                     }}
                   >
-                    <div className="w-full h-full flex flex-col items-center pt-10 md:pt-14 font-ghibli-title pointer-events-none" style={{ color: s.text }}>
-                      <span className="text-[10px] md:text-sm uppercase tracking-tighter leading-none mb-1 text-center font-ghibli-title px-4">{s.label}</span>
-                      <Sparkles size={16} className="opacity-40 animate-pulse mt-2" />
+                    <div className="w-full h-full flex flex-col items-center pt-8 md:pt-14 font-ghibli-title pointer-events-none" style={{ color: s.text }}>
+                      <span className="text-[9px] md:text-sm uppercase tracking-tighter leading-none mb-1 text-center font-ghibli-title px-4">{s.label}</span>
+                      <Sparkles size={12} className="opacity-40 animate-pulse mt-1 md:mt-2" />
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="absolute w-12 h-12 md:w-16 md:h-16 bg-[#FDF5E6] rounded-full z-20 border-4 border-[#3A332F] flex items-center justify-center shadow-2xl overflow-hidden">
-                <div className="w-full h-full bg-[#3A332F]/5 flex items-center justify-center"><Zap size={20} className="text-[#D4AF37] animate-pulse" /></div>
+              <div className="absolute w-10 h-10 md:w-16 md:h-16 bg-[#FDF5E6] rounded-full z-20 border-4 border-[#3A332F] flex items-center justify-center shadow-2xl overflow-hidden">
+                <div className="w-full h-full bg-[#3A332F]/5 flex items-center justify-center"><Zap size={16} className="text-[#D4AF37] animate-pulse md:w-5 md:h-5" /></div>
               </div>
 
               {/* Pointer (Centered at Top) */}
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-[30] flex flex-col items-center">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border-4 border-[#C14B3A] shadow-[0_5px_15px_rgba(193,75,58,0.4)] animate-bounce-subtle">
-                  <Crown className="text-[#D4AF37]" size={20} />
+              <div className="absolute -top-6 md:-top-10 left-1/2 -translate-x-1/2 z-[30] flex flex-col items-center">
+                <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center border-4 border-[#C14B3A] shadow-[0_5px_15px_rgba(193,75,58,0.4)] animate-bounce-subtle">
+                  <Crown className="text-[#D4AF37] w-4 h-4 md:w-5 md:h-5" />
                 </div>
-                <div className="w-6 h-8 bg-[#C14B3A] clip-path-triangle rotate-180 -mt-2 shadow-sm"></div>
+                <div className="w-4 h-6 md:w-6 md:h-8 bg-[#C14B3A] clip-path-triangle rotate-180 -mt-1 md:-mt-2 shadow-sm"></div>
               </div>
             </div>
-            <div className="min-h-[140px] flex flex-col items-center justify-center px-4">
+
+            <div className="min-h-[100px] md:min-h-[140px] flex flex-col items-center justify-center shrink-0">
               {isSpinning ? (
-                <div className="space-y-4 text-center">
-                  <p className="font-ghibli-title text-[#C14B3A] text-2xl tracking-widest animate-pulse">EL DESTINO ESTÁ GIRANDO...</p>
-                  <div className="flex gap-3 justify-center"><div className="w-3 h-3 bg-[#D4AF37] rounded-full animate-bounce"></div><div className="w-3 h-3 bg-[#D4AF37] rounded-full animate-bounce [animation-delay:0.2s]"></div><div className="w-3 h-3 bg-[#D4AF37] rounded-full animate-bounce [animation-delay:0.4s]"></div></div>
+                <div className="space-y-2 md:space-y-4 text-center">
+                  <p className="font-ghibli-title text-[#C14B3A] text-lg md:text-2xl tracking-widest animate-pulse">EL DESTINO GIRA...</p>
+                  <div className="flex gap-2 md:gap-3 justify-center"><div className="w-2 h-2 md:w-3 md:h-3 bg-[#D4AF37] rounded-full animate-bounce"></div><div className="w-2 h-2 md:w-3 md:h-3 bg-[#D4AF37] rounded-full animate-bounce [animation-delay:0.2s]"></div><div className="w-2 h-2 md:w-3 md:h-3 bg-[#D4AF37] rounded-full animate-bounce [animation-delay:0.4s]"></div></div>
                 </div>
               ) : hasSpunFirst ? (
                 <div className="animate-pop w-full">
                   {appliedDiscount > 0 ? (
-                    <div className="bg-white p-8 rounded-[40px] border-4 border-[#D4AF37] shadow-2xl space-y-3 relative overflow-hidden group"><div className="absolute inset-0 bg-[#D4AF37]/5 pointer-events-none"></div><p className="text-[11px] font-black uppercase tracking-[0.4em] text-[#8C8279]">Gracia del Espíritu</p><h3 className="text-4xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight">¡TIENES UN <span className="text-[#C14B3A]">{appliedDiscount}% OFF</span>!</h3><p className="font-bold text-[#8C8279] text-sm mt-2">Guardado en tu esencia para la próxima compra.</p></div>
+                    <div className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[40px] border-2 md:border-4 border-[#D4AF37] shadow-2xl space-y-1 md:space-y-3 relative overflow-hidden group"><div className="absolute inset-0 bg-[#D4AF37]/5 pointer-events-none"></div><p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.4em] text-[#8C8279]">Gracia del Espíritu</p><h3 className="text-2xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight">¡<span className="text-[#C14B3A]">{appliedDiscount}% OFF</span>!</h3><p className="font-bold text-[#8C8279] text-[10px] md:text-sm mt-1">Guardado para tu próxima compra.</p></div>
                   ) : (
-                    <div className="bg-[#3A332F]/5 p-8 rounded-[40px] border-4 border-[#3A332F]/10 space-y-3"><h3 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase">INTENTO FALLIDO</h3><p className="font-bold text-[#8C8279] text-[10px] uppercase tracking-widest">Los vientos no soplaron a tu favor. Regresa en 24 horas.</p></div>
+                    <div className="bg-[#3A332F]/5 p-4 md:p-8 rounded-[20px] md:rounded-[40px] border-2 md:border-4 border-[#3A332F]/10 space-y-2 md:space-y-3"><h3 className="text-xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase">INTENTO FALLIDO</h3><p className="font-bold text-[#8C8279] text-[9px] md:text-[10px] uppercase tracking-widest">Los vientos no soplaron a tu favor.</p></div>
                   )}
                 </div>
               ) : (
-                <button onClick={spinWheel} className="group relative px-20 py-6 md:px-28 md:py-8 rounded-full bg-[#3A332F] text-white font-ghibli-title text-xl md:text-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:bg-[#C14B3A] transition-all hover:scale-105 active:scale-95 overflow-hidden border-2 border-white/20"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine"></div><span className="relative z-10 flex items-center gap-4">INVOCAR SUERTE <ArrowRight size={24} /></span></button>
+                <button onClick={spinWheel} className="group relative px-10 py-3 md:px-28 md:py-8 rounded-full bg-[#3A332F] text-white font-ghibli-title text-lg md:text-2xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:bg-[#C14B3A] transition-all hover:scale-105 active:scale-95 overflow-hidden border-2 border-white/20"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine"></div><span className="relative z-10 flex items-center gap-2 md:gap-4">INVOCAR SUERTE <ArrowRight size={18} className="md:w-6 md:h-6" /></span></button>
               )}
             </div>
           </div>
