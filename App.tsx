@@ -768,7 +768,7 @@ const App: React.FC = () => {
       <main className="flex-grow relative z-10">{renderContent()}</main>
 
       {isChatOpen && (
-        <div className="fixed bottom-32 md:bottom-40 right-6 w-[calc(100vw-3rem)] md:w-96 h-[500px] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
+        <div className="fixed bottom-24 md:bottom-40 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-96 h-[500px] max-h-[calc(100vh-8rem)] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
           <div className="bg-[#3A332F] p-6 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#C14B3A] rounded-full flex items-center justify-center border-2 border-white"><Sparkles size={18} /></div>
@@ -1049,7 +1049,7 @@ const App: React.FC = () => {
       )}
 
       {isRouletteOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-center justify-center p-6 overflow-y-auto backdrop-blur-md">
+        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-start md:items-center justify-center p-4 pt-24 md:p-6 overflow-y-auto backdrop-blur-md">
           <div className="bg-[#FDF5E6] w-full max-w-2xl rounded-[60px] p-8 md:p-14 relative animate-pop text-center space-y-10 border-8 border-[#3A332F] shadow-[0_0_100px_rgba(0,0,0,0.5)]">
             <button onClick={() => setIsRouletteOpen(false)} className="absolute top-8 right-8 hover:rotate-90 transition-transform bg-white/80 p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X size={32} /></button>
             <div className="space-y-4">
