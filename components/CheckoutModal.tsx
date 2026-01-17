@@ -227,7 +227,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                     <div className="space-y-1">
                                         <p className="text-[9px] font-black uppercase tracking-widest text-[#8C8279]">Envía a nuestro número oficial</p>
                                         <p className="font-ghibli-title text-2xl text-[#C14B3A]">+57 322 687 0628</p>
-                                        <p className="font-ghibli-title text-sm text-[#3A332F] bg-[#FDF5E6] py-1 px-4 rounded-full inline-block">DAIVER RODRIGUEZ</p>
+                                        <p className="font-ghibli-title text-sm text-[#C14B3A] bg-[#FDF5E6] py-1 px-4 rounded-full inline-block">DAIVER RODRIGUEZ</p>
                                     </div>
 
                                     <div className="space-y-3 pt-2">
