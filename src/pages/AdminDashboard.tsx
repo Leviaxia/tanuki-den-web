@@ -224,7 +224,7 @@ export const AdminDashboard = () => {
 
     const loadMockData = () => {
         setProducts([
-            { id: '1', name: 'Tanuki de Prueba', price: 50000, stock: 10, category: 'Test', description: 'Si ves esto, la interfaz funciona.', image: 'https://via.placeholder.com/150', created_at: new Date().toISOString() }
+            { id: '1', name: 'Tanuki de Prueba', price: 50000, stock: 10, category: 'Test', description: 'Si ves esto, la interfaz funciona.', image: 'https://via.placeholder.com/150', created_at: new Date().toISOString(), rating: 5 }
         ]);
         alert("Modo Prueba: Se han cargado datos falsos para verificar la interfaz.");
     };
@@ -485,14 +485,126 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
 
 const CollectionForm = ({ collection, onSave, onCancel }: { collection: Partial<Collection>, onSave: (c: Partial<Collection>) => void, onCancel: () => void }) => {
     const [form, setForm] = useState(collection);
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-            <input placeholder="Título" value={form.title || ''} onChange={e => setForm({ ...form, title: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
-            <input placeholder="Imagen URL" value={form.image || ''} onChange={e => setForm({ ...form, image: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
-            <input placeholder="Rotación (ej: -3deg)" value={form.rotation || ''} onChange={e => setForm({ ...form, rotation: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
-            <input placeholder="Color Acento (Hex)" value={form.accent || ''} onChange={e => setForm({ ...form, accent: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
+    const [uploading, setUploading] = useState(false);
 
-            <textarea placeholder="Descripción" value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" rows={3} />
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        try {
+            setUploading(true);
+            if (!e.target.files || e.target.files.length === 0) {
+                setUploading(false);
+                return;
+            }
+
+            const file = e.target.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `col-${Date.now()}.${fileExt}`;
+            const uploadUrl = `${supabaseUrl}/storage/v1/object/products/${fileName}`; // Reusing products bucket
+
+            console.log("Subiendo colección img:", fileName);
+
+            let token = '';
+            const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+            const key = `sb-${projectRef}-auth-token`;
+            const stored = localStorage.getItem(key);
+            if (stored) token = JSON.parse(stored).access_token;
+
+            if (!token) throw new Error("Sesión expirada. Por favor recarga.");
+
+            const res = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'apikey': supabaseAnonKey || ''
+                },
+                body: file
+            });
+
+            if (!res.ok) throw new Error("Error subiendo imagen");
+
+            const publicUrl = `${supabaseUrl}/storage/v1/object/public/products/${fileName}`;
+            setForm({ ...form, image: publicUrl });
+        } catch (e: any) {
+            alert("Error: " + e.message);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+            <div className="space-y-2">
+                <label className="text-sm font-bold text-[#3A332F] ml-2">Título de la Colección</label>
+                <input
+                    placeholder="Ej: Brisa de Ghibli"
+                    value={form.title || ''}
+                    onChange={e => setForm({ ...form, title: e.target.value })}
+                    className="w-full p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold"
+                />
+            </div>
+
+            <div className="space-y-2">
+                <label className="text-sm font-bold text-[#3A332F] ml-2">Rotación (Estilo Tarjeta)</label>
+                <input
+                    placeholder="Ej: -3deg, 2deg, 0deg"
+                    value={form.rotation || ''}
+                    onChange={e => setForm({ ...form, rotation: e.target.value })}
+                    className="w-full p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold"
+                />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-bold text-[#3A332F] ml-2">Imagen de Portada</label>
+                <div className="flex gap-2">
+                    <input
+                        placeholder="URL de la imagen"
+                        value={form.image || ''}
+                        onChange={e => setForm({ ...form, image: e.target.value })}
+                        className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold flex-grow"
+                    />
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            disabled={uploading}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className={`bg-[#3A332F] text-white px-4 py-3 rounded-xl font-bold hover:bg-[#C14B3A] transition-colors flex items-center justify-center ${uploading ? 'opacity-50' : ''}`}>
+                            {uploading ? <Loader2 className="animate-spin" size={24} /> : <div className="flex items-center gap-2"><ImageIcon size={20} /> <span className="hidden md:inline">Subir</span></div>}
+                        </div>
+                    </div>
+                </div>
+                {form.image && <img src={form.image} className="h-32 w-full object-cover rounded-xl mt-2 border-2 border-[#3A332F]/10" />}
+            </div>
+
+            <div className="space-y-2">
+                <label className="text-sm font-bold text-[#3A332F] ml-2">Color de Acento (Hex)</label>
+                <div className="flex gap-2">
+                    <input
+                        type="color"
+                        value={form.accent || '#3A332F'}
+                        onChange={e => setForm({ ...form, accent: e.target.value })}
+                        className="h-[50px] w-[50px] rounded-xl cursor-pointer border-none"
+                    />
+                    <input
+                        placeholder="#3A332F"
+                        value={form.accent || ''}
+                        onChange={e => setForm({ ...form, accent: e.target.value })}
+                        className="flex-grow p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold"
+                    />
+                </div>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-bold text-[#3A332F] ml-2">Descripción</label>
+                <textarea
+                    placeholder="Describe la temática de esta colección..."
+                    value={form.description || ''}
+                    onChange={e => setForm({ ...form, description: e.target.value })}
+                    className="w-full p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold"
+                    rows={3}
+                />
+            </div>
 
             <div className="flex gap-4 md:col-span-2 justify-end mt-4">
                 <button onClick={onCancel} className="px-6 py-2 rounded-full border-2 border-[#3A332F]/10 font-bold hover:bg-gray-50">Cancelar</button>
