@@ -747,7 +747,7 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      <div className="lg:hidden fixed bottom-6 left-4 right-4 h-20 bg-[#2C2420]/95 backdrop-blur-xl rounded-full z-[1600] flex items-center justify-around px-2 border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] ring-1 ring-[#D4AF37]/20">
+      <div className="lg:hidden fixed bottom-6 left-4 right-4 h-16 bg-[#2C2420]/95 backdrop-blur-xl rounded-full z-[1600] flex items-center justify-around px-2 border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] ring-1 ring-[#D4AF37]/20">
         {[
           { id: 'inicio', icon: Home, label: 'Inicio' },
           { id: 'figuras', icon: ShoppingBag, label: 'Tienda' },
@@ -757,10 +757,10 @@ const App: React.FC = () => {
           <button
             key={item.id}
             onClick={() => handleNavClick(item.id)}
-            className={`flex items-center justify-center w-14 h-14 rounded-full transition-all duration-300 relative ${activeTab === item.id ? 'text-[#3A332F] scale-110' : 'text-white/40 hover:text-white/80'}`}
+            className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 relative ${activeTab === item.id ? 'text-[#3A332F] scale-110' : 'text-white/40 hover:text-white/80'}`}
           >
             <div className={`absolute inset-0 bg-[#D4AF37] rounded-full -z-10 transition-all duration-300 ${activeTab === item.id ? 'opacity-100 scale-100 shadow-lg border-2 border-white' : 'opacity-0 scale-50'}`}></div>
-            <item.icon size={activeTab === item.id ? 26 : 24} className="transition-all relative z-10" />
+            <item.icon size={activeTab === item.id ? 22 : 20} className="transition-all relative z-10" />
           </button>
         ))}
       </div>
@@ -768,7 +768,7 @@ const App: React.FC = () => {
       <main className="flex-grow relative z-10">{renderContent()}</main>
 
       {isChatOpen && (
-        <div className="fixed bottom-24 md:bottom-40 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-96 h-[380px] md:h-[500px] max-h-[60vh] md:max-h-[calc(100vh-8rem)] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
+        <div className="fixed bottom-28 md:bottom-40 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-96 h-[380px] md:h-[500px] max-h-[60vh] md:max-h-[calc(100vh-8rem)] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
           <div className="bg-[#3A332F] p-6 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#C14B3A] rounded-full flex items-center justify-center border-2 border-white"><Sparkles size={18} /></div>
