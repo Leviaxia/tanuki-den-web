@@ -205,16 +205,16 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                         {/* NEQUI CARD View */}
                         {method === 'nequi' && (
-                            <div className="bg-white rounded-[30px] p-6 w-full shadow-lg border border-white mb-6 relative overflow-hidden group">
+                            <div className="bg-white rounded-[30px] p-6 w-full shadow-lg border border-white mb-6 relative overflow-visible group">
                                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#C14B3A] to-[#D4AF37]"></div>
 
-                                <div className="text-center space-y-4">
-                                    {/* Full QR Container - Clean Background */}
-                                    <div className="w-48 h-48 mx-auto bg-white rounded-none p-0 flex items-center justify-center">
+                                <div className="text-center space-y-4 relative z-10">
+                                    {/* Full QR Container - MAX VISIBILITY */}
+                                    <div className="w-64 h-64 mx-auto bg-white rounded-xl shadow-sm border border-gray-100 p-2 flex items-center justify-center relative z-20">
                                         <img
                                             src="/assets/nequi-qr.png"
                                             alt="Nequi QR"
-                                            className="max-w-full max-h-full object-contain"
+                                            className="w-full h-full object-contain"
                                         />
                                     </div>
 
