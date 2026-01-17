@@ -165,17 +165,26 @@ const App: React.FC = () => {
                 let projectRef = '';
               const url = import.meta.env.VITE_SUPABASE_URL;
               if (url) {
+             // 1. Try Regex
              const matches = url.match(/https?:\/\/([^.]+)\./);
-              if (matches && matches[1]) projectRef = matches[1];
+              if (matches && matches[1]) {
+                projectRef = matches[1];
+             } else {
+                // 2. Fallback to Split
+                console.log("Regex failed, using split fallback for ProjectRef");
+              const parts = url.split('//');
+                 if (parts.length > 1) {
+                projectRef = parts[1].split('.')[0];
+                 }
+             }
         }
 
-              // Fallback for debugging if needed, but the regex should work for standard supabase URLs
-              if (!projectRef) console.warn("Could not extract Project Ref from URL:", url);
+              if (!projectRef) console.error("CRITICAL: Failed to extract Project Ref from URL:", url);
 
               const key = `sb-${projectRef}-auth-token`;
               const stored = localStorage.getItem(key);
 
-              console.log(`[DEBUG SESSION] Looking for key: ${key} -> Found: ${!!stored}`);
+              console.log(`[DEBUG SESSION] Key: ${key}, Found: ${!!stored}`);
 
               if (stored) {
           const session = JSON.parse(stored);

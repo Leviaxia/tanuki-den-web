@@ -140,7 +140,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
         let projectRef = '';
         if (supabaseUrl) {
           const matches = supabaseUrl.match(/https?:\/\/([^.]+)\./);
-          if (matches && matches[1]) projectRef = matches[1];
+          if (matches && matches[1]) {
+            projectRef = matches[1];
+          } else {
+            const parts = supabaseUrl.split('//');
+            if (parts.length > 1) {
+              projectRef = parts[1].split('.')[0];
+            }
+          }
         }
         const key = `sb-${projectRef}-auth-token`;
         console.log("[AUTH] Saving session to:", key);
