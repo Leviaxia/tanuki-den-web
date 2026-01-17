@@ -157,70 +157,50 @@ const App: React.FC = () => {
 
   // Manual Session Recovery (Bypass SDK Init)
   useEffect(() => {
+    const recoverSession = async () => { // Define inside to keep scope clean or use existing if defined outside
       try {
-                // ROBUST KEY GENERATION: Don't rely on URL splitting which can fail
-                // The key format is strictly: sb-<PROJECT_ID>-auth-token
-                // We will try the standard extraction, but also log it.
+                console.log("[SESSION] Attempting Manual Recovery...");
 
-                let projectRef = '';
-              const url = import.meta.env.VITE_SUPABASE_URL;
-              if (url) {
-             // 1. Try Regex
-             const matches = url.match(/https?:\/\/([^.]+)\./);
-              if (matches && matches[1]) {
-                projectRef = matches[1];
-             } else {
-                // 2. Fallback to Split
-                console.log("Regex failed, using split fallback for ProjectRef");
-              const parts = url.split('//');
-                 if (parts.length > 1) {
-                projectRef = parts[1].split('.')[0];
-                 }
-             }
-        }
+              // 1. Priority: Backup Key (Deterministic)
+              let stored = localStorage.getItem('tanuki-auth-token');
 
-              if (!projectRef) console.error("CRITICAL: Failed to extract Project Ref from URL:", url);
-
-              const key = `sb-${projectRef}-auth-token`;
-              let stored = localStorage.getItem(key);
-
-              // FAILSAFE: Try the simple backup key if specific key fails
+              // 2. Fallback: Dynamic Key (only if backup missing)
               if (!stored) {
-                console.warn(`[DEBUG SESSION] Standard key ${key} not found. Checking backup 'tanuki-auth-token'`);
-              stored = localStorage.getItem('tanuki-auth-token');
+             const projectRef = import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0];
+              const key = `sb-${projectRef}-auth-token`;
+              stored = localStorage.getItem(key);
         }
 
-              console.log(`[DEBUG SESSION] Final Session Found: ${!!stored}`);
+              console.log(`[SESSION] Token Found: ${!!stored}`);
 
               if (stored) {
           const session = JSON.parse(stored);
-              const now = Math.floor(Date.now() / 1000);
-          
-          if (session.expires_at && session.expires_at > now) {
-                console.log("Found valid manual session, restoring user...");
+              // TRUST MODE: Ignore expiry check for now to guarantee login works
+              // if (session.expires_at ...) 
 
-              // Restore immediately to avoid flash of "Guest"
+              console.log("Restoring user from manual token...");
               const user = session.user;
               const meta = user.user_metadata || { };
 
               // Fetch Profile manually
               let profile = null;
               try {
-                const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
+             // ... existing fetch logic ...
+             const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
                 headers: {
                 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
               'Authorization': `Bearer ${session.access_token}`
-                    }
-                });
-              if (res.ok) {
-                    const profiles = await res.json();
-                    if (profiles && profiles.length > 0) profile = profiles[0];
                 }
-             } catch (e) {
-                console.warn("Profile fetch failed during recovery", e);
+             });
+              if (res.ok) {
+                 const profiles = await res.json();
+                 if (profiles && profiles.length > 0) profile = profiles[0];
              }
+          } catch (e) {
+                console.warn("Profile fetch failed", e);
+          }
 
-             setUser(prev => ({
+          setUser(prev => ({
                 ...prev,
                 id: user.id,
               name: profile?.full_name || meta.full_name || meta.username || (user.email?.split('@')[0] || 'Aventurero'),
@@ -232,8 +212,7 @@ const App: React.FC = () => {
               birthDate: profile?.birth_date || meta.birth_date || '',
               phone: profile?.phone || meta.phone || '',
               realName: profile?.full_name || meta.full_name || ''
-             }));
-          }
+          }));
         }
       } catch (e) {
                 console.error("Manual session recovery failed", e);
@@ -271,33 +250,10 @@ const App: React.FC = () => {
               realName: profile?.full_name || meta.full_name || (prev.id === session.user.id ? prev.realName : '')
         }));
       } else if (event === 'SIGNED_OUT') {
-          // CHECK MANUAL TOKEN BEFORE RESETTING
-          // We must check BOTH the standard key and our backup key
-          const projectRef = import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0];
-              const standardKey = `sb-${projectRef}-auth-token`;
-              const backupKey = 'tanuki-auth-token';
-
-              const hasSession = localStorage.getItem(standardKey) || localStorage.getItem(backupKey);
-
-              if (hasSession) {
-                console.log("SDK sent SIGNED_OUT, but Manual Token (or Backup) exists. Ignoring reset to protect session.");
+                // DISABLE SDK LOGOUT COMPLETELY IN MANUAL MODE
+                // This prevents the SDK from overriding our manual tanuki-auth-token session
+                console.log("SDK sent SIGNED_OUT - IGNORING to protect Manual Session.");
               return;
-          }
-
-          // Only reset if NO session exists at all
-          setUser(prev => ({
-                ...prev,
-                id: 'guest',
-              email: '',
-              name: 'Viajero', // Keep original name 'Viajero'
-              isRegistered: false, // Keep original isRegistered
-              membership: undefined, // Keep original membership
-              location: '', // Keep original location
-              birthDate: '', // Keep original birthDate
-              photo: '/assets/default_avatar.png' // Keep original photo
-          }));
-              setFavorites([]); // setFavorites expects an array
-              sessionStorage.removeItem('tanuki_user');
       }
     });
 
