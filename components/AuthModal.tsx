@@ -63,9 +63,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
     setPhone(val);
 
     if (val && !/^3\d{9}$/.test(val)) {
-      // Si ya tiene 10 dígitos pero no empieza por 3, o si es corto (opcional: validar longitud en blur o typing?)
-      // Para UX agresiva validamos "typing" pero quizá sea molesto si es muy estricto al inicio.
-      // Mejor: Validamos si la longitud > 3 y no empieza por 3. O cuando length == 10.
       if (val.length > 0 && !val.startsWith('3')) {
         setPhoneError("Debe empezar por 3");
       } else if (val.length === 10 && !/^3\d{9}$/.test(val)) {
@@ -80,7 +77,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
     }
   };
 
-  // Custom validation on Blur for better UX (don't scream while typing too much)
   const handlePhoneBlur = () => {
     if (phone && !/^3\d{9}$/.test(phone)) {
       setPhoneError("Debe ser un celular válido (3XXXXXXXXX)");
@@ -100,7 +96,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
     setError(null);
     setStatusMsg('Conectando con el Clan...');
 
-    // Feedback Timer
     const msgInterval = setInterval(() => {
       setStatusMsg(prev => {
         if (prev === 'Conectando con el Clan...') return 'Contactando a los espíritus (Supabase)...';
@@ -111,52 +106,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
     }, 4000);
 
     try {
-      // Check Env Vars
-      if (!supabaseUrl || !supabaseAnonKey) throw new Error("Falta configuración de Supabase (URL/Key)");
+      console.log("Iniciando Login con SDK Oficial...");
 
-      console.log("Iniciando Login RAW...");
-
-      // 1. Raw Login Request
-      const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
-        method: 'POST',
-        headers: {
-          'apikey': supabaseAnonKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
+      // 1. SDK Login
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
 
-      clearInterval(msgInterval);
+      if (loginError) throw loginError;
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error_description || errorData.msg || "Error en credenciales");
-      }
-
-      const data = await response.json();
-
-      // 2. Manual Session Storage (Critical for app persistence)
-      if (data.access_token) {
-        let projectRef = '';
-        if (supabaseUrl) {
-          const matches = supabaseUrl.match(/https?:\/\/([^.]+)\./);
-          if (matches && matches[1]) {
-            projectRef = matches[1];
-          } else {
-            const parts = supabaseUrl.split('//');
-            if (parts.length > 1) {
-              projectRef = parts[1].split('.')[0];
-            }
-          }
-        }
+      if (data.session && data.user) {
+        // 2. Manual Session Storage (Hybrid Approach)
+        const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0] || 'default';
         const key = `sb-${projectRef}-auth-token`;
-        console.log("[AUTH] Saving session to:", key);
+
+        console.log("[AUTH] SDK Success. Saving manual backup to:", key);
 
         const sessionObj = {
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
           user: data.user,
-          expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
+          expires_at: data.session.expires_at,
         };
 
         // 1. Standard Key
@@ -165,48 +136,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
         // 2. Simple Backup Key
         localStorage.setItem('tanuki-auth-token', JSON.stringify(sessionObj));
 
-        // 3. Sync SDK Session (CRITICAL FIX)
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        });
-        if (sessionError) console.warn("[AUTH] SDK Session Sync Warning:", sessionError);
+        // 3. Clear Guest State
+        sessionStorage.removeItem('tanuki_user');
 
-        // 4. FORCE RELOAD to sync App.tsx state (with delay)
-        console.log("[AUTH] Success! Reloading to apply session...");
-        sessionStorage.removeItem('tanuki_user'); // CRITICAL: Clear stale guest state
+        // 4. Reload
+        console.log("[AUTH] Reloading...");
         setTimeout(() => {
           window.location.reload();
         }, 500);
         return;
-
-        // 3. User & Profile Handling
-        const user = data.user;
-
-        // Fetch profile (Still try SDK, if fails, fallback to basic user data)
-        let profile = null;
-        try {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          profile = profileData;
-        } catch (e) {
-          console.warn("No se pudo cargar perfil extra con SDK, usando datos básicos", e);
-        }
-
-        onComplete({ ...user, ...profile, id: user.id, name: profile?.full_name || user.email });
-        onClose();
       } else {
-        throw new Error("El servidor no devolvió un token válido.");
+        throw new Error("Login exitoso pero sin sesión retornado.");
       }
 
     } catch (err: any) {
       console.error("Login Error:", err);
-      setError(err.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : (err.message || 'Error desconocido al iniciar sesión'));
+      setError(err.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : (err.message || 'Error desconocido'));
     } finally {
       setLoading(false);
+      clearInterval(msgInterval);
     }
   };
 
@@ -215,28 +163,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
     setLoading(true);
     setError(null);
 
-    // Validaciones estrictas
     if (!/^3\d{9}$/.test(phone)) {
       setError("El número de celular debe ser colombiano (Empieza por 3 y tiene 10 dígitos).");
       setLoading(false);
       return;
     }
-
     const birthYear = parseInt(birthDate.split('-')[0]);
     if (birthDate && (birthYear < 1900 || birthYear > 2100)) {
-      setError("Por favor ingresa un año de nacimiento válido (1900-2100).");
+      setError("Año inválido.");
       setLoading(false);
       return;
     }
 
     try {
-      if (!supabaseUrl || !supabaseAnonKey) throw new Error("Falta configuración de Supabase (URL/Key)");
-      console.log("Iniciando Registro RAW...");
-
+      console.log("Iniciando Registro con SDK Oficial...");
       const fullLocation = `${city}, ${department}`;
       const validBirthDate = birthDate ? birthDate : null;
 
-      // Metadata for user
       const metadata = {
         username: fullName,
         full_name: fullName,
@@ -245,77 +188,41 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
         birth_date: validBirthDate,
       };
 
-      // 1. Raw Signup Request
-      const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
-        method: 'POST',
-        headers: {
-          'apikey': supabaseAnonKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
+      // 1. SDK SignUp
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
           data: metadata
-        })
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        // Translate common errors
-        const msg = errorData.msg || errorData.error_description || "Error al registrarse";
-        if (msg.includes('registered') || msg.includes('already exists')) {
-          throw new Error('Este correo ya está registrado. Intenta iniciar sesión.');
-        }
-        throw new Error(msg);
+      if (signUpError) {
+        if (signUpError.message?.includes('registered')) throw new Error('Este correo ya está registrado.');
+        throw signUpError;
       }
 
-      const data = await response.json();
-
-      // 2. Handle Success
       if (data.user) {
-        console.log('User created successfully:', data.user.id);
-
-        // If auto-confirm is on (Supabase default usually off for email, but off for phone), we might get a session.
-
-        // 2. Manual Session Storage
-        if (data.access_token) {
-          let projectRef = '';
-          if (supabaseUrl) {
-            const matches = supabaseUrl.match(/https?:\/\/([^.]+)\./);
-            if (matches && matches[1]) {
-              projectRef = matches[1];
-            } else {
-              const parts = supabaseUrl.split('//');
-              if (parts.length > 1) {
-                projectRef = parts[1].split('.')[0];
-              }
-            }
-          }
+        // 2. Auto-Login Check
+        if (data.session) {
+          console.log("Registro con autologin exitoso.");
+          // Manual Save
+          const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0] || 'default';
           const key = `sb-${projectRef}-auth-token`;
 
           const sessionObj = {
-            access_token: data.access_token,
-            refresh_token: data.refresh_token,
-            expires_at: Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
-            user: data.user
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+            user: data.user,
+            expires_at: data.session.expires_at,
           };
 
-          // 1. Standard Supabase Key
           localStorage.setItem(key, JSON.stringify(sessionObj));
-
-          // 2. Simple Backup Key (Deterministic, no URL parsing needed)
           localStorage.setItem('tanuki-auth-token', JSON.stringify(sessionObj));
+          sessionStorage.removeItem('tanuki_user');
 
-          // 3. Sync SDK Session (CRITICAL FIX)
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: data.access_token,
-            refresh_token: data.refresh_token,
-          });
-          if (sessionError) console.warn("[AUTH] SDK Session Sync Warning:", sessionError);
-
-          // 4. FORCE RELOAD for registration too (with small delay)
-          console.log("[AUTH] Registration Success! Reloading...");
-          sessionStorage.removeItem('tanuki_user'); // CRITICAL: Clear stale guest state
+          // Reload
+          console.log("[AUTH] Reloading...");
           setTimeout(() => {
             window.location.reload();
           }, 500);
@@ -325,17 +232,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
         setSuccessData({
           name: fullName || 'Viajero',
           email: email,
-          isAutoLogin: !!data.access_token
+          isAutoLogin: !!data.session
         });
         setStep('success');
 
       } else {
-        throw new Error('Respuesta inesperada del servidor (Sin usuario).');
+        throw new Error('No se recibió usuario del servidor.');
       }
 
     } catch (err: any) {
-      console.error('Critical Register Error:', err);
-      setError(err.message || 'Error desconocido al registrarse');
+      console.error('Register Error:', err);
+      setError(err.message || 'Error al registrarse');
     } finally {
       setLoading(false);
     }
@@ -343,19 +250,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
 
   const handleSuccessContinue = () => {
     if (successData?.isAutoLogin) {
-      // Construir objeto de usuario para autologin
-      const fullLocation = `${city}, ${department}`;
-      const validBirthDate = birthDate ? birthDate : null;
-
-      // Nota: El ID real lo obtendríamos de la sesión, pero aquí usamos un placeholder si no lo tenemos a mano
-      // En realidad, handleRegister ya verificó data.session. 
-      // Para simplificar, cerramos y dejamos que App.tsx detecte la sesión por onAuthStateChange, 
-      // O forzamos los datos que tenemos.
-
-      // Mejor: Cerramos modal. App.tsx detectará el evento SIGNED_IN de Supabase y actualizará todo.
       onClose();
     } else {
-      // Caso: Requiere confirmación de email
       onClose();
     }
   };
