@@ -130,7 +130,15 @@ const App: React.FC = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
 
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('tanuki_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.warn("Error loading cart:", e);
+      return [];
+    }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [detailQuantity, setDetailQuantity] = useState(1);
@@ -281,6 +289,10 @@ const App: React.FC = () => {
     window.addEventListener('tanuki_user_update', handleUserUpdate);
     return () => window.removeEventListener('tanuki_user_update', handleUserUpdate);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('tanuki_cart', JSON.stringify(cart));
+  }, [cart]);
 
   useEffect(() => {
     sessionStorage.setItem('tanuki_user', JSON.stringify(user));
