@@ -23,10 +23,19 @@ export interface Review {
   dislikes: number;
 }
 
+export interface Collection {
+  id: number;
+  title: string;
+  image: string;
+  description: string;
+  rotation: string;
+  accent: string;
+}
+
 export interface Product {
   id: string;
   name: string;
-  category: 'Scale' | 'Nendoroid' | 'Accessory' | 'Limited';
+  category: 'Scale' | 'Nendoroid' | 'Accessory' | 'Limited' | string; // Allow dynamic strings
   price: number;
   description: string;
   image: string;
@@ -35,6 +44,7 @@ export interface Product {
   reviews?: Review[];
   collectionId?: number;
   benefits?: string[];
+  created_at?: string;
 }
 
 export interface CartItem extends Product {

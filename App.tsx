@@ -8,10 +8,10 @@ import {
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
-import { Product, CartItem, UserMessage, Review, User as UserType } from './types';
+import { Product, CartItem, UserMessage, Review, User as UserType, Collection } from './types';
 import AuthModal from './components/AuthModal';
 import CheckoutModal from './components/CheckoutModal';
-import { PRODUCTS as INITIAL_PRODUCTS, heroText, collectionsContent } from './constants';
+import { PRODUCTS as INITIAL_PRODUCTS, heroText } from './constants';
 import { getOtakuRecommendation } from './services/gemini';
 import { supabase } from './src/lib/supabase';
 import { formatCurrency } from './src/lib/utils';
@@ -145,6 +145,20 @@ const App: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('All');
+
+  // Dynamic Collections State
+  const [collections, setCollections] = useState<Collection[]>([]);
+
+  // Fetch Collections
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const { data, error } = await supabase.from('collections').select('*').order('id');
+        if (data) setCollections(data);
+      } catch (e) { console.error("Error fetching collections", e); }
+    };
+    fetchCollections();
+  }, []);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -416,7 +430,7 @@ const App: React.FC = () => {
             <div className="space-y-6 md:space-y-8 text-center lg:text-left">
               <h2 className="text-4xl md:text-[5rem] lg:text-[5.5rem] font-ghibli-title text-[#3A332F] leading-[0.9] uppercase tracking-tighter">Catálogo <span className="text-[#C14B3A]">Completo</span></h2>
               <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
-                {['All', 'Scale', 'Nendoroid', 'Accessory', 'Limited', 'Favoritos'].map(cat => (
+                {['All', ...Array.from(new Set(products.map(p => p.category))).filter(c => c !== 'All'), 'Favoritos'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
@@ -483,7 +497,7 @@ const App: React.FC = () => {
         );
       case 'colecciones':
         if (selectedCollectionId) {
-          const collection = collectionsContent.find(c => c.id === selectedCollectionId);
+          const collection = collections.find(c => c.id === selectedCollectionId);
           const collectionProducts = products.filter(p => p.collectionId === selectedCollectionId);
 
           return (
@@ -548,7 +562,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-14">
-              {collectionsContent.map((item) => (
+              {collections.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => { setSelectedCollectionId(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
