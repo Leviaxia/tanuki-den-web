@@ -35,12 +35,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 const App: React.FC = () => {
   console.log("TANUKI APP VERSION: 2.6 - DEBUG MODE (BUILD " + new Date().toISOString() + ")");
 
-  // DEBUG OVERLAY
-  const debugOverlay = (
-    <div style={{ position: 'fixed', bottom: '10px', right: '10px', backgroundColor: 'purple', color: 'white', padding: '8px', zIndex: 9999, fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', borderRadius: '4px' }}>
-      VER: 2.7 | RAW MODE | ID: {user.id} | REG: {user.isRegistered ? 'YES' : 'NO'}
-    </div>
-  );
+
 
   // DEBUG CHECK ENV VARS
   if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
@@ -147,6 +142,13 @@ const App: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // DEBUG OVERLAY
+  const debugOverlay = (
+    <div style={{ position: 'fixed', bottom: '10px', right: '10px', backgroundColor: 'purple', color: 'white', padding: '8px', zIndex: 9999, fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', borderRadius: '4px' }}>
+      VER: 2.7 | RAW MODE | ID: {user.id} | REG: {user.isRegistered ? 'YES' : 'NO'}
+    </div>
+  );
 
 
   useEffect(() => {
