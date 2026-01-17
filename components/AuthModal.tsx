@@ -159,13 +159,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
           expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
         };
 
+        // 1. Standard Key
         localStorage.setItem(key, JSON.stringify(sessionObj));
 
-        // 3. FORCE RELOAD to sync App.tsx state
-        // Since we are using raw fetch, App.tsx won't know about the change unless we reload.
-        // This ensures recoverSession() in App.tsx runs and picks up the new token.
+        // 2. Simple Backup Key
+        localStorage.setItem('tanuki-auth-token', JSON.stringify(sessionObj));
+
+        // 3. FORCE RELOAD to sync App.tsx state (with delay)
         console.log("[AUTH] Success! Reloading to apply session...");
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
         return;
       }    // Notify SDK (optional, might not work if SDK is broken, but good practice)
       // supabase.auth.setSession(data); 
@@ -290,11 +294,17 @@ const handleRegister = async (e: React.FormEvent) => {
             user: data.user
           };
 
+          // 1. Standard Supabase Key
           localStorage.setItem(key, JSON.stringify(sessionObj));
 
-          // 3. FORCE RELOAD for registration too
+          // 2. Simple Backup Key (Deterministic, no URL parsing needed)
+          localStorage.setItem('tanuki-auth-token', JSON.stringify(sessionObj));
+
+          // 3. FORCE RELOAD for registration too (with small delay)
           console.log("[AUTH] Registration Success! Reloading...");
-          window.location.reload();
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
           return;
         }  // Notify SDK if possible
         // supabase.auth.setSession(data);

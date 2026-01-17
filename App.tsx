@@ -182,9 +182,15 @@ const App: React.FC = () => {
               if (!projectRef) console.error("CRITICAL: Failed to extract Project Ref from URL:", url);
 
               const key = `sb-${projectRef}-auth-token`;
-              const stored = localStorage.getItem(key);
+              let stored = localStorage.getItem(key);
 
-              console.log(`[DEBUG SESSION] Key: ${key}, Found: ${!!stored}`);
+              // FAILSAFE: Try the simple backup key if specific key fails
+              if (!stored) {
+                console.warn(`[DEBUG SESSION] Standard key ${key} not found. Checking backup 'tanuki-auth-token'`);
+              stored = localStorage.getItem('tanuki-auth-token');
+        }
+
+              console.log(`[DEBUG SESSION] Final Session Found: ${!!stored}`);
 
               if (stored) {
           const session = JSON.parse(stored);
