@@ -182,53 +182,33 @@ const App: React.FC = () => {
   }, [chatMessages, isTyping]);
 
   // PERMANENCE ENGINE: User-Scoped Data Sync
+  const [isCloudInitialized, setIsCloudInitialized] = useState(false);
+
+  // PERMANENCE ENGINE: User-Scoped Data Sync & Cloud Restore
   useEffect(() => {
-    // When ID changes (Login/Logout), reload THEIR specific data
-    const loadUserData = () => {
+    const refreshProfile = async () => {
+      // 1. Load Local Data (Instant)
       try {
-        console.log(`[STORAGE] Loading data for scope: ${user.id}`);
         setFavorites(JSON.parse(localStorage.getItem(`tanuki_favorites_${user.id}`) || '[]'));
         setAppliedDiscount(Number(localStorage.getItem(`tanuki_discount_${user.id}`) || 0));
         setCart(JSON.parse(localStorage.getItem(`tanuki_cart_${user.id}`) || '[]'));
         setHasSpunFirst(localStorage.getItem(`tanuki_has_spun_${user.id}`) === 'true');
-      } catch (e) { console.error("Data load error", e); }
-    };
-    loadUserData();
-  }, [user.id]);
+      } catch (e) { console.error("Local load error", e); }
 
-  // Savers
-  useEffect(() => { localStorage.setItem(`tanuki_favorites_${user.id}`, JSON.stringify(favorites)); }, [favorites, user.id]);
-  useEffect(() => { localStorage.setItem(`tanuki_discount_${user.id}`, appliedDiscount.toString()); }, [appliedDiscount, user.id]);
-  useEffect(() => { localStorage.setItem(`tanuki_cart_${user.id}`, JSON.stringify(cart)); }, [cart, user.id]);
-  useEffect(() => { localStorage.setItem(`tanuki_has_spun_${user.id}`, String(hasSpunFirst)); }, [hasSpunFirst, user.id]);
+      // 2. Load Cloud Data (Async Upgrade)
+      if (user.id === 'guest') {
+        setIsCloudInitialized(true);
+        return;
+      }
 
-  // Clean up OLD localStorage data to prevent conflicts
-  useEffect(() => {
-    localStorage.removeItem('tanuki_user');
-  }, []);
-
-  // Fix for stale guest data in localStorage (only reset if using the old unsplash image)
-  useEffect(() => {
-    if (user.id === 'guest' && user.photo?.includes('unsplash.com')) {
-      setUser(prev => ({ ...prev, photo: '/assets/default_avatar.png' }));
-    }
-  }, [user.id, user.photo]);
-
-  // Background Profile Refresh (Trusts Hydration)
-  useEffect(() => {
-    const refreshProfile = async () => {
-      // If not logged in via hydration, do nothing (or check token if hydration failed?)
-      // We check token directly again to be safe.
+      setIsCloudInitialized(false);
       const stored = localStorage.getItem('tanuki-auth-token');
-      if (!stored) return;
+      if (!stored) { setIsCloudInitialized(true); return; }
 
       try {
         const session = JSON.parse(stored);
-        const user = session.user;
 
-        console.log("[BG] Refreshing profile data...");
-
-        // Fetch Profile manually using Raw Fetch to bypass SDK issues
+        // Fetch Profile manually
         const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
           headers: {
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -242,10 +222,9 @@ const App: React.FC = () => {
             const profile = profiles[0];
             console.log("[BG] Profile refreshed:", profile);
 
-            // Update state with fresh DB data, preserving local fallbacks
+            // Update User Identity
             setUser(prev => ({
               ...prev,
-              // Only update fields that come from DB
               membership: profile.membership || prev.membership,
               photo: profile.avatar_url || prev.photo,
               location: profile.location || prev.location,
@@ -253,15 +232,65 @@ const App: React.FC = () => {
               phone: profile.phone || prev.phone,
               realName: profile.full_name || prev.realName
             }));
+
+            // CLOUD SYNC: Restore cross-device data from DB
+            // Only overwrite local if DB has valid data
+            if (profile.favorites && Array.isArray(profile.favorites)) setFavorites(profile.favorites);
+            if (profile.cart && Array.isArray(profile.cart)) setCart(profile.cart);
+            if (typeof profile.discount === 'number') setAppliedDiscount(profile.discount);
+            if (typeof profile.has_spun === 'boolean') setHasSpunFirst(profile.has_spun);
           }
         }
       } catch (e) {
         console.error("[BG] Profile refresh failed", e);
+      } finally {
+        setIsCloudInitialized(true);
       }
     };
 
     refreshProfile();
+  }, [user.id]);
+
+  // Savers
+  useEffect(() => { localStorage.setItem(`tanuki_favorites_${user.id}`, JSON.stringify(favorites)); }, [favorites, user.id]);
+  useEffect(() => { localStorage.setItem(`tanuki_discount_${user.id}`, appliedDiscount.toString()); }, [appliedDiscount, user.id]);
+  useEffect(() => { localStorage.setItem(`tanuki_cart_${user.id}`, JSON.stringify(cart)); }, [cart, user.id]);
+  useEffect(() => { localStorage.setItem(`tanuki_has_spun_${user.id}`, String(hasSpunFirst)); }, [hasSpunFirst, user.id]);
+
+  // CLOUD SYNC: Push updates to Supabase (Debounced)
+  useEffect(() => {
+    if (!user.isRegistered || user.id === 'guest' || !isCloudInitialized) return;
+
+    const syncToCloud = async () => {
+      try {
+        await supabase.from('profiles').update({
+          favorites: favorites,
+          cart: cart,
+          discount: appliedDiscount,
+          has_spun: hasSpunFirst
+        }).eq('id', user.id);
+      } catch (e) { console.error("Cloud sync failed", e); }
+    };
+
+    const timeout = setTimeout(syncToCloud, 2000);
+    return () => clearTimeout(timeout);
+  }, [favorites, cart, appliedDiscount, hasSpunFirst, user.id, user.isRegistered, isCloudInitialized]);
+
+
+
+  // Clean up OLD localStorage data to prevent conflicts
+  useEffect(() => {
+    localStorage.removeItem('tanuki_user');
   }, []);
+
+  // Fix for stale guest data in localStorage (only reset if using the old unsplash image)
+  useEffect(() => {
+    if (user.id === 'guest' && user.photo?.includes('unsplash.com')) {
+      setUser(prev => ({ ...prev, photo: '/assets/default_avatar.png' }));
+    }
+  }, [user.id, user.photo]);
+
+
 
   /* REMOVED: onAuthStateChange listener to prevent conflicts. 
      We rely 100% on tanuki-auth-token in localStorage. */
