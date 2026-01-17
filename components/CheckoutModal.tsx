@@ -262,6 +262,22 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                         <img src="/assets/bancolombia-logo.png" alt="Bancolombia" className="w-32 h-auto object-contain mb-4 opacity-80" />
                                         <p className="text-[#3A332F] font-bold text-sm max-w-[200px]">Transferencia Bancaria a Bancolombia.</p>
                                         <p className="text-xs text-[#8C8279]">Cuenta Ahorros: 123-456-789-00</p>
+
+                                        <div className="relative w-full max-w-xs pt-4">
+                                            <input
+                                                type="file"
+                                                onChange={handleFileChange}
+                                                accept="image/*"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                            />
+                                            <div className={`w-full p-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border-2 border-dashed transition-all ${proofFile ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#2E7D32]' : 'bg-[#FDF5E6] text-[#8C8279] border-[#D7CCC8]'}`}>
+                                                {proofFile ? (
+                                                    <><CheckCircle2 size={16} /> ¡Comprobante Cargado!</>
+                                                ) : (
+                                                    <><Upload size={16} /> Subir Comprobante</>
+                                                )}
+                                            </div>
+                                        </div>
                                     </>
                                 )}
                             </div>
