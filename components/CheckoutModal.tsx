@@ -190,12 +190,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         {/* Payment Toggles */}
                         <div className="grid grid-cols-3 gap-3 w-full mb-6">
                             <button onClick={() => setMethod('nequi')} className={`py-4 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-all shadow-sm ${method === 'nequi' ? 'bg-[#C14B3A] text-white shadow-lg scale-105 z-10' : 'bg-white text-[#3A332F] hover:bg-gray-50'}`}>
-                                <Wallet size={20} />
+                                <img src="/assets/nequi-logo.png" alt="Nequi" className={`w-auto h-6 object-contain ${method === 'nequi' ? 'brightness-0 invert' : ''}`} />
                                 <span className="text-[9px] font-black uppercase tracking-widest">Nequi</span>
                             </button>
-                            <button onClick={() => setMethod('card')} className={`py-4 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-all shadow-sm ${method === 'card' ? 'bg-[#3A332F] text-white shadow-lg scale-105 z-10' : 'bg-white text-[#3A332F] hover:bg-gray-50'}`}>
-                                <CreditCard size={20} />
-                                <span className="text-[9px] font-black uppercase tracking-widest text-center leading-none">Tarjeta<br />/ PSE</span>
+                            <button onClick={() => setMethod('card')} className={`py-4 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-all shadow-sm ${method === 'card' ? 'bg-[#3A332F] text-white shadow-lg scale-105 z-10' : 'bg-white text-[#C14B3A] hover:bg-gray-50'}`}>
+                                <CreditCard size={20} className={method === 'card' ? 'text-white' : 'text-[#C14B3A]'} />
+                                <span className={`text-[9px] font-black uppercase tracking-widest text-center leading-none ${method === 'card' ? 'text-white' : 'text-[#C14B3A]'}`}>Tarjeta<br />/ PSE</span>
                             </button>
                             <button onClick={() => setMethod('manual')} className={`py-4 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-all shadow-sm ${method === 'manual' ? 'bg-[#D4AF37] text-white shadow-lg scale-105 z-10' : 'bg-white text-[#3A332F] hover:bg-gray-50'}`}>
                                 <img src="/assets/bancolombia-logo.png" alt="Bancolombia" className="w-auto h-6 object-contain" />
@@ -209,12 +209,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#C14B3A] to-[#D4AF37]"></div>
 
                                 <div className="text-center space-y-4">
-                                    {/* Full QR Container - No Crop */}
-                                    <div className="w-48 h-48 mx-auto bg-white rounded-2xl p-2 shadow-sm border border-gray-100">
+                                    {/* Full QR Container - Clean Background */}
+                                    <div className="w-48 h-48 mx-auto bg-white rounded-none p-0 flex items-center justify-center">
                                         <img
                                             src="/assets/nequi-qr.png"
                                             alt="Nequi QR"
-                                            className="w-full h-full object-contain rounded-xl"
+                                            className="max-w-full max-h-full object-contain"
                                         />
                                     </div>
 
