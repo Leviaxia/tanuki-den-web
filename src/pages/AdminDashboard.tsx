@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase';
-import { Plus, Edit3, Trash2, Save, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Plus, Edit3, Trash2, Save, X, Image as ImageIcon, Loader2, Home } from 'lucide-react';
 import { Product } from '../../types';
 import { formatCurrency } from '../lib/utils';
 
@@ -237,7 +237,10 @@ export const AdminDashboard = () => {
                         <h1 className="text-4xl font-ghibli-title text-[#3A332F] uppercase">Panel de Control</h1>
                         <p className="text-[#8C8279] font-bold">Gestiona los tesoros del Tanuki Den</p>
                     </div>
-                    <button onClick={() => setIsCreating(true)} className="bg-[#C14B3A] text-white px-8 py-4 rounded-full font-bold flex items-center gap-2 hover:bg-[#3A332F] transition-all"><Plus /> Nuevo Tesoro</button>
+                    <div className="flex gap-3">
+                        <button onClick={() => window.location.href = '/'} className="bg-[#FDF5E6] text-[#3A332F] px-6 py-4 rounded-full font-bold flex items-center gap-2 hover:bg-[#D4AF37] hover:text-white transition-all border-2 border-[#3A332F]"><Home size={20} /> Inicio</button>
+                        <button onClick={() => setIsCreating(true)} className="bg-[#C14B3A] text-white px-8 py-4 rounded-full font-bold flex items-center gap-2 hover:bg-[#3A332F] transition-all"><Plus /> Nuevo Tesoro</button>
+                    </div>
                 </div>
 
                 {isCreating && (
