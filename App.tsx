@@ -1246,17 +1246,17 @@ const App: React.FC = () => {
       {selectedProduct && (
         <div className="fixed inset-0 z-[2100] bg-[#3A332F]/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8">
           <div className="bg-white w-full max-w-5xl h-fit max-h-[90vh] rounded-[30px] md:rounded-[60px] overflow-hidden flex flex-col md:flex-row border-4 md:border-8 border-white shadow-2xl animate-pop">
-            <div className="w-full md:w-1/2 h-64 md:h-auto bg-[#FDF5E6] relative group">
+            <div className="w-full md:w-1/2 h-72 md:h-auto bg-[#FDF5E6] relative group p-6 md:p-0 flex items-center justify-center">
               <img
                 src={selectedProduct.image}
-                className="w-full h-full object-cover cursor-zoom-in active:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover md:object-cover object-contain rounded-[20px] md:rounded-none cursor-zoom-in active:scale-105 transition-transform duration-500 shadow-sm md:shadow-none bg-white md:bg-transparent"
                 alt={selectedProduct.name}
                 onClick={() => setFullScreenImage(selectedProduct.image)}
               />
-              <div className="absolute top-4 left-4 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none md:hidden flex items-center gap-1">
+              <div className="absolute top-8 left-8 bg-black/50 text-white text-[10px] px-3 py-1.5 rounded-full backdrop-blur-sm pointer-events-none md:hidden flex items-center gap-1 z-10 font-bold tracking-wider border border-white/20">
                 <Sparkles size={10} /> Toca para Zoom
               </div>
-              <button onClick={() => setSelectedProduct(null)} className="md:hidden absolute top-4 right-4 p-2 bg-white/90 rounded-full shadow-md z-10"><X size={20} /></button>
+              <button onClick={() => setSelectedProduct(null)} className="md:hidden absolute top-6 right-6 p-2 bg-white rounded-full shadow-lg z-20 text-[#3A332F] hover:bg-[#C14B3A] hover:text-white transition-colors"><X size={20} /></button>
             </div>
             <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col overflow-y-auto">
               <button onClick={() => setSelectedProduct(null)} className="hidden md:block self-end p-3 hover:bg-[#FDF5E6] rounded-full transition-all mb-8"><X size={32} /></button>
