@@ -198,12 +198,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 <span className="text-[9px] font-black uppercase tracking-widest text-center leading-none">Tarjeta<br />/ PSE</span>
                             </button>
                             <button onClick={() => setMethod('manual')} className={`py-4 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-all shadow-sm ${method === 'manual' ? 'bg-[#D4AF37] text-white shadow-lg scale-105 z-10' : 'bg-white text-[#3A332F] hover:bg-gray-50'}`}>
-                                {/* Bancolombia-style Icon */}
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="4" y="4" width="6" height="16" rx="1" />
-                                    <rect x="14" y="4" width="6" height="16" rx="1" />
-                                    <path d="M2 20L22 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                </svg>
+                                <img src="/assets/bancolombia-logo.png" alt="Bancolombia" className="w-auto h-6 object-contain" />
                                 <span className="text-[8px] font-black uppercase tracking-tighter">Bancolombia</span>
                             </button>
                         </div>
@@ -214,13 +209,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#C14B3A] to-[#D4AF37]"></div>
 
                                 <div className="text-center space-y-4">
-                                    {/* Cropped QR Container */}
-                                    <div className="w-40 h-40 mx-auto bg-[#3A332F] rounded-2xl p-2 shadow-inner overflow-hidden relative">
+                                    {/* Full QR Container - No Crop */}
+                                    <div className="w-48 h-48 mx-auto bg-white rounded-2xl p-2 shadow-sm border border-gray-100">
                                         <img
                                             src="/assets/nequi-qr.png"
                                             alt="Nequi QR"
-                                            className="w-full object-cover rounded-xl"
-                                            style={{ marginTop: '-40px', height: '140%', width: '100%', objectPosition: 'center' }}
+                                            className="w-full h-full object-contain rounded-xl"
                                         />
                                     </div>
 
@@ -267,12 +261,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                     </>
                                 ) : (
                                     <>
-                                        {/* Bancolombia Large Icon */}
-                                        <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor" className="text-[#3A332F]/20" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="4" y="4" width="6" height="16" rx="1" />
-                                            <rect x="14" y="4" width="6" height="16" rx="1" />
-                                            <path d="M2 20L22 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                        </svg>
+                                        <img src="/assets/bancolombia-logo.png" alt="Bancolombia" className="w-32 h-auto object-contain mb-4 opacity-80" />
                                         <p className="text-[#3A332F] font-bold text-sm max-w-[200px]">Transferencia Bancaria a Bancolombia.</p>
                                         <p className="text-xs text-[#8C8279]">Cuenta Ahorros: 123-456-789-00</p>
                                     </>
