@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, Upload, Image as ImageIcon } from 'lucide-react';
 import { CartItem } from '../types';
 import { formatCurrency } from '../src/lib/utils';
+import { departments, colombiaData } from '@/src/data/colombia';
 
 interface CheckoutModalProps {
     isOpen: boolean;
@@ -22,7 +23,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const [success, setSuccess] = useState(false);
 
     // Shipping State
-    const [shipping, setShipping] = useState({ city: '', address: '', notes: '' });
+    const [shipping, setShipping] = useState({ fullName: '', department: '', city: '', address: '' });
     const [shippingErrors, setShippingErrors] = useState<any>({});
 
     // Payment State
@@ -38,10 +39,17 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         }
     }, [isOpen]);
 
+    // Reset city when department changes
+    useEffect(() => {
+        setShipping(prev => ({ ...prev, city: '' }));
+    }, [shipping.department]);
+
     if (!isOpen) return null;
 
     const validateShipping = () => {
         const errs: any = {};
+        if (!shipping.fullName) errs.fullName = 'Requerido';
+        if (!shipping.department) errs.department = 'Requerido';
         if (!shipping.city) errs.city = 'Requerido';
         if (!shipping.address) errs.address = 'Requerido';
         setShippingErrors(errs);
@@ -126,10 +134,40 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 <div className="space-y-6 animate-slide-in h-full flex flex-col">
                                     <h3 className="text-xl font-ghibli-title text-[#3A332F] flex items-center gap-2"><MapPin size={20} className="text-[#C14B3A]" /> Datos de Entrega</h3>
                                     <div className="space-y-3 flex-grow">
-                                        <input value={shipping.city} onChange={e => setShipping({ ...shipping, city: e.target.value })} placeholder="Ciudad" className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.city ? 'border-red-400' : 'border-transparent'}`} />
-                                        <input placeholder="Departamento" defaultValue="Cundinamarca" className="w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 border-transparent focus:border-[#C14B3A]" />
-                                        <input value={shipping.address} onChange={e => setShipping({ ...shipping, address: e.target.value })} placeholder="Dirección Exacta" className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.address ? 'border-red-400' : 'border-transparent'}`} />
-                                        <textarea value={shipping.notes} onChange={e => setShipping({ ...shipping, notes: e.target.value })} placeholder="Notas adicionales (opcional)" rows={3} className="w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 border-transparent focus:border-[#C14B3A] placeholder:text-[#3A332F]/30" />
+                                        <input
+                                            value={shipping.fullName}
+                                            onChange={e => setShipping({ ...shipping, fullName: e.target.value })}
+                                            placeholder="Nombre Completo"
+                                            className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.fullName ? 'border-red-400' : 'border-transparent'}`}
+                                        />
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <select
+                                                value={shipping.department}
+                                                onChange={e => setShipping({ ...shipping, department: e.target.value })}
+                                                className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] appearance-none ${shippingErrors.department ? 'border-red-400' : 'border-transparent'}`}
+                                            >
+                                                <option value="">Departamento</option>
+                                                {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                            </select>
+
+                                            <select
+                                                value={shipping.city}
+                                                onChange={e => setShipping({ ...shipping, city: e.target.value })}
+                                                disabled={!shipping.department}
+                                                className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] appearance-none ${shippingErrors.city ? 'border-red-400' : 'border-transparent'} disabled:opacity-50`}
+                                            >
+                                                <option value="">Municipio</option>
+                                                {shipping.department && colombiaData[shipping.department]?.map(c => <option key={c} value={c}>{c}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <input
+                                            value={shipping.address}
+                                            onChange={e => setShipping({ ...shipping, address: e.target.value })}
+                                            placeholder="Dirección Exacta"
+                                            className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.address ? 'border-red-400' : 'border-transparent'}`}
+                                        />
                                     </div>
                                     <div className="flex gap-3 pt-2">
                                         <button onClick={() => setStep('summary')} className="px-6 py-4 bg-white rounded-full font-bold text-[#3A332F] shadow-sm hover:bg-gray-50 text-sm">Volver</button>
@@ -160,8 +198,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 <span className="text-[9px] font-black uppercase tracking-widest text-center leading-none">Tarjeta<br />/ PSE</span>
                             </button>
                             <button onClick={() => setMethod('manual')} className={`py-4 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-all shadow-sm ${method === 'manual' ? 'bg-[#D4AF37] text-white shadow-lg scale-105 z-10' : 'bg-white text-[#3A332F] hover:bg-gray-50'}`}>
-                                <Landmark size={20} />
-                                <span className="text-[9px] font-black uppercase tracking-widest">Banco</span>
+                                {/* Bancolombia-style Icon */}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="4" y="4" width="6" height="16" rx="1" />
+                                    <rect x="14" y="4" width="6" height="16" rx="1" />
+                                    <path d="M2 20L22 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                </svg>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">Bancolombia</span>
                             </button>
                         </div>
 
@@ -171,8 +214,14 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#C14B3A] to-[#D4AF37]"></div>
 
                                 <div className="text-center space-y-4">
-                                    <div className="w-40 h-40 mx-auto bg-[#3A332F] rounded-2xl p-2 shadow-inner">
-                                        <img src="/assets/nequi-qr.png" alt="Nequi QR" className="w-full h-full object-cover rounded-xl" />
+                                    {/* Cropped QR Container */}
+                                    <div className="w-40 h-40 mx-auto bg-[#3A332F] rounded-2xl p-2 shadow-inner overflow-hidden relative">
+                                        <img
+                                            src="/assets/nequi-qr.png"
+                                            alt="Nequi QR"
+                                            className="w-full object-cover rounded-xl"
+                                            style={{ marginTop: '-40px', height: '140%', width: '100%', objectPosition: 'center' }}
+                                        />
                                     </div>
 
                                     <div className="space-y-1">
@@ -218,7 +267,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                     </>
                                 ) : (
                                     <>
-                                        <Landmark className="text-[#3A332F]/20" size={64} />
+                                        {/* Bancolombia Large Icon */}
+                                        <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor" className="text-[#3A332F]/20" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="4" y="4" width="6" height="16" rx="1" />
+                                            <rect x="14" y="4" width="6" height="16" rx="1" />
+                                            <path d="M2 20L22 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                        </svg>
                                         <p className="text-[#3A332F] font-bold text-sm max-w-[200px]">Transferencia Bancaria a Bancolombia.</p>
                                         <p className="text-xs text-[#8C8279]">Cuenta Ahorros: 123-456-789-00</p>
                                     </>
