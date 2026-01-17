@@ -272,24 +272,31 @@ const App: React.FC = () => {
         }));
       } else if (event === 'SIGNED_OUT') {
           // CHECK MANUAL TOKEN BEFORE RESETTING
+          // We must check BOTH the standard key and our backup key
           const projectRef = import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0];
-              const key = `sb-${projectRef}-auth-token`;
-              const stored = localStorage.getItem(key);
-              if (stored) {
-                console.log("SDK sent SIGNED_OUT, but Manual Token exists. Ignoring reset to protect session.");
+              const standardKey = `sb-${projectRef}-auth-token`;
+              const backupKey = 'tanuki-auth-token';
+
+              const hasSession = localStorage.getItem(standardKey) || localStorage.getItem(backupKey);
+
+              if (hasSession) {
+                console.log("SDK sent SIGNED_OUT, but Manual Token (or Backup) exists. Ignoring reset to protect session.");
               return;
           }
 
-              // Reset to guest
-              setUser({
+          // Only reset if NO session exists at all
+          setUser(prev => ({
+                ...prev,
                 id: 'guest',
-              name: 'Viajero',
-              photo: '/assets/default_avatar.png',
-              isRegistered: false,
-              membership: undefined,
-              location: '',
-              birthDate: ''
-          });
+              email: '',
+              name: 'Viajero', // Keep original name 'Viajero'
+              isRegistered: false, // Keep original isRegistered
+              membership: undefined, // Keep original membership
+              location: '', // Keep original location
+              birthDate: '', // Keep original birthDate
+              photo: '/assets/default_avatar.png' // Keep original photo
+          }));
+              setFavorites([]); // setFavorites expects an array
               sessionStorage.removeItem('tanuki_user');
       }
     });
