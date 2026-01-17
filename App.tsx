@@ -38,7 +38,7 @@ const App: React.FC = () => {
   // DEBUG OVERLAY
   const debugOverlay = (
     <div style={{ position: 'fixed', bottom: '10px', right: '10px', backgroundColor: 'purple', color: 'white', padding: '8px', zIndex: 9999, fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', borderRadius: '4px' }}>
-      VER: 2.6 | RAW MODE | <a href="/debug" style={{ textDecoration: 'underline' }}>DEBUG RED</a>
+      VER: 2.7 | RAW MODE | ID: {user.id} | REG: {user.isRegistered ? 'YES' : 'NO'}
     </div>
   );
 
@@ -171,110 +171,57 @@ const App: React.FC = () => {
     }
   }, [user.id, user.photo]);
 
-  // Manual Session Recovery (Bypass SDK Init)
+  // Background Profile Refresh (Trusts Hydration)
   useEffect(() => {
-    const recoverSession = async () => { // Define inside to keep scope clean or use existing if defined outside
+    const refreshProfile = async () => {
+      // If not logged in via hydration, do nothing (or check token if hydration failed?)
+      // We check token directly again to be safe.
+      const stored = localStorage.getItem('tanuki-auth-token');
+      if (!stored) return;
+
       try {
-        console.log("[SESSION] Attempting Manual Recovery...");
+        const session = JSON.parse(stored);
+        const user = session.user;
 
-        // 1. Priority: Backup Key (Deterministic)
-        let stored = localStorage.getItem('tanuki-auth-token');
+        console.log("[BG] Refreshing profile data...");
 
-        // 2. Fallback: Dynamic Key (only if backup missing)
-        if (!stored) {
-          const projectRef = import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0];
-          const key = `sb-${projectRef}-auth-token`;
-          stored = localStorage.getItem(key);
-        }
-
-        console.log(`[SESSION] Token Found: ${!!stored}`);
-
-        if (stored) {
-          const session = JSON.parse(stored);
-          // TRUST MODE: Ignore expiry check for now to guarantee login works
-          // if (session.expires_at ...) 
-
-          console.log("Restoring user from manual token...");
-          const user = session.user;
-          const meta = user.user_metadata || {};
-
-          // Fetch Profile manually
-          let profile = null;
-          try {
-            // ... existing fetch logic ...
-            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
-              headers: {
-                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${session.access_token}`
-              }
-            });
-            if (res.ok) {
-              const profiles = await res.json();
-              if (profiles && profiles.length > 0) profile = profiles[0];
-            }
-          } catch (e) {
-            console.warn("Profile fetch failed", e);
+        // Fetch Profile manually using Raw Fetch to bypass SDK issues
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session.access_token}`
           }
+        });
 
-          setUser(prev => ({
-            ...prev,
-            id: user.id,
-            name: profile?.full_name || meta.full_name || meta.username || (user.email?.split('@')[0] || 'Aventurero'),
-            photo: profile?.avatar_url || prev.photo,
-            isRegistered: true,
-            email: user.email,
-            membership: profile?.membership || undefined,
-            location: profile?.location || meta.location || '',
-            birthDate: profile?.birth_date || meta.birth_date || '',
-            phone: profile?.phone || meta.phone || '',
-            realName: profile?.full_name || meta.full_name || ''
-          }));
+        if (res.ok) {
+          const profiles = await res.json();
+          if (profiles && profiles.length > 0) {
+            const profile = profiles[0];
+            console.log("[BG] Profile refreshed:", profile);
+
+            // Update state with fresh DB data, preserving local fallbacks
+            setUser(prev => ({
+              ...prev,
+              // Only update fields that come from DB
+              membership: profile.membership || prev.membership,
+              photo: profile.avatar_url || prev.photo,
+              location: profile.location || prev.location,
+              birthDate: profile.birth_date || prev.birthDate,
+              phone: profile.phone || prev.phone,
+              realName: profile.full_name || prev.realName
+            }));
+          }
         }
       } catch (e) {
-        console.error("Manual session recovery failed", e);
+        console.error("[BG] Profile refresh failed", e);
       }
     };
-    recoverSession();
+
+    refreshProfile();
   }, []);
 
-  // Supabase Auth Listener (Keep as backup/sync)
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        // Get extra profile data
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        // Use metadata as fallback if profile is empty (common immediately after signup)
-        const meta = session.user.user_metadata || {};
-
-        setUser(prev => ({
-          ...prev,
-          id: session.user.id,
-          // Hierarchy: Profile (DB) -> Metadata (Auth) -> Previous Local -> Email Fallback
-          name: profile?.full_name || meta.full_name || meta.username || (prev.id === session.user.id && prev.name !== 'Viajero' ? prev.name : (session.user.email?.split('@')[0] || 'Aventurero')),
-          photo: profile?.avatar_url || prev.photo,
-          isRegistered: true,
-          email: session.user.email,
-          membership: profile?.membership || (prev.id === session.user.id ? prev.membership : undefined),
-          location: profile?.location || meta.location || (prev.id === session.user.id ? prev.location : ''),
-          birthDate: profile?.birth_date || meta.birth_date || (prev.id === session.user.id ? prev.birthDate : ''),
-          phone: profile?.phone || meta.phone || (prev.id === session.user.id ? prev.phone : ''),
-          realName: profile?.full_name || meta.full_name || (prev.id === session.user.id ? prev.realName : '')
-        }));
-      } else if (event === 'SIGNED_OUT') {
-        // DISABLE SDK LOGOUT COMPLETELY IN MANUAL MODE
-        // This prevents the SDK from overriding our manual tanuki-auth-token session
-        console.log("SDK sent SIGNED_OUT - IGNORING to protect Manual Session.");
-        return;
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  /* REMOVED: onAuthStateChange listener to prevent conflicts. 
+     We rely 100% on tanuki-auth-token in localStorage. */
 
   // Sync state when returning from checkout
   useEffect(() => {
