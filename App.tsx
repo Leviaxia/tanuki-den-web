@@ -1249,7 +1249,7 @@ const App: React.FC = () => {
             <div className="w-full md:w-1/2 h-72 md:h-auto bg-[#FDF5E6] relative group p-6 md:p-0 flex items-center justify-center">
               <img
                 src={selectedProduct.image}
-                className="w-full h-full object-cover md:object-cover object-contain rounded-[20px] md:rounded-none cursor-zoom-in active:scale-105 transition-transform duration-500 shadow-sm md:shadow-none bg-white md:bg-transparent"
+                className="w-full h-full object-cover object-top rounded-[20px] md:rounded-none cursor-zoom-in active:scale-105 transition-transform duration-500 shadow-sm md:shadow-none bg-white md:bg-transparent"
                 alt={selectedProduct.name}
                 onClick={() => setFullScreenImage(selectedProduct.image)}
               />
