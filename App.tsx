@@ -1199,8 +1199,8 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 space-y-24">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-16">
             <div className="space-y-8 text-center md:text-left">
-              <h3 className="hidden md:block text-4xl md:text-6xl font-ghibli-title leading-none uppercase tracking-tighter">TANUKI <br /><span className="text-[#D4AF37]">DEN</span></h3>
-              <p className="hidden md:block text-white/40 text-[10px] font-black uppercase tracking-[0.2em] leading-loose">Tesoros con alma. El refugio de todo coleccionista de corazón en Colombia. Forjamos piezas legendarias para repisas épicas. 🇨🇴</p>
+              <h3 className="text-4xl md:text-6xl font-ghibli-title leading-none uppercase tracking-tighter">TANUKI <br /><span className="text-[#D4AF37]">DEN</span></h3>
+              <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] leading-loose">Tesoros con alma. El refugio de todo coleccionista de corazón en Colombia. Forjamos piezas legendarias para repisas épicas. 🇨🇴</p>
               <div className="flex justify-center md:justify-start gap-5">
                 <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Instagram size={18} /></button>
                 <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Facebook size={18} /></button>
