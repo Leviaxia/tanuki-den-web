@@ -60,6 +60,9 @@ const App: React.FC = () => {
     }));
   });
 
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+
   // ... (existing state)
 
   if (isDebug) {
@@ -1266,6 +1269,80 @@ const App: React.FC = () => {
                 <p className="text-[#8C8279] text-sm md:text-lg font-bold leading-relaxed">{selectedProduct.description}</p>
                 <div className="text-3xl md:text-5xl font-ghibli-title text-[#3A332F] pt-4 md:pt-6 border-t-4 border-[#FDF5E6]"><span className="text-[#C14B3A] text-xl md:text-2xl mr-2">$</span>{formatCurrency(selectedProduct.price)}</div>
                 <div className="flex flex-col sm:flex-row gap-4 md:gap-6 pt-6 md:pt-10"><div className="flex items-center justify-between bg-[#FDF5E6] px-6 py-4 md:px-8 md:py-5 rounded-full border-4 border-[#E6D5B8] sm:w-48"><button onClick={() => setDetailQuantity(q => Math.max(1, q - 1))}><Minus size={18} className="md:w-5 md:h-5" /></button><span className="font-ghibli-title text-xl md:text-2xl">{detailQuantity}</span><button onClick={() => setDetailQuantity(q => q + 1)}><Plus size={18} className="md:w-5 md:h-5" /></button></div><button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-4 md:py-6 rounded-full text-base md:text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-4">AÑADIR AL SACO <ArrowRight size={20} className="md:w-6 md:h-6" /></button></div>
+
+                {/* Reviews Section */}
+                <div className="mt-8 md:mt-12 border-t-4 border-[#FDF5E6] pt-6 md:pt-8 space-y-6">
+                  <h3 className="font-ghibli-title text-xl md:text-2xl text-[#3A332F] uppercase">Opiniones del Gremio</h3>
+
+                  <div className="space-y-4 max-h-[300px] overflow-y-auto scrollbar-hide">
+                    {selectedProduct.reviews && selectedProduct.reviews.length > 0 ? (
+                      selectedProduct.reviews.map((r, i) => (
+                        <div key={i} className="bg-[#FDF5E6]/40 p-4 rounded-[20px] space-y-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-bold text-[#3A332F] text-sm">{r.userName}</h4>
+                              <div className="flex text-[#D4AF37]">{[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < r.rating ? "currentColor" : "none"} />)}</div>
+                            </div>
+                            <span className="text-[10px] text-[#8C8279] font-bold">{new Date(r.date).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-xs md:text-sm text-[#3A332F]/80 leading-relaxed">{r.comment}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-[#8C8279] italic">Sé el primero en opinar sobre este tesoro.</p>
+                    )}
+                  </div>
+
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!user.isRegistered) { alert('Debes unirte al Gremio para opinar.'); setIsAuthModalOpen(true); return; }
+                    if (!reviewComment.trim()) return;
+
+                    const newReview: Review = {
+                      id: Date.now().toString(),
+                      userName: user.name,
+                      rating: reviewRating,
+                      comment: reviewComment,
+                      images: [],
+                      date: new Date().toISOString(),
+                      likes: 0,
+                      dislikes: 0
+                    };
+
+                    const updatedProducts = products.map(p => {
+                      if (p.id === selectedProduct.id) {
+                        return { ...p, reviews: [...(p.reviews || []), newReview] };
+                      }
+                      return p;
+                    });
+
+                    setProducts(updatedProducts);
+                    setSelectedProduct(prev => prev ? ({ ...prev, reviews: [...(prev.reviews || []), newReview] }) : null);
+
+                    // Save to LocalStorage
+                    const allReviews = updatedProducts.reduce((acc, p) => ({ ...acc, [p.id]: p.reviews }), {});
+                    localStorage.setItem('tanuki_all_reviews', JSON.stringify(allReviews));
+
+                    setReviewComment('');
+                    setReviewRating(5);
+                  }} className="bg-[#FDF5E6] p-4 md:p-6 rounded-[25px] space-y-4 border-2 border-[#E6D5B8]">
+                    <h4 className="font-ghibli-title text-sm uppercase text-[#3A332F]">Deja tu huella</h4>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button key={star} type="button" onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform hover:scale-110">
+                          <Star size={24} className={star <= reviewRating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"} />
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Comparte tu sabiduría..."
+                      className="w-full bg-white p-3 rounded-[15px] text-sm outline-none border-2 border-transparent focus:border-[#C14B3A] transition-all resize-none h-24"
+                    />
+                    <button type="submit" className="w-full bg-[#3A332F] text-white font-ghibli-title py-3 rounded-full text-xs md:text-sm shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest">PUBLICAR RESEÑA</button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
