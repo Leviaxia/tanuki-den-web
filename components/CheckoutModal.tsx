@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { sendOrderEmail } from '../src/services/email';
 import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, Upload, Image as ImageIcon } from 'lucide-react';
 import { CartItem } from '../types';
 import { formatCurrency } from '../src/lib/utils';
@@ -63,21 +64,35 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     };
 
     const handleCompletePayment = async () => {
+        console.log(">>> INICIANDO PAGO (EMAIL MODE) <<<");
         setIsProcessing(true);
 
-        // 1. Format WhatsApp Message
+        // Prepare Email Params
+        console.log(">>> PREPARANDO EMAIL... <<<");
         const itemsList = cart.map(item => `- ${item.quantity}x ${item.name} ($${formatCurrency(item.price * item.quantity)})`).join('\n');
+        const emailParams = {
+            to_name: "Admin Tanuki",
+            from_name: shipping.fullName || "Cliente",
+            order_id: new Date().getTime().toString(),
+            message: `Nuevo Pedido:\n\nProductos:\n${itemsList}\n\nTotal: $${formatCurrency(total)}\n\nEnvío:\n${shipping.address}, ${shipping.city}\n\nPago: ${method}`,
+            customer_email: user.email || "no-email@provided.com",
+            total: formatCurrency(total)
+        };
+        console.log(">>> PARAMS EMAIL:", emailParams);
 
-        const message = `*¡Hola Tanuki Den! 🦝*\n\nQuiero confirmar mi nuevo pedido:\n\n*📦 Productos:*\n${itemsList}\n\n*💰 Total:* $${formatCurrency(total)}\n\n*📍 Envío:*\n${shipping.fullName}\n${shipping.address}\n${shipping.city}, ${shipping.department}\n\n*💳 Método de Pago:* ${method === 'nequi' ? 'Nequi (Comprobante adjunto)' : method === 'card' ? 'Tarjeta' : 'Bancolombia'}\n\n¡Quedo atento al despacho! ✨`;
+        // Send Email
+        try {
+            console.log(">>> ENVIANDO A EMAILJS... <<<");
+            await sendOrderEmail(emailParams);
+            console.log(">>> EMAIL ENVIADO EXITOSAMENTE <<<");
+        } catch (e) {
+            console.error(">>> ERROR ENVIANDO EMAIL:", e);
+        }
 
-        const whatsappUrl = `https://wa.me/573226870628?text=${encodeURIComponent(message)}`;
-
-        // 2. Simulate processing duration then redirect
+        // Simulate processing duration
         setTimeout(() => {
             setIsProcessing(false);
             setSuccess(true);
-            // Open WhatsApp in new tab
-            window.open(whatsappUrl, '_blank');
         }, 1500);
     };
 
