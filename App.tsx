@@ -449,7 +449,7 @@ const App: React.FC = () => {
     }
 
     const phone = "573226870628";
-    const message = `Hola, Espíritu Tanuki 🦝. Quiero que hagas realidad mi idea...\n\n✨ *Concepto:* ${tallerConcept}\n📝 *Detalles:* ${tallerDetails}`;
+    const message = `¡Hola Espíritu Tanuki! ✨\n\nHe tenido una visión y quiero que la hagas realidad en tu Taller Mágico... ✨\n\n✨ *La Idea:* ${tallerConcept}\n✨ *Los Detalles:* ${tallerDetails}\n\n¡Quedo atento a tu magia! ✨`;
     const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
 
     window.open(url, '_blank');
