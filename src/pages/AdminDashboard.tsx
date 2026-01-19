@@ -47,7 +47,12 @@ export const AdminDashboard = () => {
             if (!response.ok) throw new Error(`Error del Servidor (${response.status})`);
 
             const data = await response.json();
-            setProducts(data || []);
+            // Map DB snake_case to frontend camelCase
+            const mappedData = (data || []).map((p: any) => ({
+                ...p,
+                collectionId: p.collection_id // Map collection_id to collectionId
+            }));
+            setProducts(mappedData);
         } catch (err: any) {
             console.error('Error fetching products:', err);
             setError(err.message || 'Error desconocido');
@@ -102,8 +107,8 @@ export const AdminDashboard = () => {
                 category: product.category || 'General',
                 image: product.image || 'https://via.placeholder.com/300',
                 stock: product.stock || 0,
-                // ADDED COLLECTION ID
-                collectionId: product.collectionId || null
+                // ADDED COLLECTION ID (Mapped to DB column snake_case)
+                collection_id: product.collectionId || null
             };
 
             if (product.id) {
