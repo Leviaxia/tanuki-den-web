@@ -33,7 +33,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 const App: React.FC = () => {
-  console.log("TANUKI APP VERSION: 3.1 - EMAIL STABLE (BUILD " + new Date().toISOString() + ")");
+  console.log("TANUKI APP VERSION: 3.2 - SUPABASE FIX (BUILD " + new Date().toISOString() + ")");
 
 
 

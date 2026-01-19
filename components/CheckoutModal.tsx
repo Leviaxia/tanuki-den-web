@@ -96,6 +96,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 if (uploadedUrl) proofUrl = uploadedUrl;
             }
 
+            // FAILSAFE: Ensure we NEVER send a huge string (like base64) that crashes EmailJS
+            if (proofUrl.length > 2000) {
+                console.warn("Proof URL too long! Truncating to avoid crash.");
+                proofUrl = "";
+            }
+
             // Prepare Email Params
             const itemsList = cart.map(item => `- ${item.quantity}x ${item.name} ($${formatCurrency(item.price * item.quantity)})`).join('\n');
             const emailParams = {
