@@ -873,7 +873,7 @@ const App: React.FC = () => {
       <main className="flex-grow relative z-10">{renderContent()}</main>
 
       {isChatOpen && (
-        <div className="fixed bottom-24 md:bottom-28 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-96 h-[380px] md:h-[500px] max-h-[60vh] md:max-h-[70vh] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
+        <div className="fixed bottom-24 md:bottom-28 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-96 h-[380px] md:h-[500px] max-h-[60vh] md:max-h-[70vh] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] md:z-[1100] flex flex-col overflow-hidden animate-slide-up">
           <div className="bg-[#3A332F] p-6 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#C14B3A] rounded-full flex items-center justify-center border-2 border-white"><Sparkles size={18} /></div>
