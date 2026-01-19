@@ -64,11 +64,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     const handleCompletePayment = async () => {
         setIsProcessing(true);
-        // Simulate processing
+
+        // 1. Format WhatsApp Message
+        const itemsList = cart.map(item => `- ${item.quantity}x ${item.name} ($${formatCurrency(item.price * item.quantity)})`).join('\n');
+
+        const message = `*¡Hola Tanuki Den! 🦝*\n\nQuiero confirmar mi nuevo pedido:\n\n*📦 Productos:*\n${itemsList}\n\n*💰 Total:* $${formatCurrency(total)}\n\n*📍 Envío:*\n${shipping.fullName}\n${shipping.address}\n${shipping.city}, ${shipping.department}\n\n*💳 Método de Pago:* ${method === 'nequi' ? 'Nequi (Comprobante adjunto)' : method === 'card' ? 'Tarjeta' : 'Bancolombia'}\n\n¡Quedo atento al despacho! ✨`;
+
+        const whatsappUrl = `https://wa.me/573226870628?text=${encodeURIComponent(message)}`;
+
+        // 2. Simulate processing duration then redirect
         setTimeout(() => {
             setIsProcessing(false);
             setSuccess(true);
-        }, 2000);
+            // Open WhatsApp in new tab
+            window.open(whatsappUrl, '_blank');
+        }, 1500);
     };
 
     return (
