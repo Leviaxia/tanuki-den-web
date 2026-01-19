@@ -423,18 +423,37 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const [userMsg, setUserMsg] = useState('');
+  const [tallerConcept, setTallerConcept] = useState('Figura Personalizada');
+  const [tallerDetails, setTallerDetails] = useState('');
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    const userMsg = inputValue;
+    const msg = inputValue;
     setInputValue('');
-    setChatMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setChatMessages(prev => [...prev, { role: 'user', content: msg }]);
     setIsTyping(true);
 
-    const response = await getOtakuRecommendation(userMsg);
+    const response = await getOtakuRecommendation(msg);
     setIsTyping(false);
     setChatMessages(prev => [...prev, { role: 'assistant', content: response }]);
+  };
+
+  const handleTallerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tallerDetails.trim()) {
+      alert("Por favor describe tu idea mágica ✨");
+      return;
+    }
+
+    const phone = "573226870628";
+    const message = `Hola, Espíritu Tanuki 🦝. Quiero que hagas realidad mi idea...\n\n🌀 *Concepto:* ${tallerConcept}\n📝 *Detalles:* ${tallerDetails}`;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+    window.open(url, '_blank');
+    setTallerDetails(''); // Reset after sending
   };
 
 
@@ -532,22 +551,34 @@ const App: React.FC = () => {
                 </p>
               </div>
               <div className="p-8 md:p-16 rounded-[40px] border-4 border-[#3A332F] shadow-[15px_15px_0px_0px_#C14B3A] relative z-10 bg-[#FDF5E6]">
-                <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); alert("Tu petición ha sido recibida."); }}>
+                <form className="space-y-6" onSubmit={handleTallerSubmit}>
                   <div className="space-y-2">
                     <label className="font-ghibli-title text-[9px] md:text-sm uppercase tracking-widest text-[#3A332F] ml-2">¿Qué deseas crear?</label>
-                    <select className="w-full p-4 md:p-6 bg-white border-4 border-[#3A332F] rounded-[20px] font-bold text-sm md:text-xl outline-none transition-all cursor-pointer">
+                    <select
+                      value={tallerConcept}
+                      onChange={(e) => setTallerConcept(e.target.value)}
+                      className="w-full p-4 md:p-6 bg-white border-4 border-[#3A332F] rounded-[20px] font-bold text-sm md:text-xl outline-none transition-all cursor-pointer"
+                    >
                       <option>Figura Personalizada</option>
                       <option>Camiseta Exclusiva</option>
                       <option>Cuadro o Ilustración</option>
                       <option>Accesorio Especial</option>
+                      <option>Otra Idea Loca</option>
                     </select>
                   </div>
                   <div className="space-y-2">
                     <label className="font-ghibli-title text-[9px] md:text-sm uppercase tracking-widest text-[#3A332F] ml-2">Tus requerimientos</label>
-                    <textarea rows={4} className="w-full p-5 md:p-8 bg-white border-4 border-[#3A332F] rounded-[25px] outline-none text-base font-medium shadow-inner" placeholder="Describe aquí los detalles..." required />
+                    <textarea
+                      rows={4}
+                      value={tallerDetails}
+                      onChange={(e) => setTallerDetails(e.target.value)}
+                      className="w-full p-5 md:p-8 bg-white border-4 border-[#3A332F] rounded-[25px] outline-none text-base font-medium shadow-inner"
+                      placeholder="Describe aquí los detalles... (Colores, tamaño, referencia de anime, etc.)"
+                      required
+                    />
                   </div>
-                  <button type="submit" className="w-full bg-[#C14B3A] text-white font-ghibli-title py-5 rounded-full text-base shadow-xl hover:bg-[#3A332F] transition-all flex items-center justify-center gap-4">
-                    ENVIAR MI IDEA <ArrowRight size={22} />
+                  <button type="submit" className="w-full bg-[#C14B3A] text-white font-ghibli-title py-5 rounded-full text-base shadow-xl hover:bg-[#3A332F] transition-all flex items-center justify-center gap-4 group">
+                    ENVIAR MI IDEA <ArrowRight size={22} className="group-hover:translate-x-2 transition-transform" />
                   </button>
                 </form>
               </div>
