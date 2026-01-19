@@ -873,7 +873,7 @@ const App: React.FC = () => {
       <main className="flex-grow relative z-10">{renderContent()}</main>
 
       {isChatOpen && (
-        <div className="fixed bottom-28 md:bottom-40 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-96 h-[380px] md:h-[500px] max-h-[60vh] md:max-h-[calc(100vh-8rem)] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
+        <div className="fixed bottom-24 md:bottom-28 right-4 md:right-6 w-[calc(100vw-2rem)] md:w-96 h-[380px] md:h-[500px] max-h-[60vh] md:max-h-[70vh] bg-white rounded-[40px] border-4 border-[#3A332F] shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
           <div className="bg-[#3A332F] p-6 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#C14B3A] rounded-full flex items-center justify-center border-2 border-white"><Sparkles size={18} /></div>
@@ -1051,7 +1051,7 @@ const App: React.FC = () => {
       )}
 
       {isSubscriptionModalOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-start md:items-center justify-center p-4 pt-24 md:p-6 overflow-y-auto backdrop-blur-md">
+        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-start justify-center p-4 pt-4 md:p-6 md:pt-12 overflow-y-auto backdrop-blur-md">
           <div className="bg-[#FDF5E6] w-full max-w-6xl rounded-[40px] md:rounded-[60px] p-6 md:p-10 relative animate-pop border-4 md:border-4 border-white shadow-2xl my-8">
             <button onClick={() => setIsSubscriptionModalOpen(false)} className="absolute top-4 right-4 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X className="w-6 h-6 md:w-8 md:h-8" /></button>
 
