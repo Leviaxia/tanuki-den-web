@@ -504,9 +504,10 @@ const App: React.FC = () => {
     switch (activeTab) {
       case 'figuras':
         return (
-          <div className="max-w-7xl mx-auto px-4 md:px-6 pt-10 pb-32 md:pb-24 space-y-12 section-reveal">
+
+          <div className="max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-32 md:pb-24 space-y-12 section-reveal">
             <div className="space-y-6 md:space-y-8 text-center lg:text-left">
-              <h2 className="text-4xl md:text-[5rem] lg:text-[5.5rem] font-ghibli-title text-[#3A332F] leading-[0.9] uppercase tracking-tighter">Catálogo <span className="text-[#C14B3A]">Completo</span></h2>
+              <h2 className="text-4xl md:text-5xl lg:text-[5.5rem] font-ghibli-title text-[#3A332F] leading-[0.9] uppercase tracking-tighter">Catálogo <span className="text-[#C14B3A]">Completo</span></h2>
               <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
                 {['All', ...Array.from(new Set(products.map(p => p.category))).filter(c => c !== 'All'), 'Favoritos'].map(cat => (
                   <button
@@ -521,7 +522,7 @@ const App: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-8 lg:gap-12">
               {products
                 .filter(p => {
                   if (activeCategory === 'Favoritos') return favorites.includes(p.id);
@@ -545,12 +546,12 @@ const App: React.FC = () => {
           <div className="max-w-7xl mx-auto px-6 pt-10 pb-32 md:pb-24 section-reveal">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="space-y-8 text-center lg:text-left">
-                <h2 className="text-4xl md:text-[6.5rem] lg:text-[7.5rem] font-ghibli-title text-[#3A332F] leading-[0.85] uppercase tracking-tighter">Taller <br /><span className="text-[#C14B3A]">Mágico.</span></h2>
+                <h2 className="text-4xl md:text-6xl lg:text-[7.5rem] font-ghibli-title text-[#3A332F] leading-[0.85] uppercase tracking-tighter">Taller <br /><span className="text-[#C14B3A]">Mágico.</span></h2>
                 <p className="text-[#3A332F] text-xl md:text-2xl font-bold leading-relaxed max-w-xl mx-auto lg:mx-0">
                   Crea algo único. Cuéntanos tu idea y la haremos realidad con el sello Tanuki.
                 </p>
               </div>
-              <div className="p-8 md:p-16 rounded-[40px] border-4 border-[#3A332F] shadow-[15px_15px_0px_0px_#C14B3A] relative z-10 bg-[#FDF5E6]">
+              <div className="p-8 md:p-12 lg:p-16 rounded-[40px] border-4 border-[#3A332F] shadow-[15px_15px_0px_0px_#C14B3A] relative z-10 bg-[#FDF5E6] max-w-2xl mx-auto lg:max-w-none w-full">
                 <form className="space-y-6" onSubmit={handleTallerSubmit}>
                   <div className="space-y-2">
                     <label className="font-ghibli-title text-[9px] md:text-sm uppercase tracking-widest text-[#3A332F] ml-2">¿Qué deseas crear?</label>

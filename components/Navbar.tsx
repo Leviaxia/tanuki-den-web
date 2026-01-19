@@ -58,8 +58,8 @@ const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="text-xl md:text-3xl font-ghibli-title tracking-tighter text-[#3A332F] leading-none">TANUKI DEN</span>
-                <span className="text-[8px] md:text-xs font-black text-[#8C8279] tracking-[0.4em] uppercase hidden sm:block">ESPÍRITU DE COLECCIÓN</span>
+                <span className="text-xl md:text-2xl lg:text-3xl font-ghibli-title tracking-tighter text-[#3A332F] leading-none">TANUKI DEN</span>
+                <span className="text-[8px] md:text-[10px] lg:text-xs font-black text-[#8C8279] tracking-[0.4em] uppercase hidden sm:block">ESPÍRITU DE COLECCIÓN</span>
               </div>
             </div>
 
