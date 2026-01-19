@@ -132,7 +132,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[2000] bg-[#3A332F]/90 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
-            <div className={`bg-[#FDF5E6] w-[95%] md:w-full max-w-4xl rounded-[20px] md:rounded-[40px] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-pop border-2 md:border-4 border-white relative transition-all duration-500 ${step === 'payment' ? 'max-w-[480px] md:flex-col' : 'max-h-[85vh] md:max-h-none md:min-h-[600px]'}`}>
+            <div className={`bg-[#FDF5E6] w-[95%] md:w-full max-w-4xl rounded-[20px] md:rounded-[40px] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-pop border-2 md:border-4 border-white relative transition-all duration-500 my-auto ${step === 'payment' ? 'max-w-[480px] md:flex-col' : 'max-h-[85vh] md:max-h-none md:min-h-[600px]'}`}>
 
                 <button onClick={onClose} className="absolute top-3 right-3 md:top-5 md:right-5 z-50 p-2 bg-white rounded-full text-[#3A332F] hover:bg-[#C14B3A] hover:text-white transition-colors shadow-sm scale-75 md:scale-100"><X size={20} /></button>
 

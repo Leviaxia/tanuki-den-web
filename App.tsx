@@ -1052,7 +1052,7 @@ const App: React.FC = () => {
 
       {isSubscriptionModalOpen && (
         <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-start md:items-center justify-center p-4 pt-24 md:p-6 overflow-y-auto backdrop-blur-md">
-          <div className="bg-[#FDF5E6] w-full max-w-6xl rounded-[40px] md:rounded-[60px] p-6 md:p-14 relative animate-pop border-4 md:border-8 border-white shadow-2xl my-8 md:my-0">
+          <div className="bg-[#FDF5E6] w-full max-w-6xl rounded-[40px] md:rounded-[60px] p-6 md:p-10 relative animate-pop border-4 md:border-4 border-white shadow-2xl my-8">
             <button onClick={() => setIsSubscriptionModalOpen(false)} className="absolute top-4 right-4 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X className="w-6 h-6 md:w-8 md:h-8" /></button>
 
             {user.membership ? (
@@ -1154,8 +1154,8 @@ const App: React.FC = () => {
       )}
 
       {isRouletteOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-center justify-center p-4 backdrop-blur-md">
-          <div className="bg-[#FDF5E6] w-full max-w-[340px] md:max-w-2xl rounded-[30px] md:rounded-[60px] p-5 md:p-14 relative animate-pop text-center flex flex-col justify-between border-4 md:border-8 border-[#3A332F] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-h-[85vh] md:max-h-none overflow-hidden">
+        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+          <div className="bg-[#FDF5E6] w-full max-w-[340px] md:max-w-xl rounded-[30px] md:rounded-[50px] p-5 md:p-10 relative animate-pop text-center flex flex-col justify-between border-4 md:border-4 border-[#3A332F] shadow-[0_0_50px_rgba(0,0,0,0.5)] my-auto">
             <button onClick={() => setIsRouletteOpen(false)} className="absolute top-3 right-3 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-1.5 md:p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X size={20} className="md:w-8 md:h-8" /></button>
 
             <div className="space-y-1 md:space-y-4 mb-2 md:mb-0 shrink-0">
