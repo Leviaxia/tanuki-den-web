@@ -369,7 +369,7 @@ const App: React.FC = () => {
             // Ensure compatibility with Product type if DB has missing fields
             category: p.category || 'General',
             rating: p.rating || 5.0,
-            collectionId: p.collectionId || null
+            collectionId: p.collection_id || p.collectionId || null // Prioritize snake_case from DB
           })));
         }
       } catch (err) {
