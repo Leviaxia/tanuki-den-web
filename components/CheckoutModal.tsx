@@ -105,20 +105,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 proofUrl = "";
             }
 
-            // Prepare Email Params
-            const itemsList = cart.map(item => `- ${item.quantity}x ${item.name} ($${formatCurrency(item.price * item.quantity)})`).join('\n');
+            // Prepare Email Params (DEBUG MODE - MINIMAL)
+            // const itemsList = cart.map(item => `- ${item.quantity}x ${item.name} ($${formatCurrency(item.price * item.quantity)})`).join('\n');
             const emailParams = {
                 to_name: "Admin Tanuki",
-                from_name: shipping.fullName || "Cliente",
-                order_id: new Date().getTime().toString(),
-                message: `Nuevo Pedido:\n\nProductos:\n${itemsList}\n\nTotal: $${formatCurrency(total)}\n\nEnvío:\n${shipping.address}, ${shipping.city}, ${shipping.department}\n\nPago: ${method}`,
-                customer_email: user.email || "no-email@provided.com",
-                customer_phone: shipping.phone || senderPhone || "No registrado",
-                payment_proof: proofUrl, // Now sending URL instead of Base64
-                total: formatCurrency(total)
+                from_name: "DEBUG TEST",
+                order_id: "TEST-12345",
+                message: "Prueba de envío simple. Si ves esto, el sistema funciona.",
+                customer_email: "test@example.com",
+                customer_phone: "0000000000",
+                payment_proof: "",
+                total: "$0"
             };
 
             // Send Email
+            console.log(">>> SENDING DEBUG EMAIL", emailParams);
             await sendOrderEmail(emailParams);
 
         } catch (e: any) {
