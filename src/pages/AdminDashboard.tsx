@@ -19,10 +19,20 @@ export const AdminDashboard = () => {
 
     const [error, setError] = useState<string | null>(null);
 
-    // Initial load: Do NOT fetch automatically to prevent loading loops
-    useEffect(() => {
-        setLoading(false);
-    }, []);
+    const getAuthToken = () => {
+        try {
+            const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+            const key = `sb-${projectRef}-auth-token`;
+            const stored = localStorage.getItem(key);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                return parsed.access_token;
+            }
+        } catch (e) {
+            console.error("Error reading token", e);
+        }
+        return null;
+    };
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -60,29 +70,12 @@ export const AdminDashboard = () => {
         }
     };
 
+    // Initial load
     useEffect(() => {
-        if (activeTab === 'products') fetchProducts();
-        else fetchCollections();
-    }, [activeTab]);
-
-    const getAuthToken = () => {
-        try {
-            // 1. Try SDK Session first (cleanest)
-            // But we can't await here easily, and SDK might hang. 
-            // Better to rely on localStorage which is synchronous and reliable if user is logged in.
-
-            const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
-            const key = `sb-${projectRef}-auth-token`;
-            const stored = localStorage.getItem(key);
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                return parsed.access_token;
-            }
-        } catch (e) {
-            console.error("Error reading token", e);
-        }
-        return null;
-    };
+        setLoading(false);
+        fetchProducts();
+        fetchCollections();
+    }, []);
 
     const handleSave = async (product: Partial<Product>) => {
         if (!product.name || !product.price) return alert('Nombre y Precio son requeridos');
@@ -102,15 +95,15 @@ export const AdminDashboard = () => {
             let url = `${supabaseUrl}/rest/v1/products`;
             let method = 'POST';
 
-            // Payload cleaning: remove undefined/nulls that Supabase dislikes? 
-            // Actually REST API handles JSON fine.
             const payload = {
                 name: product.name,
                 price: product.price,
                 description: product.description,
                 category: product.category || 'General',
                 image: product.image || 'https://via.placeholder.com/300',
-                stock: product.stock || 0
+                stock: product.stock || 0,
+                // ADDED COLLECTION ID
+                collectionId: product.collectionId || null
             };
 
             if (product.id) {
@@ -141,7 +134,6 @@ export const AdminDashboard = () => {
                 setNewProduct({});
             }
 
-            // Wait a bit before fetching to let DB propagate? Usually not needed for single writer.
             fetchProducts();
 
         } catch (err: any) {
@@ -283,7 +275,7 @@ export const AdminDashboard = () => {
                     <div className="bg-white p-8 rounded-[40px] shadow-xl border-4 border-[#C14B3A] animate-slide-in">
                         <h2 className="text-xl font-bold mb-4">{activeTab === 'products' ? 'Nuevo Tesoro' : 'Nueva Colección'}</h2>
                         {activeTab === 'products' ? (
-                            <ProductForm product={newProduct} onSave={handleSave} onCancel={() => setIsCreating(false)} />
+                            <ProductForm product={newProduct} collections={collections} onSave={handleSave} onCancel={() => setIsCreating(false)} />
                         ) : (
                             <CollectionForm collection={newCollection} onSave={handleSaveCollection} onCancel={() => setIsCreating(false)} />
                         )}
@@ -291,7 +283,6 @@ export const AdminDashboard = () => {
                 )}
 
                 {activeTab === 'products' ? (
-                    /* PRODUCTS LIST */
                     products.length === 0 ? (
                         <div className="bg-white p-12 rounded-[40px] shadow-xl border-4 border-[#3A332F] text-center opacity-80 mt-8">
                             <ImageIcon className="mx-auto mb-4 text-[#C14B3A]" size={64} />
@@ -307,7 +298,7 @@ export const AdminDashboard = () => {
                                 <div key={product.id} className="bg-white p-6 rounded-[30px] shadow-md border-2 border-[#FDF5E6] flex flex-col md:flex-row gap-6 items-center">
                                     <img src={product.image} className="w-24 h-24 rounded-2xl object-cover bg-gray-100" />
                                     {editingId === product.id ? (
-                                        <div className="flex-grow w-full"><ProductForm product={product} onSave={handleSave} onCancel={() => setEditingId(null)} /></div>
+                                        <div className="flex-grow w-full"><ProductForm product={product} collections={collections} onSave={handleSave} onCancel={() => setEditingId(null)} /></div>
                                     ) : (
                                         <>
                                             <div className="flex-grow text-center md:text-left">
@@ -329,7 +320,6 @@ export const AdminDashboard = () => {
                         </div>
                     )
                 ) : (
-                    /* COLLECTIONS LIST */
                     <div className="grid grid-cols-1 gap-4">
                         {collections.map(col => (
                             <div key={col.id} className="bg-white p-6 rounded-[30px] shadow-md border-2 border-[#FDF5E6] flex flex-col md:flex-row gap-6 items-center">
@@ -361,7 +351,7 @@ export const AdminDashboard = () => {
     );
 };
 
-const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>, onSave: (p: Partial<Product>) => void, onCancel: () => void }) => {
+const ProductForm = ({ product, collections, onSave, onCancel }: { product: Partial<Product>, collections: Collection[], onSave: (p: Partial<Product>) => void, onCancel: () => void }) => {
     const [form, setForm] = useState(product);
     const [uploading, setUploading] = useState(false);
 
@@ -382,14 +372,13 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
 
             console.log("Iniciando subida RAW para:", fileName);
 
-            // 1. Obtener Token de Sesión (Manual para evitar errores del SDK)
+            // 1. Obtener Token de Sesión
             let token = '';
 
-            // INTENTO 1: SDK con Timeout agresivo (2s)
+            // INTENTO 1: SDK
             try {
                 const sdkPromise = supabase.auth.getSession();
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject('SDK Timeout'), 2000));
-
                 const { data }: any = await Promise.race([sdkPromise, timeoutPromise]);
                 token = data?.session?.access_token || '';
             } catch (err) {
@@ -409,13 +398,11 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
 
             if (!token) throw new Error("No hay sesión válida. Recarga la página.");
 
-
             const headers: HeadersInit = {
                 'Authorization': `Bearer ${token}`,
                 'apikey': supabaseAnonKey || '',
             };
 
-            // 3. Raw Fetch (Sin SDK)
             const response = await fetch(uploadUrl, {
                 method: 'POST',
                 headers: headers,
@@ -427,10 +414,7 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
                 throw new Error(`Error en subida (${response.status}): ${errorText}`);
             }
 
-            // 4. Construir URL Pública (Manual o vía SDK, el SDK es seguro para esto)
-            // Re-derive path or just rely on convention
             const publicUrl = `${supabaseUrl}/storage/v1/object/public/products/${fileName}`;
-
             setForm({ ...form, image: publicUrl });
         } catch (error: any) {
             console.error('Raw Upload Error:', error);
@@ -447,6 +431,19 @@ const ProductForm = ({ product, onSave, onCancel }: { product: Partial<Product>,
             <input placeholder="Categoría" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value as any })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
             <input type="number" placeholder="Stock" value={form.stock || ''} onChange={e => setForm({ ...form, stock: Number(e.target.value) })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
 
+            <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-[#3A332F] mb-1 ml-2">Asignar a Colección (Opcional)</label>
+                <select
+                    value={form.collectionId || ''}
+                    onChange={e => setForm({ ...form, collectionId: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold cursor-pointer appearance-none"
+                >
+                    <option value="">-- Sin Colección --</option>
+                    {collections.map(c => (
+                        <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                </select>
+            </div>
 
             <div className="md:col-span-2">
                 <label className="block text-sm font-bold text-[#3A332F] mb-1 ml-2">Imagen del Tesoro</label>
@@ -498,9 +495,7 @@ const CollectionForm = ({ collection, onSave, onCancel }: { collection: Partial<
             const file = e.target.files[0];
             const fileExt = file.name.split('.').pop();
             const fileName = `col-${Date.now()}.${fileExt}`;
-            const uploadUrl = `${supabaseUrl}/storage/v1/object/products/${fileName}`; // Reusing products bucket
-
-            console.log("Subiendo colección img:", fileName);
+            const uploadUrl = `${supabaseUrl}/storage/v1/object/products/${fileName}`;
 
             let token = '';
             const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
