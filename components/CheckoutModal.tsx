@@ -24,7 +24,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const [success, setSuccess] = useState(false);
 
     // Shipping State
-    const [shipping, setShipping] = useState({ fullName: '', department: '', city: '', address: '' });
+    const [shipping, setShipping] = useState({ fullName: '', department: '', city: '', address: '', phone: '' });
     const [shippingErrors, setShippingErrors] = useState<any>({});
 
     // Payment State
@@ -63,25 +63,44 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         }
     };
 
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+        });
+    };
+
     const handleCompletePayment = async () => {
         setIsProcessing(true);
 
-        // Prepare Email Params
-        const itemsList = cart.map(item => `- ${item.quantity}x ${item.name} ($${formatCurrency(item.price * item.quantity)})`).join('\n');
-        const emailParams = {
-            to_name: "Admin Tanuki",
-            from_name: shipping.fullName || "Cliente",
-            order_id: new Date().getTime().toString(),
-            message: `Nuevo Pedido:\n\nProductos:\n${itemsList}\n\nTotal: $${formatCurrency(total)}\n\nEnvío:\n${shipping.address}, ${shipping.city}\n\nPago: ${method}`,
-            customer_email: user.email || "no-email@provided.com",
-            total: formatCurrency(total)
-        };
-
-        // Send Email
         try {
+            // Convert file to Base64 if exists
+            let proofBase64 = "";
+            if (proofFile) {
+                proofBase64 = await fileToBase64(proofFile);
+            }
+
+            // Prepare Email Params
+            const itemsList = cart.map(item => `- ${item.quantity}x ${item.name} ($${formatCurrency(item.price * item.quantity)})`).join('\n');
+            const emailParams = {
+                to_name: "Admin Tanuki",
+                from_name: shipping.fullName || "Cliente",
+                order_id: new Date().getTime().toString(),
+                message: `Nuevo Pedido:\n\nProductos:\n${itemsList}\n\nTotal: $${formatCurrency(total)}\n\nEnvío:\n${shipping.address}, ${shipping.city}, ${shipping.department}\n\nPago: ${method}`,
+                customer_email: user.email || "no-email@provided.com",
+                customer_phone: shipping.phone || senderPhone || "No registrado",
+                payment_proof: proofBase64,
+                total: formatCurrency(total)
+            };
+
+            // Send Email
             await sendOrderEmail(emailParams);
-        } catch (e) {
+
+        } catch (e: any) {
             console.error("Error sending email:", e);
+            alert("⚠️ Error: " + (e.text || e.message));
         }
 
         // Simulate processing duration
@@ -159,6 +178,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                             onChange={e => setShipping({ ...shipping, fullName: e.target.value })}
                                             placeholder="Nombre Completo"
                                             className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.fullName ? 'border-red-400' : 'border-transparent'}`}
+                                        />
+                                        <input
+                                            value={shipping.phone}
+                                            onChange={e => setShipping({ ...shipping, phone: e.target.value })}
+                                            placeholder="Teléfono de Contacto"
+                                            type="tel"
+                                            className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30`}
                                         />
 
                                         <div className="grid grid-cols-2 gap-3">

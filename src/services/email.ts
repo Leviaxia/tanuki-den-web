@@ -7,6 +7,8 @@ export interface EmailParams {
     order_id: string; // Timestamp or UUID
     message: string; // formatted order details
     customer_email: string; // Reply-To
+    customer_phone: string; // Contact Number
+    payment_proof: string; // Base64 Image string (optional)
     total: string;
 }
 
