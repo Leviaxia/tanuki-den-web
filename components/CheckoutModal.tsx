@@ -64,11 +64,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     };
 
     const handleCompletePayment = async () => {
-        console.log(">>> INICIANDO PAGO (EMAIL MODE) <<<");
         setIsProcessing(true);
 
         // Prepare Email Params
-        console.log(">>> PREPARANDO EMAIL... <<<");
         const itemsList = cart.map(item => `- ${item.quantity}x ${item.name} ($${formatCurrency(item.price * item.quantity)})`).join('\n');
         const emailParams = {
             to_name: "Admin Tanuki",
@@ -78,16 +76,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             customer_email: user.email || "no-email@provided.com",
             total: formatCurrency(total)
         };
-        console.log(">>> PARAMS EMAIL:", emailParams);
 
         // Send Email
         try {
-            console.log(">>> ENVIANDO A EMAILJS... <<<");
             await sendOrderEmail(emailParams);
-            console.log(">>> EMAIL ENVIADO EXITOSAMENTE <<<");
-        } catch (e: any) {
-            console.error(">>> ERROR ENVIANDO EMAIL:", e);
-            alert("⚠️ Error enviando correo: " + (e.text || e.message || "Revisa la consola"));
+        } catch (e) {
+            console.error("Error sending email:", e);
         }
 
         // Simulate processing duration
