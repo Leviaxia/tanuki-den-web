@@ -917,7 +917,7 @@ const App: React.FC = () => {
       />
 
       {isProfileModalOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/90 flex items-center justify-center p-4 md:p-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/90 flex items-center justify-center p-4 md:p-6 backdrop-blur-sm overflow-y-auto">
           {(() => {
             const getColor = () => {
               switch (user.membership) {
@@ -970,7 +970,7 @@ const App: React.FC = () => {
 
             return (
               <div
-                className="bg-white w-full max-w-md rounded-[50px] p-6 md:p-12 border-8 relative animate-pop text-center space-y-8"
+                className="bg-white w-full max-w-md rounded-[30px] md:rounded-[50px] p-6 md:p-8 border-4 md:border-8 relative animate-pop text-center space-y-6 md:space-y-8 my-auto"
                 style={{ borderColor: accentColor }}
               >
                 <button onClick={() => setIsProfileModalOpen(false)} className="absolute top-8 right-8"><X size={28} /></button>
