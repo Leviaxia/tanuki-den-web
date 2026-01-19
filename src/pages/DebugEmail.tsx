@@ -9,6 +9,7 @@ export const DebugEmail = () => {
     const [status, setStatus] = useState<string>('idle');
     const [log, setLog] = useState<string[]>([]);
     const [testFile, setTestFile] = useState<File | null>(null);
+    const [uploadedUrl, setUploadedUrl] = useState<string>("");
 
     // Load vars from env (masking parts)
     const envService = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
@@ -45,7 +46,8 @@ export const DebugEmail = () => {
                 addLog('✅ ÉXITO SUBIDA: Archivo guardado.');
                 const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(fileName);
                 addLog('🔗 URL Pública: ' + urlData.publicUrl);
-                addLog('👉 Intenta abrir esa URL para verificar si es accesible.');
+                setUploadedUrl(urlData.publicUrl); // Save for email test
+                addLog('👉 URL Guardada para la prueba de email.');
             }
         } catch (err: any) {
             addLog('❌ EXCEPCIÓN: ' + (err.message || err));
@@ -71,10 +73,10 @@ export const DebugEmail = () => {
             to_name: "Admin Debug",
             from_name: "Test User",
             order_id: "DEBUG-" + Math.random().toString(36).substr(2, 5),
-            message: "This is a clean debug message.",
+            message: "This is a clean debug message with image test.",
             customer_email: "debug@test.com",
             customer_phone: "123456789",
-            payment_proof: "",
+            payment_proof: uploadedUrl || "NO_IMAGE_UPLOADED",
             total: "$100"
         };
 
