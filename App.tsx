@@ -34,7 +34,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 const App: React.FC = () => {
-  console.log("TANUKI APP VERSION: 3.4 - MINIMAL PAYLOAD TEST (BUILD " + new Date().toISOString() + ")");
+  console.log("TANUKI APP VERSION: 3.5 - PROD RESTORED + TEMPLATE FIX (BUILD " + new Date().toISOString() + ")");
 
 
 
