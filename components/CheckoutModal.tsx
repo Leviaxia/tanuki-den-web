@@ -3,6 +3,7 @@ import { sendOrderEmail } from '../src/services/email';
 import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, Upload, Image as ImageIcon } from 'lucide-react';
 import { CartItem } from '../types';
 import { formatCurrency } from '../src/lib/utils';
+import { supabase } from '../src/lib/supabase';
 import { departments, colombiaData } from '@/src/data/colombia';
 
 interface CheckoutModalProps {
@@ -63,23 +64,36 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         }
     };
 
-    const fileToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = error => reject(error);
-        });
+    const uploadProofToSupabase = async (file: File): Promise<string | null> => {
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${new Date().getTime()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('receipts')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage.from('receipts').getPublicUrl(filePath);
+            return data.publicUrl;
+        } catch (error) {
+            console.error("Error uploading proof:", error);
+            // Fallback: If upload fails (e.g. bucket doesn't exist), return null so order continues without image
+            return null;
+        }
     };
 
     const handleCompletePayment = async () => {
         setIsProcessing(true);
 
         try {
-            // Convert file to Base64 if exists
-            let proofBase64 = "";
+            // Upload file to Supabase if exists
+            let proofUrl = "";
             if (proofFile) {
-                proofBase64 = await fileToBase64(proofFile);
+                const uploadedUrl = await uploadProofToSupabase(proofFile);
+                if (uploadedUrl) proofUrl = uploadedUrl;
             }
 
             // Prepare Email Params
@@ -91,7 +105,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 message: `Nuevo Pedido:\n\nProductos:\n${itemsList}\n\nTotal: $${formatCurrency(total)}\n\nEnvío:\n${shipping.address}, ${shipping.city}, ${shipping.department}\n\nPago: ${method}`,
                 customer_email: user.email || "no-email@provided.com",
                 customer_phone: shipping.phone || senderPhone || "No registrado",
-                payment_proof: proofBase64,
+                payment_proof: proofUrl, // Now sending URL instead of Base64
                 total: formatCurrency(total)
             };
 
