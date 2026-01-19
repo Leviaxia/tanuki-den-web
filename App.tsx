@@ -21,6 +21,7 @@ import { CheckoutCancel } from './src/pages/CheckoutCancel';
 import { AdminDashboard } from './src/pages/AdminDashboard';
 
 import { DebugNetwork } from './src/pages/DebugNetwork';
+import { DebugEmail } from './src/pages/DebugEmail';
 
 // Helper to handle base64 conversion
 const fileToBase64 = (file: File): Promise<string> => {
@@ -66,7 +67,10 @@ const App: React.FC = () => {
   // ... (existing state)
 
   if (isDebug) {
-    return <Routes><Route path="/debug" element={<DebugNetwork />} /></Routes>;
+    return <Routes>
+      <Route path="/debug" element={<DebugNetwork />} />
+      <Route path="/debug-email" element={<DebugEmail />} />
+    </Routes>;
   }
 
 
