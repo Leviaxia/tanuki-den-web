@@ -85,8 +85,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             console.log(">>> ENVIANDO A EMAILJS... <<<");
             await sendOrderEmail(emailParams);
             console.log(">>> EMAIL ENVIADO EXITOSAMENTE <<<");
-        } catch (e) {
+        } catch (e: any) {
             console.error(">>> ERROR ENVIANDO EMAIL:", e);
+            alert("⚠️ Error enviando correo: " + (e.text || e.message || "Revisa la consola"));
         }
 
         // Simulate processing duration
