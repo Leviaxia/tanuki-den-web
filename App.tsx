@@ -449,8 +449,8 @@ const App: React.FC = () => {
     }
 
     const phone = "573226870628";
-    const message = `Hola, Espíritu Tanuki 🦝. Quiero que hagas realidad mi idea...\n\n🌀 *Concepto:* ${tallerConcept}\n📝 *Detalles:* ${tallerDetails}`;
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    const message = `Hola, Espíritu Tanuki 🦝. Quiero que hagas realidad mi idea...\n\n✨ *Concepto:* ${tallerConcept}\n📝 *Detalles:* ${tallerDetails}`;
+    const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
 
     window.open(url, '_blank');
     setTallerDetails(''); // Reset after sending
