@@ -91,10 +91,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         try {
             // Upload file to Supabase if exists
             let proofUrl = "";
+            /* 
+            // DISABLE TEMPORARILY TO DEBUG EMAILJS ERROR
             if (proofFile) {
                 const uploadedUrl = await uploadProofToSupabase(proofFile);
                 if (uploadedUrl) proofUrl = uploadedUrl;
             }
+            */
 
             // FAILSAFE: Ensure we NEVER send a huge string (like base64) that crashes EmailJS
             if (proofUrl.length > 2000) {
