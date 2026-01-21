@@ -18,7 +18,7 @@ export async function getOtakuRecommendation(userQuery: string) {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-001',
       contents: userQuery,
       config: {
         systemInstruction: `Eres el "Espíritu Tanuki", un guía sabio y minimalista de una tienda boutique anime.
