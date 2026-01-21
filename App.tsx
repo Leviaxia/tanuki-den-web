@@ -401,7 +401,14 @@ const App: React.FC = () => {
     if (params.get('success') === 'true') {
       setCart([]);
       setIsCartOpen(false);
-      alert('¡Pago completado con éxito! Gracias por tu compra.');
+
+      // RESET ROULETTE CYCLE
+      if (appliedDiscount > 0 || hasSpunFirst) {
+        setAppliedDiscount(0);
+        setHasSpunFirst(false); // Enable spin again for next purchase
+      }
+
+      alert('¡Pago completado con éxito! Gracias por tu compra.\n\n✨ ¡Tu energía se ha recargado! Puedes volver a girar la ruleta en tu próxima visita.');
       // remove params from url
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -1246,6 +1253,12 @@ const App: React.FC = () => {
           }
           setCart([]);
           setIsCheckoutOpen(false);
+
+          // RESET ROULETTE CYCLE
+          if (appliedDiscount > 0 || hasSpunFirst) {
+            setAppliedDiscount(0);
+            setHasSpunFirst(false); // Enable spin again for next purchase
+          }
         }}
       />
 
