@@ -1,27 +1,28 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PRODUCTS } from "../constants";
 
-// Use import.meta.env for Vite instead of process.env
+// Use import.meta.env for Vite
 const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
 
-// Only initialize if key exists to prevent crash on load
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+// Initialize the API client
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export async function getOtakuRecommendation(userQuery: string) {
-  // DEBUG ALERT for Tablet
-  if (!ai) {
+  // Check for missing key
+  if (!genAI) {
     return "El espíritu Tanuki está descansando (Falta API Key). Intenta más tarde. 🍃";
   }
 
   const productContext = PRODUCTS.map(p => `- ${p.name}: ${p.category}, $${p.price}.`).join('\n');
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-pro',
-      contents: userQuery,
-      config: {
-        systemInstruction: `Eres el "Espíritu Tanuki", un guía sabio y minimalista de una tienda boutique anime.
+    // Get the generative model (using the standard gemini-1.5-flash)
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: {
+        parts: [{
+          text: `Eres el "Espíritu Tanuki", un guía sabio y minimalista de una tienda boutique anime.
         
         REGLAS DE RESPUESTA:
         1. Sé BREVE y CALIDO (máximo 2-3 frases).
@@ -32,15 +33,16 @@ export async function getOtakuRecommendation(userQuery: string) {
         Catálogo:
         ${productContext}
         
-        Responde siempre en español.`,
-        temperature: 0.7,
-      },
+        Responde siempre en español.` }]
+      }
     });
 
-    return response.text;
+    const result = await model.generateContent(userQuery);
+    const response = await result.response;
+    return response.text();
+
   } catch (error: any) {
     console.error("Gemini Error:", error);
-    // Return explicit error
     return `Error Mágico: ${error.message || error}`;
   }
 }
