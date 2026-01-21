@@ -818,7 +818,7 @@ const App: React.FC = () => {
           {!hasSpunFirst && <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent animate-shine"></div>}
         </button>
         <button
-          onClick={() => window.open('https://wa.me/573226870628', '_blank')}
+          onClick={() => window.open('https://wa.me/573226870628?text=%C2%A1Hola+Guardianes+del+Tanuki+Den!+%F0%9F%8D%83%E2%9C%A8+He+visto+sus+tesoros+y+necesito+ayuda+para+mi+colecci%C3%B3n.+%C2%BFPodr%C3%ADan+asesorarme%3F', '_blank')}
           className="w-16 h-16 md:w-20 md:h-20 bg-[#3A332F] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 animate-float"
           aria-label="Contactar por WhatsApp"
         >
