@@ -15,10 +15,11 @@ interface CheckoutModalProps {
     onRemove: (id: string) => void;
     onSuccess: () => void;
     user: any;
+    discount?: number;
 }
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({
-    isOpen, onClose, cart, total, onUpdateQuantity, onRemove, onSuccess, user
+    isOpen, onClose, cart, total, onUpdateQuantity, onRemove, onSuccess, user, discount = 0
 }) => {
     const [step, setStep] = useState<'summary' | 'shipping' | 'payment'>('summary');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -32,6 +33,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const [method, setMethod] = useState<'nequi' | 'card' | 'manual'>('nequi');
     const [proofFile, setProofFile] = useState<File | null>(null);
     const [senderPhone, setSenderPhone] = useState('');
+
+    const finalTotal = discount > 0 ? total - (total * (discount / 100)) : total;
 
     useEffect(() => {
         if (isOpen) {
@@ -112,7 +115,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 customer_email: user.email || "no-email@provided.com",
                 customer_phone: shipping.phone || senderPhone || "No registrado",
                 payment_proof: proofUrl,
-                total: formatCurrency(total)
+                total: formatCurrency(finalTotal)
             };
 
             // Send Email
@@ -249,7 +252,15 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <div className="p-4 md:p-8 w-full animate-slide-in flex flex-col items-center justify-center h-full">
                         <div className="text-center mb-4 md:mb-6 shrink-0">
                             <h2 className="font-ghibli-title text-xl md:text-3xl text-[#3A332F] mb-1">Finalizar <span className="text-[#C14B3A]">Pago</span></h2>
-                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8C8279]">Total: <span className="text-[#C14B3A] text-sm md:text-base">${formatCurrency(total)}</span></p>
+                            {discount > 0 ? (
+                                <div className="flex flex-col items-center">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C8279] line-through">Subtotal: ${formatCurrency(total)}</p>
+                                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C14B3A] animate-pulse">🎉 Descuento: -{discount}%</p>
+                                    <p className="text-sm font-black uppercase tracking-[0.2em] text-[#3A332F] mt-1">Total: <span className="text-[#C14B3A] text-lg md:text-xl">${formatCurrency(finalTotal)}</span></p>
+                                </div>
+                            ) : (
+                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8C8279]">Total: <span className="text-[#C14B3A] text-sm md:text-base">${formatCurrency(total)}</span></p>
+                            )}
                         </div>
 
                         {/* Payment Toggles - COMPACT */}

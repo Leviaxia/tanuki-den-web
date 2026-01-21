@@ -1245,6 +1245,7 @@ const App: React.FC = () => {
         onUpdateQuantity={updateQuantity}
         onRemove={removeFromCart}
         user={user}
+        discount={appliedDiscount}
         onSuccess={() => {
           const subItem = cart.find(item => item.id.startsWith('sub-'));
           if (subItem) {
