@@ -346,18 +346,47 @@ const App: React.FC = () => {
         const data = await response.json();
 
         if (data && data.length > 0) {
-          // Merge with local reviews if needed, or just set
-          const savedReviews = localStorage.getItem('tanuki_all_reviews');
-          const reviewsMap = savedReviews ? JSON.parse(savedReviews) : {};
+          // Fetch Reviews for all products
+          const { data: reviewsData, error: reviewsError } = await supabase.from('reviews').select('*');
 
-          setProducts(data.map((p: any) => ({
-            ...p,
-            reviews: reviewsMap[p.id] || [],
-            // Ensure compatibility with Product type if DB has missing fields
-            category: p.category || 'General',
-            rating: p.rating || 5.0,
-            collectionId: p.collection_id || p.collectionId || null // Prioritize snake_case from DB
-          })));
+          if (reviewsError) console.error("Error fetching reviews:", reviewsError);
+
+          const reviewsByProduct = (reviewsData || []).reduce((acc: any, review: any) => {
+            if (!acc[review.product_id]) acc[review.product_id] = [];
+            acc[review.product_id].push({
+              id: review.id,
+              userName: review.user_name,
+              rating: review.rating,
+              comment: review.comment,
+              date: review.created_at,
+              images: [],
+              likes: 0,
+              dislikes: 0
+            });
+            return acc;
+          }, {});
+
+          setProducts(data.map((p: any) => {
+            const productReviews = reviewsByProduct[p.id] || [];
+
+            // Calculate Rating Logic
+            let averageRating = 5.0;
+            if (productReviews.length > 0) {
+              const sum = productReviews.reduce((a: number, r: any) => a + r.rating, 0);
+              averageRating = sum / productReviews.length;
+            } else if (p.rating) {
+              averageRating = p.rating; // Fallback to manual DB rating if no reviews
+            }
+
+            return {
+              ...p,
+              reviews: productReviews,
+              // Ensure compatibility with Product type if DB has missing fields
+              category: p.category || 'General',
+              rating: averageRating,
+              collectionId: p.collection_id || p.collectionId || null // Prioritize snake_case from DB
+            };
+          }));
         }
       } catch (err) {
         console.error("Error loading catalog:", err);
@@ -1267,121 +1296,146 @@ const App: React.FC = () => {
                     )}
                   </div>
 
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!user.isRegistered) { alert('Debes unirte al Gremio para opinar.'); setIsAuthModalOpen(true); return; }
-                    if (!reviewComment.trim()) return;
+                  if (!user.isRegistered) {alert('Debes unirte al Gremio para opinar.'); setIsAuthModalOpen(true); return; }
+                  if (!reviewComment.trim()) return;
 
-                    const newReview: Review = {
-                      id: Date.now().toString(),
-                      userName: user.name,
-                      rating: reviewRating,
-                      comment: reviewComment,
-                      images: [],
-                      date: new Date().toISOString(),
-                      likes: 0,
-                      dislikes: 0
-                    };
+                  try {
+                      const {error} = await supabase.from('reviews').insert({
+                    product_id: selectedProduct.id,
+                  user_id: user.id,
+                  user_name: user.name,
+                  rating: reviewRating,
+                  comment: reviewComment
+                      });
 
-                    const updatedProducts = products.map(p => {
-                      if (p.id === selectedProduct.id) {
-                        return { ...p, reviews: [...(p.reviews || []), newReview] };
-                      }
-                      return p;
-                    });
+                  if (error) throw error;
 
-                    setProducts(updatedProducts);
-                    setSelectedProduct(prev => prev ? ({ ...prev, reviews: [...(prev.reviews || []), newReview] }) : null);
+                  const newReview: Review = {
+                    id: Date.now().toString(), // Temporary ID for UI
+                  userName: user.name,
+                  rating: reviewRating,
+                  comment: reviewComment,
+                  images: [],
+                  date: new Date().toISOString(),
+                  likes: 0,
+                  dislikes: 0
+                      };
 
-                    // Save to LocalStorage
-                    const allReviews = updatedProducts.reduce((acc, p) => ({ ...acc, [p.id]: p.reviews }), {});
-                    localStorage.setItem('tanuki_all_reviews', JSON.stringify(allReviews));
+                      // Update Local State Optimistically
+                      const updatedProducts = products.map(p => {
+                        if (p.id === selectedProduct.id) {
+                          const updatedReviews = [...(p.reviews || []), newReview];
+                          // Recalculate Average
+                          const sum = updatedReviews.reduce((a, r) => a + r.rating, 0);
+                  const newAvg = sum / updatedReviews.length;
+                  return {...p, reviews: updatedReviews, rating: newAvg };
+                        }
+                  return p;
+                      });
 
-                    setReviewComment('');
-                    setReviewRating(5);
-                  }} className="bg-[#FDF5E6] p-4 md:p-6 rounded-[25px] space-y-4 border-2 border-[#E6D5B8]">
-                    <h4 className="font-ghibli-title text-sm uppercase text-[#3A332F]">Deja tu huella</h4>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <button key={star} type="button" onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform hover:scale-110">
-                          <Star size={24} className={star <= reviewRating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"} />
-                        </button>
-                      ))}
-                    </div>
-                    <textarea
-                      value={reviewComment}
-                      onChange={(e) => setReviewComment(e.target.value)}
-                      placeholder="Comparte tu sabiduría..."
-                      className="w-full bg-white p-3 rounded-[15px] text-sm outline-none border-2 border-transparent focus:border-[#C14B3A] transition-all resize-none h-24"
-                    />
-                    <button type="submit" className="w-full bg-[#3A332F] text-white font-ghibli-title py-3 rounded-full text-xs md:text-sm shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest">PUBLICAR RESEÑA</button>
-                  </form>
-                </div>
+                  setProducts(updatedProducts);
+                      setSelectedProduct(prev => { 
+                         if(!prev) return null;
+                  const updatedReviews = [...(prev.reviews || []), newReview];
+                         const sum = updatedReviews.reduce((a, r) => a + r.rating, 0);
+                  const newAvg = sum / updatedReviews.length;
+                  return {...prev, reviews: updatedReviews, rating: newAvg };
+                      });
+
+                  setReviewComment('');
+                  setReviewRating(5);
+                  alert('¡Tu reseña ha sido grabada en la piedra del destino!');
+
+                    } catch(e) {
+                    console.error("Error submitting review", e);
+                  alert("Hubo un error al publicar tu reseña. Intenta de nuevo.");
+                    }
+                  };
+                  <h4 className="font-ghibli-title text-sm uppercase text-[#3A332F]">Deja tu huella</h4>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button key={star} type="button" onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform hover:scale-110">
+                        <Star size={24} className={star <= reviewRating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"} />
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Comparte tu sabiduría..."
+                    className="w-full bg-white p-3 rounded-[15px] text-sm outline-none border-2 border-transparent focus:border-[#C14B3A] transition-all resize-none h-24"
+                  />
+                  <button type="submit" className="w-full bg-[#3A332F] text-white font-ghibli-title py-3 rounded-full text-xs md:text-sm shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest">PUBLICAR RESEÑA</button>
+                </form>
               </div>
             </div>
           </div>
         </div>
-      )}
-
-      <footer className="bg-[#1A1614] text-[#FDF5E6] pt-32 pb-44 md:pb-12 rounded-t-[60px] md:rounded-t-[100px] mt-24 relative z-[50] border-t-8 border-[#D4AF37] shadow-2xl">
-        <div className="max-w-7xl mx-auto px-6 space-y-24">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-16">
-            <div className="space-y-8 text-center md:text-left">
-              <h3 className="text-4xl md:text-6xl font-ghibli-title leading-none uppercase tracking-tighter">TANUKI <br /><span className="text-[#D4AF37]">DEN</span></h3>
-              <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] leading-loose">Tesoros con alma. El refugio de todo coleccionista de corazón en Colombia. Forjamos piezas legendarias para repisas épicas. 🇨🇴</p>
-              <div className="flex justify-center md:justify-start gap-5">
-                <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Instagram size={18} /></button>
-                <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Facebook size={18} /></button>
-                <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Twitter size={18} /></button>
-                <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Youtube size={18} /></button>
-              </div>
-            </div>
-            <div className="hidden md:block space-y-8 text-center md:text-left">
-              <h4 className="font-ghibli-title text-2xl text-[#D4AF37] uppercase tracking-widest">El Gremio</h4>
-              <ul className="space-y-5 font-bold text-[10px] uppercase tracking-[0.2em] text-white/60">
-                <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('inicio')}>Portal Inicio</li>
-                <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('figuras')}>Catálogo Total</li>
-                <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('personalizacion')}>Taller Mágico</li>
-                <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('colecciones')}>Explorar Temas</li>
-              </ul>
-            </div>
-            <div className="hidden md:block space-y-8 text-center md:text-left">
-              <h4 className="font-ghibli-title text-2xl text-[#D4AF37] uppercase tracking-widest">Soporte</h4>
-              <ul className="space-y-5 font-bold text-[10px] uppercase tracking-[0.2em] text-white/60">
-                <li className="hover:text-white cursor-pointer transition-colors">Seguir Tesoro</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Preguntas Frecuentes</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Términos Ancestrales</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Privacidad del Clan</li>
-              </ul>
-            </div>
-            <div className="hidden md:block space-y-8 bg-white/5 p-8 rounded-[50px] border border-white/10 shadow-2xl mx-4 md:mx-0">
-              <h4 className="font-ghibli-title text-2xl text-white uppercase tracking-widest">Susurros</h4>
-              <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Recibe novedades del bosque mágico.</p>
-              <div className="relative">
-                <input type="email" placeholder="tu@bosque.com" className="w-full bg-[#110E0C] border-2 border-white/10 rounded-full px-6 py-4 outline-none text-[10px] font-bold focus:border-[#D4AF37] transition-all" />
-                <button className="absolute right-2 top-2 bottom-2 bg-[#D4AF37] text-white px-5 rounded-full hover:bg-white hover:text-[#D4AF37] transition-all shadow-lg"><ArrowRight size={18} /></button>
-              </div>
-              <div className="flex items-center gap-4 text-white/60 text-[8px] font-black uppercase tracking-widest justify-center"><Lock size={12} className="text-[#81C784]" /> PAGOS 100% SEGUROS</div>
-            </div>
-          </div>
-          <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 opacity-40">
-            <p className="text-[8px] font-bold uppercase tracking-[0.4em]">© 2024 TANUKI DEN COLOMBIA - ESPÍRITU DE COLECCIÓN (v2.0 COP)</p>
-            <div className="flex gap-4"><Shield size={16} /><Truck size={16} /><CreditCard size={16} /></div>
-          </div>
         </div>
-      </footer>
+  )
+}
 
-
-
-      {/* Fullscreen Image Overlay */}
-      {fullScreenImage && (
-        <div className="fixed inset-0 z-[3000] bg-black/95 flex items-center justify-center p-2 animate-fade-in" onClick={() => setFullScreenImage(null)}>
-          <button className="absolute top-4 right-4 text-white bg-white/10 p-2 rounded-full hover:bg-white/20 transition-all"><X size={32} /></button>
-          <img src={fullScreenImage} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl scale-100 animate-pop" alt="Zoom" />
+<footer className="bg-[#1A1614] text-[#FDF5E6] pt-32 pb-44 md:pb-12 rounded-t-[60px] md:rounded-t-[100px] mt-24 relative z-[50] border-t-8 border-[#D4AF37] shadow-2xl">
+  <div className="max-w-7xl mx-auto px-6 space-y-24">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-16">
+      <div className="space-y-8 text-center md:text-left">
+        <h3 className="text-4xl md:text-6xl font-ghibli-title leading-none uppercase tracking-tighter">TANUKI <br /><span className="text-[#D4AF37]">DEN</span></h3>
+        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] leading-loose">Tesoros con alma. El refugio de todo coleccionista de corazón en Colombia. Forjamos piezas legendarias para repisas épicas. 🇨🇴</p>
+        <div className="flex justify-center md:justify-start gap-5">
+          <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Instagram size={18} /></button>
+          <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Facebook size={18} /></button>
+          <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Twitter size={18} /></button>
+          <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Youtube size={18} /></button>
         </div>
-      )}
+      </div>
+      <div className="hidden md:block space-y-8 text-center md:text-left">
+        <h4 className="font-ghibli-title text-2xl text-[#D4AF37] uppercase tracking-widest">El Gremio</h4>
+        <ul className="space-y-5 font-bold text-[10px] uppercase tracking-[0.2em] text-white/60">
+          <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('inicio')}>Portal Inicio</li>
+          <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('figuras')}>Catálogo Total</li>
+          <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('personalizacion')}>Taller Mágico</li>
+          <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('colecciones')}>Explorar Temas</li>
+        </ul>
+      </div>
+      <div className="hidden md:block space-y-8 text-center md:text-left">
+        <h4 className="font-ghibli-title text-2xl text-[#D4AF37] uppercase tracking-widest">Soporte</h4>
+        <ul className="space-y-5 font-bold text-[10px] uppercase tracking-[0.2em] text-white/60">
+          <li className="hover:text-white cursor-pointer transition-colors">Seguir Tesoro</li>
+          <li className="hover:text-white cursor-pointer transition-colors">Preguntas Frecuentes</li>
+          <li className="hover:text-white cursor-pointer transition-colors">Términos Ancestrales</li>
+          <li className="hover:text-white cursor-pointer transition-colors">Privacidad del Clan</li>
+        </ul>
+      </div>
+      <div className="hidden md:block space-y-8 bg-white/5 p-8 rounded-[50px] border border-white/10 shadow-2xl mx-4 md:mx-0">
+        <h4 className="font-ghibli-title text-2xl text-white uppercase tracking-widest">Susurros</h4>
+        <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Recibe novedades del bosque mágico.</p>
+        <div className="relative">
+          <input type="email" placeholder="tu@bosque.com" className="w-full bg-[#110E0C] border-2 border-white/10 rounded-full px-6 py-4 outline-none text-[10px] font-bold focus:border-[#D4AF37] transition-all" />
+          <button className="absolute right-2 top-2 bottom-2 bg-[#D4AF37] text-white px-5 rounded-full hover:bg-white hover:text-[#D4AF37] transition-all shadow-lg"><ArrowRight size={18} /></button>
+        </div>
+        <div className="flex items-center gap-4 text-white/60 text-[8px] font-black uppercase tracking-widest justify-center"><Lock size={12} className="text-[#81C784]" /> PAGOS 100% SEGUROS</div>
+      </div>
+    </div>
+    <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 opacity-40">
+      <p className="text-[8px] font-bold uppercase tracking-[0.4em]">© 2024 TANUKI DEN COLOMBIA - ESPÍRITU DE COLECCIÓN (v2.0 COP)</p>
+      <div className="flex gap-4"><Shield size={16} /><Truck size={16} /><CreditCard size={16} /></div>
+    </div>
+  </div>
+</footer>
 
-      <style>{`
+
+
+{/* Fullscreen Image Overlay */ }
+{
+  fullScreenImage && (
+    <div className="fixed inset-0 z-[3000] bg-black/95 flex items-center justify-center p-2 animate-fade-in" onClick={() => setFullScreenImage(null)}>
+      <button className="absolute top-4 right-4 text-white bg-white/10 p-2 rounded-full hover:bg-white/20 transition-all"><X size={32} /></button>
+      <img src={fullScreenImage} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl scale-100 animate-pop" alt="Zoom" />
+    </div>
+  )
+}
+
+<style>{`
         @keyframes slide-up { from { transform: translateY(80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
         @keyframes pop { 0% { transform: scale(0.7); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
@@ -1404,7 +1458,7 @@ const App: React.FC = () => {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .clip-path-triangle { clip-path: polygon(50% 50%, 0% 100%, 100% 100%); }
       `}</style>
-    </div>
+    </div >
   );
 };
 
