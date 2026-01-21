@@ -106,12 +106,22 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             }
 
             // Prepare Email Params
+            // Prepare Email Params
             const itemsList = cart.map(item => `- ${item.quantity}x ${item.name} ($${formatCurrency(item.price * item.quantity)})`).join('\n');
+
+            let priceBreakdown = `Subtotal: $${formatCurrency(total)}`;
+            if (discount > 0) {
+                priceBreakdown += `\nDescuento (${discount}%): -$${formatCurrency(total * (discount / 100))}`;
+                priceBreakdown += `\nTOTAL FINAL: $${formatCurrency(finalTotal)}`;
+            } else {
+                priceBreakdown += `\nTotal: $${formatCurrency(total)}`;
+            }
+
             const emailParams = {
                 to_name: "Admin Tanuki",
                 from_name: shipping.fullName || "Cliente",
                 order_id: new Date().getTime().toString(),
-                message: `Nuevo Pedido:\n\nProductos:\n${itemsList}\n\nTotal: $${formatCurrency(total)}\n\nEnvío:\n${shipping.address}, ${shipping.city}, ${shipping.department}\n\nPago: ${method}`,
+                message: `Nuevo Pedido Guardian:\n\nProductos:\n${itemsList}\n\n${priceBreakdown}\n\nEnvío:\n${shipping.address}, ${shipping.city}, ${shipping.department}\n\nPago: ${method}`,
                 customer_email: user.email || "no-email@provided.com",
                 customer_phone: shipping.phone || senderPhone || "No registrado",
                 payment_proof: proofUrl,
