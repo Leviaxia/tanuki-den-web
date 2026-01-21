@@ -1229,7 +1229,24 @@ const App: React.FC = () => {
             </div>
             {cart.length > 0 && (
               <div className="p-6 md:p-8 bg-[#FDF5E6] space-y-4 md:space-y-6">
-                <div className="flex justify-between text-xl md:text-2xl font-ghibli-title"><span>TOTAL</span><div className="text-right"><span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span></div></div>
+                {appliedDiscount > 0 ? (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm md:text-base font-bold text-[#8C8279]">
+                      <span>Subtotal</span>
+                      <span className="line-through">${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span>
+                    </div>
+                    <div className="flex justify-between text-sm md:text-base font-black text-[#C14B3A] animate-pulse">
+                      <span>🎉 Descuento ({appliedDiscount}%)</span>
+                      <span>-${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0) * (appliedDiscount / 100))}</span>
+                    </div>
+                    <div className="flex justify-between text-xl md:text-2xl font-ghibli-title pt-2 border-t border-[#3A332F]/10">
+                      <span>TOTAL</span>
+                      <span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0) * (1 - appliedDiscount / 100))}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-between text-xl md:text-2xl font-ghibli-title"><span>TOTAL</span><div className="text-right"><span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span></div></div>
+                )}
                 <button onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }} className="w-full bg-[#3A332F] text-white font-ghibli-title py-4 md:py-6 rounded-full text-base md:text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest">FINALIZAR PEDIDO</button>
               </div>
             )}
