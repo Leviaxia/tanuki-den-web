@@ -18,7 +18,7 @@ export async function getOtakuRecommendation(userQuery: string) {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash-001',
+      model: 'gemini-pro',
       contents: userQuery,
       config: {
         systemInstruction: `Eres el "Espíritu Tanuki", un guía sabio y minimalista de una tienda boutique anime.
@@ -28,7 +28,6 @@ export async function getOtakuRecommendation(userQuery: string) {
         2. No divagues. Ve directo al grano con un tono amable.
         3. Usa un emoji ocasional (✨, 🍃, 🎋).
         4. Si preguntan por productos, menciona 1 o 2 máximo del catálogo.
-        5. IMPORTANTE: Si quieren CONTACTARSE, sugieren COMPRAR, o dudas de soporte, diles que escriban al Whatsapp: 3226870628.
         
         Catálogo:
         ${productContext}
