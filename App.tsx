@@ -1250,8 +1250,14 @@ const App: React.FC = () => {
       />
 
       {selectedProduct && (
-        <div className="fixed inset-0 z-[2100] bg-[#3A332F]/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8">
-          <div className="bg-white w-full max-w-5xl h-fit max-h-[90vh] rounded-[30px] md:rounded-[60px] overflow-hidden flex flex-col md:flex-row border-4 md:border-8 border-white shadow-2xl animate-pop">
+        <div
+          className="fixed inset-0 z-[2100] bg-[#3A332F]/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer"
+          onClick={() => setSelectedProduct(null)}
+        >
+          <div
+            className="bg-white w-full max-w-5xl h-fit max-h-[90vh] rounded-[30px] md:rounded-[60px] overflow-hidden flex flex-col md:flex-row border-4 md:border-8 border-white shadow-2xl animate-pop cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="w-full md:w-1/2 h-72 md:h-auto bg-[#FDF5E6] relative group p-6 md:p-0 flex items-center justify-center">
               <img
                 src={selectedProduct.image}
