@@ -9,8 +9,8 @@ const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 export async function getOtakuRecommendation(userQuery: string) {
+  // DEBUG ALERT for Tablet
   if (!ai) {
-    console.warn("Google AI API Key not found. Chat feature disabled.");
     return "El espíritu Tanuki está descansando (Falta API Key). Intenta más tarde. 🍃";
   }
 
@@ -18,7 +18,7 @@ export async function getOtakuRecommendation(userQuery: string) {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-1.5-flash',
       contents: userQuery,
       config: {
         systemInstruction: `Eres el "Espíritu Tanuki", un guía sabio y minimalista de una tienda boutique anime.
@@ -28,6 +28,7 @@ export async function getOtakuRecommendation(userQuery: string) {
         2. No divagues. Ve directo al grano con un tono amable.
         3. Usa un emoji ocasional (✨, 🍃, 🎋).
         4. Si preguntan por productos, menciona 1 o 2 máximo del catálogo.
+        5. IMPORTANTE: Si quieren CONTACTARSE, sugieren COMPRAR, o dudas de soporte, diles que escriban al Whatsapp: 3226870628.
         
         Catálogo:
         ${productContext}
@@ -38,8 +39,9 @@ export async function getOtakuRecommendation(userQuery: string) {
     });
 
     return response.text;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Error:", error);
-    return "Lo siento, viajero. Mis vientos mágicos están cruzados hoy. Intenta de nuevo.";
+    // Return explicit error
+    return `Error Mágico: ${error.message || error}`;
   }
 }
