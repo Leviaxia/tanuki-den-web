@@ -28,6 +28,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     // Shipping State
     const [shipping, setShipping] = useState({ fullName: '', department: '', city: '', address: '', phone: '' });
     const [shippingErrors, setShippingErrors] = useState<any>({});
+    const [showCitySuggestions, setShowCitySuggestions] = useState(false);
 
     // Payment State
     const [method, setMethod] = useState<'nequi' | 'card' | 'manual'>('nequi');
@@ -230,15 +231,38 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                                 {departments.map(d => <option key={d} value={d}>{d}</option>)}
                                             </select>
 
-                                            <select
-                                                value={shipping.city}
-                                                onChange={e => setShipping({ ...shipping, city: e.target.value })}
-                                                disabled={!shipping.department}
-                                                className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] appearance-none ${shippingErrors.city ? 'border-red-400' : 'border-transparent'} disabled:opacity-50`}
-                                            >
-                                                <option value="">Municipio</option>
-                                                {shipping.department && colombiaData[shipping.department]?.map(c => <option key={c} value={c}>{c}</option>)}
-                                            </select>
+                                            <div className="relative">
+                                                <input
+                                                    value={shipping.city}
+                                                    onChange={e => {
+                                                        setShipping({ ...shipping, city: e.target.value });
+                                                        setShowCitySuggestions(true);
+                                                    }}
+                                                    onFocus={() => setShowCitySuggestions(true)}
+                                                    onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)}
+                                                    disabled={!shipping.department}
+                                                    placeholder="Escribe tu Municipio"
+                                                    className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.city ? 'border-red-400' : 'border-transparent'} disabled:opacity-50`}
+                                                />
+                                                {showCitySuggestions && shipping.department && (
+                                                    <ul className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-[#3A332F]/5 max-h-[200px] overflow-y-auto">
+                                                        {colombiaData[shipping.department]
+                                                            ?.filter(c => c.toLowerCase().includes(shipping.city.toLowerCase()))
+                                                            .map(c => (
+                                                                <li
+                                                                    key={c}
+                                                                    className="p-3 hover:bg-[#FDF5E6] hover:text-[#C14B3A] cursor-pointer text-sm text-[#3A332F] font-bold transition-colors"
+                                                                    onMouseDown={() => {
+                                                                        setShipping(prev => ({ ...prev, city: c }));
+                                                                        setShowCitySuggestions(false);
+                                                                    }}
+                                                                >
+                                                                    {c}
+                                                                </li>
+                                                            ))}
+                                                    </ul>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <input
