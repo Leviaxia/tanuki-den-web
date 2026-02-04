@@ -330,7 +330,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                                     <div className="space-y-0.5 md:space-y-1 mb-2 md:mb-4 shrink-0">
                                         <p className="font-ghibli-title text-base md:text-2xl text-[#C14B3A] leading-none">+57 322 687 0628</p>
-                                        <p className="font-ghibli-title text-[10px] md:text-sm text-[#C14B3A] bg-[#FDF5E6] py-0.5 md:py-1 px-2 md:px-4 rounded-full inline-block">Emedical Eyder Rodriguez</p>
+                                        <p className="font-ghibli-title text-[10px] md:text-sm text-[#C14B3A] bg-[#FDF5E6] py-0.5 md:py-1 px-2 md:px-4 rounded-full inline-block">EMEDICAL EYDER RODRIGUEZ</p>
                                     </div>
 
                                     <div className="space-y-2 md:space-y-3 pt-1 w-full max-w-[280px] mx-auto shrink-0">
@@ -367,7 +367,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                     <>
                                         <img src="/assets/bancolombia-logo.png" alt="Bancolombia" className="w-24 md:w-32 h-auto object-contain mb-2 md:mb-4 opacity-80" />
                                         <p className="text-[#3A332F] font-bold text-xs md:text-sm max-w-[200px]">Transferencia Bancaria a Bancolombia.</p>
-                                        <p className="text-[10px] md:text-xs text-[#8C8279]">Cuenta Ahorros: 81378232538</p>
+                                        <p className="font-ghibli-title text-sm md:text-lg text-[#C14B3A] mt-1">Cuenta Ahorros: 81378232538</p>
 
                                         <div className="relative w-full max-w-[200px] pt-2">
                                             <input type="file" onChange={handleFileChange} accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
@@ -428,7 +428,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         </div>
 
                         <div className="text-center space-y-1">
-                            <p className="font-ghibli-title text-2xl text-[#C14B3A]">Emedical Eyder Rodriguez</p>
+                            <p className="font-ghibli-title text-2xl text-[#C14B3A]">EMEDICAL EYDER RODRIGUEZ</p>
                             <p className="font-bold text-[#3A332F]/40 text-xs tracking-widest uppercase">Haz clic fuera para cerrar</p>
                         </div>
                     </div>
