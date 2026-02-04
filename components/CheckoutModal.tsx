@@ -367,7 +367,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                     <>
                                         <img src="/assets/bancolombia-logo.png" alt="Bancolombia" className="w-24 md:w-32 h-auto object-contain mb-2 md:mb-4 opacity-80" />
                                         <p className="text-[#3A332F] font-bold text-xs md:text-sm max-w-[200px]">Transferencia Bancaria a Bancolombia.</p>
-                                        <p className="text-[10px] md:text-xs text-[#8C8279]">Cuenta Ahorros: 123-456-789-00</p>
+                                        <p className="text-[10px] md:text-xs text-[#8C8279]">Cuenta Ahorros: 81378232538</p>
 
                                         <div className="relative w-full max-w-[200px] pt-2">
                                             <input type="file" onChange={handleFileChange} accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
