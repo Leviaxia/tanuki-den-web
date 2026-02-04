@@ -34,6 +34,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const [method, setMethod] = useState<'nequi' | 'card' | 'manual'>('nequi');
     const [proofFile, setProofFile] = useState<File | null>(null);
     const [senderPhone, setSenderPhone] = useState('');
+    const [showFullQr, setShowFullQr] = useState(false);
 
     const finalTotal = discount > 0 ? total - (total * (discount / 100)) : total;
 
@@ -322,7 +323,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                         <img
                                             src="/assets/nequi-qr.png"
                                             alt="Nequi QR"
-                                            className="w-[120px] md:w-[200px] h-auto mx-auto object-contain block p-1 md:p-2"
+                                            className="w-[120px] md:w-[200px] h-auto mx-auto object-contain block p-1 md:p-2 cursor-zoom-in hover:scale-105 transition-transform duration-300 drop-shadow-md"
+                                            onClick={() => setShowFullQr(true)}
                                         />
                                     </div>
 
@@ -401,6 +403,37 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
                 )}
             </div>
+            {/* Full Screen QR Modal */}
+            {showFullQr && (
+                <div className="fixed inset-0 z-[2200] bg-[#3A332F]/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setShowFullQr(false)}>
+                    <div className="relative max-w-lg w-full bg-[#FDF5E6] rounded-[40px] p-8 md:p-10 shadow-2xl border-4 border-[#C14B3A]/30 animate-in zoom-in-95 duration-300 flex flex-col items-center transform transition-all" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={() => setShowFullQr(false)}
+                            className="absolute top-4 right-4 p-3 bg-white rounded-full text-[#3A332F] hover:bg-[#C14B3A] hover:text-white transition-colors shadow-lg group"
+                        >
+                            <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+                        </button>
+
+                        <div className="text-center mb-6">
+                            <span className="bg-[#C14B3A] text-white text-[10px] uppercase font-black tracking-[0.3em] px-3 py-1 rounded-full mb-2 inline-block shadow-sm">Escanea para pagar</span>
+                            <h3 className="font-ghibli-title text-3xl md:text-5xl text-[#3A332F] leading-none">Nequi <span className="text-[#C14B3A]">QR</span></h3>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-[30px] shadow-inner mb-6 border-2 border-[#3A332F]/5 rotate-1 hover:rotate-0 transition-transform duration-500">
+                            <img
+                                src="/assets/nequi-qr.png"
+                                alt="Nequi QR Full"
+                                className="w-full h-auto max-h-[50vh] object-contain min-w-[280px]"
+                            />
+                        </div>
+
+                        <div className="text-center space-y-1">
+                            <p className="font-ghibli-title text-2xl text-[#C14B3A]">DAIVER RODRIGUEZ</p>
+                            <p className="font-bold text-[#3A332F]/40 text-xs tracking-widest uppercase">Haz clic fuera para cerrar</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
