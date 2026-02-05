@@ -1322,13 +1322,23 @@ const App: React.FC = () => {
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/40 text-white text-[9px] px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none md:hidden flex items-center gap-1 z-10 font-bold border border-white/10">
                   <Sparkles size={8} /> Zoom
                 </div>
+
+                {/* Mobile: Rating Overlay (Bottom Left) */}
+                <div className="absolute bottom-3 left-3 bg-black/40 text-[#D4AF37] px-2 py-1 rounded-full backdrop-blur-sm md:hidden flex items-center gap-1 z-10 border border-white/10">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={10} fill={i < Math.floor(selectedProduct.rating) ? "currentColor" : "none"} />
+                    ))}
+                  </div>
+                  <span className="text-[9px] font-bold text-white ml-1">({selectedProduct.reviews?.length || 0})</span>
+                </div>
               </div>
 
               {/* Details Section */}
               <div className="flex-grow flex flex-col p-5 md:p-12 h-[60%] md:h-auto bg-white relative">
 
                 <div className="space-y-2 md:space-y-4 text-center md:text-left">
-                  <span className="bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-bold md:font-ghibli-title md:text-white md:bg-[#C14B3A] px-3 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-wider inline-block">
+                  <span className="hidden md:inline-block bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-bold md:font-ghibli-title md:text-white md:bg-[#C14B3A] px-3 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-wider">
                     {selectedProduct.category}
                   </span>
                   <h2 className="text-xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight uppercase line-clamp-2 md:line-clamp-none">
@@ -1344,7 +1354,7 @@ const App: React.FC = () => {
 
                 {/* Mobile: Full Description with internal scroll */}
                 <div className="mt-4 flex-grow overflow-y-auto pr-2 custom-scrollbar">
-                  <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed">
+                  <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">
                     {selectedProduct.description}
                   </p>
                 </div>
