@@ -182,28 +182,35 @@ const App: React.FC = () => {
     fetchCollections();
   }, []);
 
-  // Fetch Reviews (Products)
+  // Fetch Reviews (Directly from table to avoid Product sync issues)
   const fetchReviews = async () => {
     try {
-      const { data } = await supabase.from('products').select('*, reviews(*)');
+      const { data } = await supabase.from('reviews').select('*');
       if (data) {
-        const formatted = data.map(p => ({
-          ...p,
-          price: Number(p.price),
-          reviews: p.reviews.map((r: any) => ({
+        // Group by product_id
+        const reviewsByProduct: Record<string, any[]> = {};
+        data.forEach(r => {
+          const pid = String(r.product_id); // Normalize ID
+          if (!reviewsByProduct[pid]) reviewsByProduct[pid] = [];
+          reviewsByProduct[pid].push({
             id: r.id,
             userName: r.user_name,
             rating: r.rating,
             comment: r.comment,
             date: r.created_at,
             images: r.images || []
-          })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        }));
+          });
+        });
 
-        setProducts(prev => prev.map(localP => {
-          // Loose equality for ID match (string vs number)
-          const remoteP = formatted.find(rp => String(rp.id) === String(localP.id));
-          return remoteP ? { ...localP, reviews: remoteP.reviews } : localP;
+        setProducts(prev => prev.map(p => {
+          const pid = String(p.id);
+          if (reviewsByProduct[pid]) {
+            return {
+              ...p,
+              reviews: reviewsByProduct[pid].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            };
+          }
+          return { ...p, reviews: [] }; // Clear if no remote reviews found (optional, keeps sync strict)
         }));
       }
     } catch (e) { console.error("Error fetching reviews", e); }
@@ -217,10 +224,21 @@ const App: React.FC = () => {
   useEffect(() => {
     if (selectedProduct) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden'; // Lock text html as well
+      document.body.style.position = 'fixed'; // Nuclear option for mobile
+      document.body.style.width = '100%';
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
     }
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
   }, [selectedProduct]);
 
 
