@@ -116,6 +116,28 @@ const App: React.FC = () => {
   });
 
   // 2. Initialize User-Scoped States
+
+  // FIX: Restore Supabase Session on Mount to ensure RLS works
+  useEffect(() => {
+    const restoreSession = async () => {
+      const savedLocal = localStorage.getItem('tanuki-auth-token');
+      if (savedLocal) {
+        try {
+          const session = JSON.parse(savedLocal);
+          if (session && session.access_token && session.refresh_token) {
+            const { error } = await supabase.auth.setSession({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+            });
+            if (error) console.error("Error restoring session:", error);
+            else console.log("Session restored for RLS.");
+          }
+        } catch (e) { console.error("Error parsing session for restore", e); }
+      }
+    };
+    restoreSession();
+  }, []);
+
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(`tanuki_favorites_${user.id}`);
