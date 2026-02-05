@@ -63,6 +63,7 @@ const App: React.FC = () => {
 
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
+  const [isWritingReview, setIsWritingReview] = useState(false); // New state for toggling form
 
   // ... (existing state)
 
@@ -446,6 +447,58 @@ const App: React.FC = () => {
     setActiveTab(id);
     setSelectedCollectionId(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleReviewSubmit = async () => {
+    if (!user.isRegistered || user.id === 'guest') {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    if (!reviewComment.trim()) {
+      alert("Por favor escribe tu leyenda (comentario).");
+      return;
+    }
+    if (!selectedProduct) return;
+
+    try {
+      const { data, error } = await supabase.from('reviews').insert({
+        product_id: selectedProduct.id,
+        user_id: user.id,
+        user_name: user.name, // Fallback if no profile relation
+        rating: reviewRating,
+        comment: reviewComment
+      }).select();
+
+      if (error) throw error;
+
+      // Optimistic Update
+      const newReview = {
+        id: data[0].id,
+        userName: user.name,
+        rating: reviewRating,
+        comment: reviewComment,
+        date: new Date().toISOString(),
+        images: [], likes: 0, dislikes: 0
+      };
+
+      setProducts(prev => prev.map(p =>
+        p.id === selectedProduct.id
+          ? { ...p, reviews: [newReview, ...p.reviews] }
+          : p
+      ));
+
+      // Update Selected Product View
+      setSelectedProduct(prev => prev ? { ...prev, reviews: [newReview, ...prev.reviews] } : null);
+
+      setReviewComment('');
+      setReviewRating(5);
+      setIsWritingReview(false);
+      alert("¡Tu leyenda ha sido grabada en el bosque!");
+
+    } catch (e) {
+      console.error("Error submitting review", e);
+      alert("Hubo un error al guardar tu reseña. Intenta de nuevo.");
+    }
   };
 
   const [userMsg, setUserMsg] = useState('');
@@ -1417,20 +1470,42 @@ const App: React.FC = () => {
                 )}
               </div>
               <div className="mt-auto pt-4 border-t border-[#F0E6D2]">
-                <button
-                  onClick={() => {
-                    if (!user.isRegistered) {
-                      setShowMobileReviews(false);
-                      setSelectedProduct(null);
-                      setIsAuthModalOpen(true);
-                      return;
-                    };
-                    alert("Función de reseña completa disponible en escritorio por ahora.");
-                  }}
-                  className="w-full py-3 bg-[#FDF5E6] text-[#C14B3A] font-bold rounded-full text-xs uppercase tracking-widest border border-[#C14B3A]/20"
-                >
-                  Escribir Reseña
-                </button>
+                {isWritingReview ? (
+                  <div className="space-y-4 animate-slide-in">
+                    <div className="flex justify-center gap-2 mb-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button key={star} onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform active:scale-95 hover:scale-110">
+                          <Star size={28} fill={star <= reviewRating ? "#D4AF37" : "none"} className={star <= reviewRating ? "text-[#D4AF37]" : "text-[#D4AF37]/40"} />
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Cuéntanos tu historia con este tesoro..."
+                      className="w-full p-4 bg-[#FDF5E6] border-2 border-[#D4AF37]/30 rounded-2xl outline-none text-[#3A332F] text-sm font-medium resize-none h-24"
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={() => setIsWritingReview(false)} className="flex-1 py-3 bg-gray-200 text-[#3A332F] font-bold rounded-full text-xs uppercase tracking-widest">Cancelar</button>
+                      <button onClick={handleReviewSubmit} className="flex-1 py-3 bg-[#C14B3A] text-white font-bold rounded-full text-xs uppercase tracking-widest shadow-lg">Enviar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (!user.isRegistered) {
+                        setShowMobileReviews(false);
+                        setSelectedProduct(null);
+                        setIsAuthModalOpen(true);
+                        return;
+                      };
+                      setIsWritingReview(true);
+                    }}
+                    className="w-full py-3 bg-[#FDF5E6] text-[#C14B3A] font-bold rounded-full text-xs uppercase tracking-widest border border-[#C14B3A]/20"
+                  >
+                    Escribir Reseña
+                  </button>
+                )}
               </div>
             </div>
 
