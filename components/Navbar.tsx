@@ -136,7 +136,14 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#3A332F]/10 to-transparent pointer-events-none"></div>
           <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-[#C14B3A]/10 rounded-full blur-3xl pointer-events-none"></div>
 
-          <div className="w-full flex flex-col items-center gap-6 mt-4 relative z-10 flex-grow">
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className="absolute top-6 right-6 p-2 bg-white rounded-full text-[#3A332F] shadow-md hover:bg-[#C14B3A] hover:text-white transition-all z-20"
+          >
+            <X size={24} />
+          </button>
+
+          <div className="w-full flex flex-col items-center gap-6 mt-10 relative z-10 flex-grow">
             {navItems.map((item, index) => (
               <button
                 key={item.id}

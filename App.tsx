@@ -533,7 +533,7 @@ const App: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-8 lg:gap-12">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 lg:gap-12">
               {products
                 .filter(p => {
                   if (activeCategory === 'Favoritos') return favorites.includes(p.id);
@@ -1403,20 +1403,23 @@ const App: React.FC = () => {
       )
       }
 
-      <footer className="bg-[#1A1614] text-[#FDF5E6] pt-32 pb-44 md:pb-12 rounded-t-[60px] md:rounded-t-[100px] mt-24 relative z-[50] border-t-8 border-[#D4AF37] shadow-2xl">
-        <div className="max-w-7xl mx-auto px-6 space-y-24">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-16">
-            <div className="space-y-8 text-center md:text-left">
-              <h3 className="text-4xl md:text-6xl font-ghibli-title leading-none uppercase tracking-tighter">TANUKI <br /><span className="text-[#D4AF37]">DEN</span></h3>
-              <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] leading-loose">Tesoros con alma. El refugio de todo coleccionista de corazón en Colombia. Forjamos piezas legendarias para repisas épicas. 🇨🇴</p>
+      <footer className="bg-[#1A1614] text-[#FDF5E6] pt-12 pb-24 md:pt-32 md:pb-12 rounded-t-[40px] md:rounded-t-[100px] mt-12 md:mt-24 relative z-[50] border-t-8 border-[#D4AF37] shadow-2xl">
+        <div className="max-w-7xl mx-auto px-6 space-y-12 md:space-y-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-16 text-center md:text-left">
+            <div className="space-y-4 md:space-y-8">
+              <h3 className="text-3xl md:text-6xl font-ghibli-title leading-none uppercase tracking-tighter">TANUKI <br /><span className="text-[#D4AF37]">DEN</span></h3>
+              <p className="text-white/40 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] leading-loose max-w-xs mx-auto md:mx-0">Tesoros con alma. El refugio de todo coleccionista de corazón en Colombia.</p>
               <div className="flex justify-center md:justify-start gap-5">
-                <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Instagram size={18} /></button>
-                <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Facebook size={18} /></button>
-                <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Twitter size={18} /></button>
-                <button className="p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Youtube size={18} /></button>
+                <button className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Instagram size={16} className="md:w-[18px] md:h-[18px]" /></button>
+                <button className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Facebook size={16} className="md:w-[18px] md:h-[18px]" /></button>
+                <button className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Twitter size={16} className="md:w-[18px] md:h-[18px]" /></button>
+                <button className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Youtube size={16} className="md:w-[18px] md:h-[18px]" /></button>
               </div>
+              {/* Accordion-style sections for mobile could be nice, but simple hiding is safer for now */}
             </div>
-            <div className="hidden md:block space-y-8 text-center md:text-left">
+
+            {/* Desktop-only sections */}
+            <div className="hidden md:block space-y-8">
               <h4 className="font-ghibli-title text-2xl text-[#D4AF37] uppercase tracking-widest">El Gremio</h4>
               <ul className="space-y-5 font-bold text-[10px] uppercase tracking-[0.2em] text-white/60">
                 <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('inicio')}>Portal Inicio</li>
@@ -1425,7 +1428,8 @@ const App: React.FC = () => {
                 <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('colecciones')}>Explorar Temas</li>
               </ul>
             </div>
-            <div className="hidden md:block space-y-8 text-center md:text-left">
+
+            <div className="hidden md:block space-y-8">
               <h4 className="font-ghibli-title text-2xl text-[#D4AF37] uppercase tracking-widest">Soporte</h4>
               <ul className="space-y-5 font-bold text-[10px] uppercase tracking-[0.2em] text-white/60">
                 <li className="hover:text-white cursor-pointer transition-colors">Seguir Tesoro</li>
@@ -1434,18 +1438,21 @@ const App: React.FC = () => {
                 <li className="hover:text-white cursor-pointer transition-colors">Privacidad del Clan</li>
               </ul>
             </div>
-            <div className="hidden md:block space-y-8 bg-white/5 p-8 rounded-[50px] border border-white/10 shadow-2xl mx-4 md:mx-0">
-              <h4 className="font-ghibli-title text-2xl text-white uppercase tracking-widest">Susurros</h4>
-              <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Recibe novedades del bosque mágico.</p>
+
+            <div className="space-y-4 md:space-y-8 bg-white/5 p-6 md:p-8 rounded-[30px] md:rounded-[50px] border border-white/10 shadow-2xl mx-2 md:mx-0">
+              {/* Simplified Newsletter for mobile */}
+              <h4 className="font-ghibli-title text-xl md:text-2xl text-white uppercase tracking-widest">Susurros</h4>
+              <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest hidden md:block">Recibe novedades del bosque mágico.</p>
               <div className="relative">
-                <input type="email" placeholder="tu@bosque.com" className="w-full bg-[#110E0C] border-2 border-white/10 rounded-full px-6 py-4 outline-none text-[10px] font-bold focus:border-[#D4AF37] transition-all" />
-                <button className="absolute right-2 top-2 bottom-2 bg-[#D4AF37] text-white px-5 rounded-full hover:bg-white hover:text-[#D4AF37] transition-all shadow-lg"><ArrowRight size={18} /></button>
+                <input type="email" placeholder="tu@email.com" className="w-full bg-[#110E0C] border-2 border-white/10 rounded-full px-4 py-3 md:px-6 md:py-4 outline-none text-[10px] font-bold focus:border-[#D4AF37] transition-all" />
+                <button className="absolute right-1 top-1 bottom-1 md:right-2 md:top-2 md:bottom-2 bg-[#D4AF37] text-white px-3 md:px-5 rounded-full hover:bg-white hover:text-[#D4AF37] transition-all shadow-lg"><ArrowRight size={14} className="md:w-[18px] md:h-[18px]" /></button>
               </div>
-              <div className="flex items-center gap-4 text-white/60 text-[8px] font-black uppercase tracking-widest justify-center"><Lock size={12} className="text-[#81C784]" /> PAGOS 100% SEGUROS</div>
+              <div className="flex items-center gap-4 text-white/60 text-[8px] font-black uppercase tracking-widest justify-center"><Lock size={12} className="text-[#81C784]" /> PAGOS SEGUROS</div>
             </div>
           </div>
-          <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 opacity-40">
-            <p className="text-[8px] font-bold uppercase tracking-[0.4em]">© 2024 TANUKI DEN COLOMBIA - ESPÍRITU DE COLECCIÓN (v2.0 COP)</p>
+
+          <div className="pt-8 md:pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 opacity-40">
+            <p className="text-[8px] font-bold uppercase tracking-[0.2em] md:tracking-[0.4em] text-center">© 2024 TANUKI DEN COLOMBIA</p>
             <div className="flex gap-4"><Shield size={16} /><Truck size={16} /><CreditCard size={16} /></div>
           </div>
         </div>
