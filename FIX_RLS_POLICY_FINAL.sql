@@ -1,4 +1,4 @@
--- Final Robust Fix for Admin Deletion
+-- Final Robust Fix for Admin Deletion (v2 - Fixed Types)
 -- 1. Enable RLS
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
@@ -27,11 +27,12 @@ USING (
   (lower(auth.jwt() ->> 'email') = 'kaieke37@gmail.com')
 );
 
--- 5. User Own Delete Policy (Optional but good)
+-- 5. User Own Delete Policy (Fixed Type Cast)
+-- CAST auth.uid() to text because user_id column is TEXT (supports guests)
 CREATE POLICY "Users can delete own reviews"
 ON reviews
 FOR DELETE
 TO authenticated
 USING (
-  auth.uid() = user_id
+  auth.uid()::text = user_id
 );
