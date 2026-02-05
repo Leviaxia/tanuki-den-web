@@ -4,7 +4,7 @@ import {
   Plus, Minus, Trash2, X, Send, Sparkles, ShoppingBag, ShoppingCart,
   Star, Mail, MapPin, Instagram, Facebook, Twitter, Youtube,
   Video, Music2, Printer, ThumbsUp, ThumbsDown, ChevronRight, ArrowRight,
-  Gift, Ticket, Lock, User as UserIcon, MessageSquare, Camera, Phone, CheckCircle2, Calendar, Map, Heart, PenLine, Crown, Zap, ShieldCheck, Truck, Shield, Clock, RotateCcw, Edit3, Save, UserPlus, Upload, Image as ImageIcon, CreditCard, Wallet, Landmark, QrCode, Home, Palette, Compass, Layers, Gem, Box, MoveLeft, ArrowLeft
+  Gift, Ticket, Lock, User as UserIcon, MessageSquare, Camera, Phone, CheckCircle2, Calendar, Map, Heart, PenLine, Crown, Zap, ShieldCheck, Truck, Shield, Clock, RotateCcw, Edit3, Save, UserPlus, Upload, Image as ImageIcon, CreditCard, Wallet, Landmark, QrCode, Home, Palette, Compass, Layers, Gem, Box, MoveLeft, ArrowLeft, ZoomIn
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
@@ -421,8 +421,21 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const toggleFavorite = (id: string) => {
-    setFavorites(prev => prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]);
+  const toggleFavorite = async (id: string) => {
+    // 1. Optimistic Update (Local)
+    const newFavorites = favorites.includes(id)
+      ? favorites.filter(fid => fid !== id)
+      : [...favorites, id];
+
+    setFavorites(newFavorites);
+    localStorage.setItem(`tanuki_favorites_${user.id}`, JSON.stringify(newFavorites));
+
+    // 2. Cloud Sync (Supabase)
+    if (user.id !== 'auth_pending' && user.id !== 'guest') {
+      try {
+        await supabase.from('profiles').update({ favorites: newFavorites }).eq('id', user.id);
+      } catch (e) { console.error("Error syncing favorites", e); }
+    }
   };
 
   const addToCart = (product: Product, quantity: number = 1) => {
@@ -1372,6 +1385,13 @@ const App: React.FC = () => {
                   alt={selectedProduct.name}
                   onClick={() => setFullScreenImage(selectedProduct.image)}
                 />
+                {/* Desktop Zoom Button */}
+                <button
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md p-4 rounded-full text-white border border-white/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-xl pointer-events-none md:pointer-events-auto hidden md:block"
+                  aria-label="Zoom Image"
+                >
+                  <ZoomIn size={32} />
+                </button>
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/40 text-white text-[9px] px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none md:hidden flex items-center gap-1 z-10 font-bold border border-white/10">
                   <Sparkles size={8} /> Zoom
                 </div>
@@ -1410,6 +1430,19 @@ const App: React.FC = () => {
                     <span className="text-[10px] font-bold text-[#8C8279] underline ml-2 cursor-pointer hover:text-[#C14B3A] transition-colors">
                       {selectedProduct.reviews?.length || 0} Opiniones
                     </span>
+                  </div>
+
+                  {/* Desktop Review Buton */}
+                  <div className="hidden md:block mt-2">
+                    <button
+                      onClick={() => {
+                        setShowMobileReviews(true); // Re-use the overlay for now, simpler than duplicating layout
+                        setIsWritingReview(true); // Open directly to write
+                      }}
+                      className="text-[10px] uppercase font-bold text-[#C14B3A] border border-[#C14B3A] px-3 py-1 rounded-full hover:bg-[#C14B3A] hover:text-white transition-colors flex items-center gap-1 w-fit"
+                    >
+                      <MessageSquare size={12} /> Escribir Reseña
+                    </button>
                   </div>
                 </div>
 
