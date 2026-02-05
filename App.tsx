@@ -1421,6 +1421,7 @@ const App: React.FC = () => {
                   onClick={() => {
                     if (!user.isRegistered) {
                       setShowMobileReviews(false);
+                      setSelectedProduct(null);
                       setIsAuthModalOpen(true);
                       return;
                     };
@@ -1505,7 +1506,7 @@ const App: React.FC = () => {
       {/* Fullscreen Image Overlay */}
       {
         fullScreenImage && (
-          <div className="fixed inset-0 z-[3000] bg-black/95 flex items-center justify-center p-2 animate-fade-in" onClick={() => setFullScreenImage(null)}>
+          <div className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center p-2 animate-fade-in" onClick={() => setFullScreenImage(null)}>
             <button className="absolute top-4 right-4 text-white bg-white/10 p-2 rounded-full hover:bg-white/20 transition-all"><X size={32} /></button>
             <img src={fullScreenImage} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl scale-100 animate-pop" alt="Zoom" />
           </div>
