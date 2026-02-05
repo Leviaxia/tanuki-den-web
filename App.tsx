@@ -198,7 +198,7 @@ const App: React.FC = () => {
             rating: r.rating,
             comment: r.comment,
             date: r.created_at,
-            images: r.images || []
+            images: Array.isArray(r.images) ? r.images : (r.images ? [r.images] : [])
           });
         });
 
@@ -1467,7 +1467,7 @@ const App: React.FC = () => {
         >
           {/* Mobile "Window" Modal */}
           <div
-            className="bg-white w-[90vw] max-h-[85vh] md:w-full md:max-w-5xl md:h-[80vh] rounded-[30px] md:rounded-[60px] flex flex-col md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-hidden"
+            className="bg-white w-[90vw] h-[85vh] md:h-auto md:w-full md:max-w-5xl md:max-h-[85vh] rounded-[30px] md:rounded-[60px] flex flex-col md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-y-auto md:overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
@@ -1527,7 +1527,7 @@ const App: React.FC = () => {
               </div>
 
               {/* Details Section */}
-              <div className="flex-1 flex flex-col p-5 md:p-12 md:max-h-full overflow-hidden bg-white relative">
+              <div className="flex-1 flex flex-col p-5 md:p-12 md:max-h-full md:overflow-hidden bg-white relative">
 
                 <div className="space-y-2 md:space-y-4 text-center md:text-left">
                   <span className="hidden md:inline-block bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-bold md:font-ghibli-title md:text-white md:bg-[#C14B3A] px-3 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-wider">
