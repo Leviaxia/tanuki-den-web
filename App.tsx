@@ -1312,7 +1312,7 @@ const App: React.FC = () => {
             <div className={`w-full h-full transition-all duration-300 md:opacity-100 md:pointer-events-auto ${showMobileReviews ? 'hidden md:flex md:flex-row' : 'flex flex-col md:flex-row'}`}>
 
               {/* Image Section */}
-              <div className="h-[25%] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
+              <div className="h-[220px] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
                 <img
                   src={selectedProduct.image}
                   className="w-full h-full object-cover object-center md:rounded-l-[50px] md:cursor-zoom-in"
@@ -1419,7 +1419,11 @@ const App: React.FC = () => {
               <div className="mt-auto pt-4 border-t border-[#F0E6D2]">
                 <button
                   onClick={() => {
-                    if (!user.isRegistered) { setIsAuthModalOpen(true); return; };
+                    if (!user.isRegistered) {
+                      setShowMobileReviews(false);
+                      setIsAuthModalOpen(true);
+                      return;
+                    };
                     alert("Función de reseña completa disponible en escritorio por ahora.");
                   }}
                   className="w-full py-3 bg-[#FDF5E6] text-[#C14B3A] font-bold rounded-full text-xs uppercase tracking-widest border border-[#C14B3A]/20"
