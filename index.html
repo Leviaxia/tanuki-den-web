@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tanuki Den | Tu Rincón Mágico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -24,9 +24,21 @@
             color: var(--ghibli-dark);
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
             width: 100%;
+            min-height: 100dvh;
             -webkit-font-smoothing: antialiased;
+            /* Prevent bounce overflow on iOS */
+            overscroll-behavior-y: none;
+        }
+
+        /* Prevent auto-zoom on inputs for iOS */
+        @media screen and (max-width: 768px) {
+
+            input,
+            select,
+            textarea {
+                font-size: 16px !important;
+            }
         }
 
         html {
