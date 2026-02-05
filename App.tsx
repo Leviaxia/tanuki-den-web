@@ -158,6 +158,10 @@ const App: React.FC = () => {
 
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
+  // Review Photo State
+  const [reviewPhoto, setReviewPhoto] = useState<File | null>(null);
+  const [isUploadingReview, setIsUploadingReview] = useState(false);
+
   // Dynamic Collections State
   const [collections, setCollections] = useState<Collection[]>([]);
 
@@ -487,12 +491,35 @@ const App: React.FC = () => {
     if (!selectedProduct) return;
 
     try {
+      console.log('Sending review...');
+      let imageUrls: string[] = [];
+
+      // 1. Upload Photo if exists
+      if (reviewPhoto) {
+        setIsUploadingReview(true);
+        try {
+          const fileExt = reviewPhoto.name.split('.').pop();
+          const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+          const { error: uploadError } = await supabase.storage.from('reviews').upload(fileName, reviewPhoto);
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage.from('reviews').getPublicUrl(fileName);
+          imageUrls.push(publicUrl);
+        } catch (uploadEffect) {
+          console.error("Error uploading review photo", uploadEffect);
+          alert("No se pudo subir la foto, pero intentaremos guardar tu reseña.");
+        } finally {
+          setIsUploadingReview(false);
+        }
+      }
+
       const { data, error } = await supabase.from('reviews').insert({
         product_id: selectedProduct.id,
         user_id: user.id,
-        user_name: user.name, // Fallback if no profile relation
+        user_name: user.name,
         rating: reviewRating,
-        comment: reviewComment
+        comment: reviewComment,
+        images: imageUrls
       }).select();
 
       if (error) throw error;
@@ -504,7 +531,9 @@ const App: React.FC = () => {
         rating: reviewRating,
         comment: reviewComment,
         date: new Date().toISOString(),
-        images: [], likes: 0, dislikes: 0
+        images: imageUrls,
+        likes: 0,
+        dislikes: 0
       };
 
       setProducts(prev => prev.map(p =>
@@ -512,6 +541,12 @@ const App: React.FC = () => {
           ? { ...p, reviews: [newReview, ...p.reviews] }
           : p
       ));
+
+      alert("¡Tu leyenda ha sido grabada en el bosque!");
+      setIsWritingReview(false);
+      setReviewComment("");
+      setReviewRating(5);
+      setReviewPhoto(null);
 
       // Update Selected Product View
       setSelectedProduct(prev => prev ? { ...prev, reviews: [newReview, ...prev.reviews] } : null);
@@ -1509,7 +1544,17 @@ const App: React.FC = () => {
                         </div>
                         <span className="text-[9px] text-[#8C8279] font-bold">{new Date(r.date).toLocaleDateString()}</span>
                       </div>
+
                       <p className="text-xs text-[#3A332F]/80 leading-tight">{r.comment}</p>
+                      {
+                        r.images && r.images.length > 0 && (
+                          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                            {r.images.map((img, idx) => (
+                              <img key={idx} src={img} className="w-16 h-16 object-cover rounded-lg border border-[#D4AF37]/30" alt="Review attachment" onClick={() => setFullScreenImage(img)} />
+                            ))}
+                          </div>
+                        )
+                      }
                     </div>
                   ))
                 ) : (
@@ -1538,6 +1583,22 @@ const App: React.FC = () => {
                       placeholder="Cuéntanos tu historia..."
                       className="w-full p-3 bg-[#FDF5E6] border-2 border-[#D4AF37]/30 rounded-2xl outline-none text-[#3A332F] text-xs font-medium resize-none h-20"
                     />
+
+                    {/* Photo Upload Preview & Button */}
+                    <div className="flex items-center gap-2">
+                      <label className={`cursor-pointer p-2 rounded-full border border-[#C14B3A]/30 text-[#C14B3A] hover:bg-[#C14B3A] hover:text-white transition-all ${reviewPhoto ? 'bg-[#C14B3A] text-white' : 'bg-white'}`}>
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) setReviewPhoto(e.target.files[0]);
+                        }} />
+                        <Camera size={16} />
+                      </label>
+                      {reviewPhoto && (
+                        <div className="flex items-center gap-2 bg-[#FDF5E6] px-2 py-1 rounded-lg border border-[#D4AF37]/20">
+                          <span className="text-[10px] text-[#3A332F] truncate max-w-[100px]">{reviewPhoto.name}</span>
+                          <button onClick={() => setReviewPhoto(null)}><X size={12} className="text-[#C14B3A]" /></button>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       <button type="button" onClick={() => setIsWritingReview(false)} className="flex-1 py-2 bg-gray-200 text-[#3A332F] font-bold rounded-full text-[10px] uppercase tracking-widest hover:bg-gray-300 transition-colors">Cancelar</button>
                       <button type="button" onClick={handleReviewSubmit} className="flex-1 py-2 bg-[#C14B3A] text-white font-bold rounded-full text-[10px] uppercase tracking-widest shadow-lg hover:bg-[#8B362A] transition-colors">Enviar</button>
