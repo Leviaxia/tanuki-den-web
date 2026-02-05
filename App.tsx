@@ -1276,130 +1276,77 @@ const App: React.FC = () => {
 
       {selectedProduct && (
         <div
-          className="fixed inset-0 z-[2100] bg-[#3A332F]/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer"
+          className="fixed inset-0 z-[2100] md:bg-[#3A332F]/90 md:backdrop-blur-md flex items-end md:items-center justify-center md:p-8 cursor-pointer overflow-hidden"
           onClick={() => setSelectedProduct(null)}
         >
           <div
-            className="bg-white w-full max-w-5xl h-fit max-h-[90vh] rounded-[30px] md:rounded-[60px] overflow-hidden flex flex-col md:flex-row border-4 md:border-8 border-white shadow-2xl animate-pop cursor-default"
+            className="bg-white w-full h-full md:h-auto md:max-w-5xl md:max-h-[85vh] md:rounded-[60px] flex flex-col md:flex-row border-none md:border-8 border-white shadow-2xl animate-slide-up md:animate-pop cursor-default relative overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full md:w-1/2 h-72 md:h-auto bg-[#FDF5E6] relative group p-6 md:p-0 flex items-center justify-center">
+            {/* Mobile Close Button */}
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="md:hidden absolute top-4 right-4 z-50 p-2 bg-black/20 backdrop-blur-md text-white rounded-full"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Image Section */}
+            <div className="w-full h-[45vh] md:w-1/2 md:h-auto bg-[#FDF5E6] relative group flex shrink-0">
               <img
                 src={selectedProduct.image}
-                className="w-full h-full object-cover object-top rounded-[20px] md:rounded-none cursor-zoom-in active:scale-105 transition-transform duration-500 shadow-sm md:shadow-none bg-white md:bg-transparent"
+                className="w-full h-full object-cover object-center md:rounded-l-[50px] cursor-zoom-in"
                 alt={selectedProduct.name}
                 onClick={() => setFullScreenImage(selectedProduct.image)}
               />
-              <div className="absolute top-8 left-8 bg-black/50 text-white text-[10px] px-3 py-1.5 rounded-full backdrop-blur-sm pointer-events-none md:hidden flex items-center gap-1 z-10 font-bold tracking-wider border border-white/20">
+              <div className="absolute bottom-4 left-4 bg-black/50 text-white text-[10px] px-3 py-1.5 rounded-full backdrop-blur-sm pointer-events-none md:hidden flex items-center gap-1 z-10 font-bold tracking-wider border border-white/20">
                 <Sparkles size={10} /> Toca para Zoom
               </div>
-              <button onClick={() => setSelectedProduct(null)} className="md:hidden absolute top-6 right-6 p-2 bg-white rounded-full shadow-lg z-20 text-[#3A332F] hover:bg-[#C14B3A] hover:text-white transition-colors"><X size={20} /></button>
             </div>
-            <div className="w-full md:w-1/2 p-6 md:p-16 flex flex-col overflow-y-auto">
-              <button onClick={() => setSelectedProduct(null)} className="hidden md:block self-end p-3 hover:bg-[#FDF5E6] rounded-full transition-all mb-8"><X size={32} /></button>
-              <div className="space-y-4 md:space-y-8 flex-grow">
-                <span className="bg-[#C14B3A] text-white text-[10px] font-ghibli-title px-4 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-widest">{selectedProduct.category}</span>
-                <h2 className="text-3xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight uppercase">{selectedProduct.name}</h2>
-                <p className="text-[#8C8279] text-sm md:text-lg font-bold leading-relaxed">{selectedProduct.description}</p>
-                <div className="text-3xl md:text-5xl font-ghibli-title text-[#3A332F] pt-4 md:pt-6 border-t-4 border-[#FDF5E6]"><span className="text-[#C14B3A] text-xl md:text-2xl mr-2">$</span>{formatCurrency(selectedProduct.price)}</div>
-                <div className="flex flex-col sm:flex-row gap-4 md:gap-6 pt-6 md:pt-10"><div className="flex items-center justify-between bg-[#FDF5E6] px-6 py-4 md:px-8 md:py-5 rounded-full border-4 border-[#E6D5B8] sm:w-48"><button onClick={() => setDetailQuantity(q => Math.max(1, q - 1))}><Minus size={18} className="md:w-5 md:h-5" /></button><span className="font-ghibli-title text-xl md:text-2xl">{detailQuantity}</span><button onClick={() => setDetailQuantity(q => q + 1)}><Plus size={18} className="md:w-5 md:h-5" /></button></div><button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-4 md:py-6 rounded-full text-base md:text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-4">AÑADIR AL SACO <ArrowRight size={20} className="md:w-6 md:h-6" /></button></div>
 
-                {/* Reviews Section */}
-                <div className="mt-8 md:mt-12 border-t-4 border-[#FDF5E6] pt-6 md:pt-8 space-y-6">
-                  <h3 className="font-ghibli-title text-xl md:text-2xl text-[#3A332F] uppercase">Opiniones del Gremio</h3>
+            {/* Content Section */}
+            <div className="w-full md:w-1/2 flex flex-col h-[55vh] md:h-auto bg-white relative">
+              <button onClick={() => setSelectedProduct(null)} className="hidden md:block absolute top-6 right-6 p-3 hover:bg-[#FDF5E6] rounded-full transition-all z-20"><X size={32} /></button>
 
-                  <div className="space-y-4 max-h-[300px] overflow-y-auto scrollbar-hide">
-                    {selectedProduct.reviews && selectedProduct.reviews.length > 0 ? (
-                      selectedProduct.reviews.map((r, i) => (
-                        <div key={i} className="bg-[#FDF5E6]/40 p-4 rounded-[20px] space-y-2">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-bold text-[#3A332F] text-sm">{r.userName}</h4>
-                              <div className="flex text-[#D4AF37]">{[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < r.rating ? "currentColor" : "none"} />)}</div>
-                            </div>
-                            <span className="text-[10px] text-[#8C8279] font-bold">{new Date(r.date).toLocaleDateString()}</span>
-                          </div>
-                          <p className="text-xs md:text-sm text-[#3A332F]/80 leading-relaxed">{r.comment}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-[#8C8279] italic">Sé el primero en opinar sobre este tesoro.</p>
-                    )}
+              <div className="flex-grow overflow-y-auto p-6 md:p-12 space-y-6 md:space-y-8 pb-32 md:pb-12">
+                <div className="space-y-2 md:space-y-4">
+                  <span className="bg-[#C14B3A] text-white text-[10px] font-ghibli-title px-3 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-widest inline-block">{selectedProduct.category}</span>
+                  <h2 className="text-2xl md:text-5xl font-ghibli-title text-[#3A332F] leading-[0.95] uppercase">{selectedProduct.name}</h2>
+                  <div className="flex items-center gap-2">
+                    <div className="flex text-[#C14B3A]">{[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < Math.floor(selectedProduct.rating) ? "currentColor" : "none"} />)}</div>
+                    <span className="text-xs font-bold text-[#8C8279] underline">{selectedProduct.reviews?.length || 0} Opiniones</span>
                   </div>
+                </div>
 
-                  <form onSubmit={async (e) => {
-                    e.preventDefault();
-                    if (!user.isRegistered) { alert('Debes unirte al Gremio para opinar.'); setIsAuthModalOpen(true); return; }
-                    if (!reviewComment.trim()) return;
+                <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed">{selectedProduct.description}</p>
 
-                    try {
-                      const { error } = await supabase.from('reviews').insert({
-                        product_id: selectedProduct.id,
-                        user_id: user.id,
-                        user_name: user.name,
-                        rating: reviewRating,
-                        comment: reviewComment
-                      });
+                <div className="text-3xl md:text-5xl font-ghibli-title text-[#3A332F] pt-2 md:pt-6 border-t border-[#FDF5E6] flex items-center gap-2">
+                  <span className="text-[#C14B3A] text-xl md:text-2xl">$</span>{formatCurrency(selectedProduct.price)}
+                </div>
 
-                      if (error) throw error;
+                {/* Reviews Preview (Mobile Optimized) */}
+                <div className="bg-[#FDF5E6]/50 rounded-[20px] p-4 space-y-3">
+                  <h3 className="font-ghibli-title text-[#3A332F] text-sm uppercase">Lo que dice el clan</h3>
+                  {selectedProduct.reviews && selectedProduct.reviews.length > 0 ? (
+                    <div className="text-xs text-[#3A332F]/70 italic">"{selectedProduct.reviews[0].comment}" - <span className="font-bold not-italic">{selectedProduct.reviews[0].userName}</span></div>
+                  ) : (
+                    <p className="text-xs text-[#8C8279]">Sin reseñas aún. ¡Sé el primero!</p>
+                  )}
+                  <button className="text-[10px] font-bold text-[#C14B3A] underline uppercase tracking-widest">Ver todas las reseñas</button>
+                </div>
+              </div>
 
-                      const newReview: Review = {
-                        id: Date.now().toString(), // Temporary ID for UI
-                        userName: user.name,
-                        rating: reviewRating,
-                        comment: reviewComment,
-                        images: [],
-                        date: new Date().toISOString(),
-                        likes: 0,
-                        dislikes: 0
-                      };
-
-                      // Update Local State Optimistically
-                      const updatedProducts = products.map(p => {
-                        if (p.id === selectedProduct.id) {
-                          const updatedReviews = [...(p.reviews || []), newReview];
-                          // Recalculate Average
-                          const sum = updatedReviews.reduce((a, r) => a + r.rating, 0);
-                          const newAvg = sum / updatedReviews.length;
-                          return { ...p, reviews: updatedReviews, rating: newAvg };
-                        }
-                        return p;
-                      });
-
-                      setProducts(updatedProducts);
-                      setSelectedProduct(prev => {
-                        if (!prev) return null;
-                        const updatedReviews = [...(prev.reviews || []), newReview];
-                        const sum = updatedReviews.reduce((a, r) => a + r.rating, 0);
-                        const newAvg = sum / updatedReviews.length;
-                        return { ...prev, reviews: updatedReviews, rating: newAvg };
-                      });
-
-                      setReviewComment('');
-                      setReviewRating(5);
-                      alert('¡Tu reseña ha sido grabada en la piedra del destino!');
-
-                    } catch (e) {
-                      console.error("Error submitting review", e);
-                      alert("Hubo un error al publicar tu reseña. Intenta de nuevo.");
-                    }
-                  }} className="bg-[#FDF5E6] p-4 md:p-6 rounded-[25px] space-y-4 border-2 border-[#E6D5B8]">
-                    <h4 className="font-ghibli-title text-sm uppercase text-[#3A332F]">Deja tu huella</h4>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <button key={star} type="button" onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform hover:scale-110">
-                          <Star size={24} className={star <= reviewRating ? "text-[#D4AF37] fill-[#D4AF37]" : "text-[#D4AF37]/30"} />
-                        </button>
-                      ))}
-                    </div>
-                    <textarea
-                      value={reviewComment}
-                      onChange={(e) => setReviewComment(e.target.value)}
-                      placeholder="Comparte tu sabiduría..."
-                      className="w-full bg-white p-3 rounded-[15px] text-sm outline-none border-2 border-transparent focus:border-[#C14B3A] transition-all resize-none h-24"
-                    />
-                    <button type="submit" className="w-full bg-[#3A332F] text-white font-ghibli-title py-3 rounded-full text-xs md:text-sm shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest">PUBLICAR RESEÑA</button>
-                  </form>
+              {/* Sticky Bottom Actions */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 md:static md:p-0 bg-white/90 backdrop-blur-md md:bg-transparent border-t border-[#FDF5E6] md:border-none z-20">
+                <div className="flex gap-3 md:gap-6 md:px-12 md:pb-12">
+                  <div className="flex items-center justify-between bg-[#FDF5E6] px-4 py-3 md:px-8 md:py-5 rounded-full border-2 md:border-4 border-[#E6D5B8] w-1/3 md:w-48 shrink-0">
+                    <button onClick={() => setDetailQuantity(q => Math.max(1, q - 1))}><Minus size={16} className="md:w-5 md:h-5" /></button>
+                    <span className="font-ghibli-title text-lg md:text-2xl">{detailQuantity}</span>
+                    <button onClick={() => setDetailQuantity(q => q + 1)}><Plus size={16} className="md:w-5 md:h-5" /></button>
+                  </div>
+                  <button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-3 md:py-6 rounded-full text-xs md:text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-2 md:gap-4 active:scale-95">
+                    AÑADIR <span className="hidden md:inline">AL SACO</span> <ArrowRight size={18} className="md:w-6 md:h-6" />
+                  </button>
                 </div>
               </div>
             </div>
