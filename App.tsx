@@ -1309,10 +1309,10 @@ const App: React.FC = () => {
             </div>
 
             {/* MAIN CONTENT (Desktop: Always Visible | Mobile: Visible if !showMobileReviews) */}
-            <div className={`w-full h-full transition-all duration-300 md:flex md:flex-row md:static md:translate-x-0 md:opacity-100 md:pointer-events-auto ${showMobileReviews ? 'hidden' : 'flex flex-col'}`}>
+            <div className={`w-full h-full transition-all duration-300 md:opacity-100 md:pointer-events-auto ${showMobileReviews ? 'hidden md:flex md:flex-row' : 'flex flex-col md:flex-row'}`}>
 
               {/* Image Section */}
-              <div className="h-[20%] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
+              <div className="h-[25%] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
                 <img
                   src={selectedProduct.image}
                   className="w-full h-full object-cover object-center md:rounded-l-[50px] md:cursor-zoom-in"
@@ -1389,7 +1389,7 @@ const App: React.FC = () => {
             </div>
 
             {/* REVIEWS CONTENT (Mobile Overlay) */}
-            <div className={`md:hidden absolute inset-0 bg-white z-40 transition-transform duration-300 flex flex-col p-6 ${showMobileReviews ? 'translate-x-0' : 'translate-x-full pointer-events-none'}`}>
+            <div className={`md:hidden flex-col h-full bg-white p-6 ${showMobileReviews ? 'flex' : 'hidden'}`}>
               <div className="mt-12 flex-grow overflow-y-auto space-y-4 pb-20">
                 <h3 className="font-ghibli-title text-xl text-[#3A332F] uppercase text-center mb-6">Opiniones del Gremio</h3>
 
