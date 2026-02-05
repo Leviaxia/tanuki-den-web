@@ -1442,9 +1442,9 @@ const App: React.FC = () => {
             </div>
 
             {/* REVIEWS CONTENT (Mobile Overlay) */}
-            <div className={`md:hidden flex-col h-full bg-white p-6 ${showMobileReviews ? 'flex' : 'hidden'}`}>
-              <div className="mt-12 flex-grow overflow-y-auto space-y-4 pb-20">
-                <h3 className="font-ghibli-title text-xl text-[#3A332F] uppercase text-center mb-6">Opiniones del Gremio</h3>
+            <div className={`md:hidden flex-col h-full bg-white p-4 ${showMobileReviews ? 'flex' : 'hidden'}`}>
+              <div className="mt-4 flex-grow overflow-y-auto space-y-4 pb-8">
+                <h3 className="font-ghibli-title text-xl text-[#3A332F] uppercase text-center mb-4">Opiniones del Gremio</h3>
 
                 {selectedProduct.reviews && selectedProduct.reviews.length > 0 ? (
                   selectedProduct.reviews.map((r, i) => (
@@ -1471,27 +1471,28 @@ const App: React.FC = () => {
               </div>
               <div className="mt-auto pt-4 border-t border-[#F0E6D2]">
                 {isWritingReview ? (
-                  <div className="space-y-4 animate-slide-in">
-                    <div className="flex justify-center gap-2 mb-2">
+                  <div className="space-y-3 animate-slide-in">
+                    <div className="flex justify-center gap-2 mb-1">
                       {[1, 2, 3, 4, 5].map((star) => (
-                        <button key={star} onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform active:scale-95 hover:scale-110">
-                          <Star size={28} fill={star <= reviewRating ? "#D4AF37" : "none"} className={star <= reviewRating ? "text-[#D4AF37]" : "text-[#D4AF37]/40"} />
+                        <button key={star} type="button" onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform active:scale-95 hover:scale-110">
+                          <Star size={24} fill={star <= reviewRating ? "#D4AF37" : "none"} className={star <= reviewRating ? "text-[#D4AF37]" : "text-[#D4AF37]/40"} />
                         </button>
                       ))}
                     </div>
                     <textarea
                       value={reviewComment}
                       onChange={(e) => setReviewComment(e.target.value)}
-                      placeholder="Cuéntanos tu historia con este tesoro..."
-                      className="w-full p-4 bg-[#FDF5E6] border-2 border-[#D4AF37]/30 rounded-2xl outline-none text-[#3A332F] text-sm font-medium resize-none h-24"
+                      placeholder="Cuéntanos tu historia..."
+                      className="w-full p-3 bg-[#FDF5E6] border-2 border-[#D4AF37]/30 rounded-2xl outline-none text-[#3A332F] text-xs font-medium resize-none h-20"
                     />
                     <div className="flex gap-2">
-                      <button onClick={() => setIsWritingReview(false)} className="flex-1 py-3 bg-gray-200 text-[#3A332F] font-bold rounded-full text-xs uppercase tracking-widest">Cancelar</button>
-                      <button onClick={handleReviewSubmit} className="flex-1 py-3 bg-[#C14B3A] text-white font-bold rounded-full text-xs uppercase tracking-widest shadow-lg">Enviar</button>
+                      <button type="button" onClick={() => setIsWritingReview(false)} className="flex-1 py-2 bg-gray-200 text-[#3A332F] font-bold rounded-full text-[10px] uppercase tracking-widest hover:bg-gray-300 transition-colors">Cancelar</button>
+                      <button type="button" onClick={handleReviewSubmit} className="flex-1 py-2 bg-[#C14B3A] text-white font-bold rounded-full text-[10px] uppercase tracking-widest shadow-lg hover:bg-[#8B362A] transition-colors">Enviar</button>
                     </div>
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => {
                       if (!user.isRegistered) {
                         setShowMobileReviews(false);
@@ -1501,7 +1502,7 @@ const App: React.FC = () => {
                       };
                       setIsWritingReview(true);
                     }}
-                    className="w-full py-3 bg-[#FDF5E6] text-[#C14B3A] font-bold rounded-full text-xs uppercase tracking-widest border border-[#C14B3A]/20"
+                    className="w-full py-3 bg-[#FDF5E6] text-[#C14B3A] font-bold rounded-full text-xs uppercase tracking-widest border border-[#C14B3A]/20 hover:bg-[#C14B3A] hover:text-white transition-all"
                   >
                     Escribir Reseña
                   </button>
