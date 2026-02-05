@@ -184,7 +184,14 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                                 <img src={item.image} className="w-14 h-14 rounded-xl object-cover" alt={item.name} />
                                                 <div className="flex-grow min-w-0">
                                                     <h4 className="font-bold text-sm text-[#3A332F] truncate">{item.name}</h4>
-                                                    <p className="text-[#C14B3A] font-black text-xs">{formatCurrency(item.price)}</p>
+                                                    {discount > 0 ? (
+                                                        <div className="flex flex-col">
+                                                            <p className="text-[10px] text-[#8C8279] line-through decoration-1">{formatCurrency(item.price)}</p>
+                                                            <p className="text-[#C14B3A] font-black text-xs">{formatCurrency(item.price * (1 - discount / 100))}</p>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-[#C14B3A] font-black text-xs">{formatCurrency(item.price)}</p>
+                                                    )}
                                                 </div>
                                                 <div className="flex items-center gap-2 bg-[#FDF5E6] px-2 py-1 rounded-full border border-[#3A332F]/5 translate-x-[-10px]">
                                                     {!item.id.startsWith('sub-') && <button onClick={() => onUpdateQuantity(item.id, -1)} className="p-1 hover:text-[#C14B3A]"><Minus size={12} /></button>}
