@@ -159,6 +159,11 @@ const App: React.FC = () => {
   // Dynamic Collections State
   const [collections, setCollections] = useState<Collection[]>([]);
 
+  // Scroll to top on tab change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
+
   // Fetch Collections
   useEffect(() => {
     const fetchCollections = async () => {
@@ -862,23 +867,7 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      <div className="lg:hidden fixed bottom-6 left-4 right-4 h-16 bg-[#2C2420]/95 backdrop-blur-xl rounded-full z-[1600] flex items-center justify-around px-2 border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] ring-1 ring-[#D4AF37]/20">
-        {[
-          { id: 'inicio', icon: Home, label: 'Inicio' },
-          { id: 'figuras', icon: ShoppingBag, label: 'Tienda' },
-          { id: 'personalizacion', icon: Palette, label: 'Taller' },
-          { id: 'colecciones', icon: Compass, label: 'Explorar' }
-        ].map(item => (
-          <button
-            key={item.id}
-            onClick={() => handleNavClick(item.id)}
-            className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 relative ${activeTab === item.id ? 'text-[#3A332F] scale-110' : 'text-white/40 hover:text-white/80'}`}
-          >
-            <div className={`absolute inset-0 bg-[#D4AF37] rounded-full -z-10 transition-all duration-300 ${activeTab === item.id ? 'opacity-100 scale-100 shadow-lg border-2 border-white' : 'opacity-0 scale-50'}`}></div>
-            <item.icon size={activeTab === item.id ? 22 : 20} className="transition-all relative z-10" />
-          </button>
-        ))}
-      </div>
+
 
       <main className="flex-grow relative z-10">{renderContent()}</main>
 
