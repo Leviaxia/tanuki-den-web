@@ -850,7 +850,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <div className="fixed bottom-32 md:bottom-12 right-6 z-[100] flex flex-col items-center gap-4">
+      <div className="fixed bottom-4 md:bottom-12 right-6 z-[100] flex flex-col items-center gap-4">
         <button
           onClick={() => setIsRouletteOpen(true)}
           className={`w-12 h-12 md:w-16 md:h-16 bg-[#D4AF37] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 relative overflow-hidden animate-wiggle ${hasSpunFirst ? 'opacity-60 grayscale-[0.5]' : ''}`}

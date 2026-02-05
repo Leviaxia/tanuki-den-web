@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Menu, X, User as UserIcon, Crown, Sparkles } from 'lucide-react';
+import { ShoppingBag, Menu, X, User as UserIcon, Crown, Sparkles, Instagram, Facebook, Twitter, Youtube } from 'lucide-react';
 import { User } from '../types';
 
 
@@ -132,30 +132,42 @@ const Navbar: React.FC<NavbarProps> = ({
       </nav>
 
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[9999] bg-[#FDF5E6] pt-32 px-6 lg:hidden animate-fade-in flex flex-col items-center">
-          <div className="flex flex-col gap-6 w-full max-w-xs">
+        <div className="fixed inset-0 z-[9999] bg-[#FDF5E6] lg:hidden animate-fade-in flex flex-col pt-24 px-6 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#3A332F]/10 to-transparent pointer-events-none"></div>
+          <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-[#C14B3A]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="w-full flex flex-col items-center gap-6 mt-4 relative z-10 flex-grow">
             {navItems.map((item, index) => (
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`text-2xl font-ghibli-title text-center py-2 transition-all duration-300 ${activeTab === item.id ? 'text-[#C14B3A] scale-110' : 'text-[#3A332F]/60 hover:text-[#3A332F]'
+                className={`text-3xl font-ghibli-title uppercase tracking-wider transition-all duration-300 ${activeTab === item.id ? 'text-[#C14B3A] scale-105' : 'text-[#3A332F]/60'
                   }`}
               >
                 {item.label}
               </button>
             ))}
 
-            <div className="h-2"></div>
+            <div className="h-px w-24 bg-[#3A332F]/10 my-2"></div>
 
             <button
               onClick={() => { onOpenSubscription(); setIsMenuOpen(false); }}
-              className={`py-4 px-6 rounded-full font-ghibli-title text-lg flex items-center justify-center gap-3 shadow-xl relative overflow-hidden group active:scale-95 transition-all duration-300 ${user.membership ? 'bg-[#3A332F] text-[#D4AF37]' : 'bg-[#C14B3A] text-white hover:bg-[#3A332F]'
+              className={`py-4 px-8 rounded-full font-ghibli-title text-base flex items-center justify-center gap-3 shadow-lg relative overflow-hidden group active:scale-95 transition-all duration-300 w-full max-w-xs ${user.membership ? 'bg-[#3A332F] text-[#D4AF37]' : 'bg-[#C14B3A] text-white'
                 }`}
             >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
               <Crown size={20} className={user.membership ? "" : "animate-bounce"} />
               <span className="relative z-10">{user.membership ? 'MI ESTATUS' : 'UNIRSE AL CLAN'}</span>
             </button>
+          </div>
+
+          <div className="pb-12 text-center space-y-4 relative z-10">
+            <p className="text-[10px] font-black uppercase text-[#3A332F]/40 tracking-[0.3em]">Sigue al gremio</p>
+            <div className="flex items-center justify-center gap-6">
+              <button className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"><Instagram size={20} /></button>
+              <button className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"><Facebook size={20} /></button>
+              <button className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"><Twitter size={20} /></button>
+              <button className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"><Youtube size={20} /></button>
+            </div>
           </div>
         </div>
       )}
