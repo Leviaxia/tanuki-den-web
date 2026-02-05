@@ -1288,7 +1288,7 @@ const App: React.FC = () => {
             {/* Close Button */}
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute top-3 right-3 md:top-6 md:right-6 z-50 p-2 bg-black/10 hover:bg-black/20 md:hover:bg-[#FDF5E6] text-[#3A332F] rounded-full transition-all"
+              className="absolute top-3 right-3 md:top-6 md:right-6 z-50 p-2 bg-white/80 hover:bg-white text-[#3A332F] rounded-full shadow-lg transition-all border border-[#3A332F]/10"
             >
               <X size={20} className="md:w-8 md:h-8" />
             </button>
@@ -1312,7 +1312,7 @@ const App: React.FC = () => {
             <div className={`w-full h-full transition-all duration-300 md:flex md:flex-row md:static md:translate-x-0 md:opacity-100 md:pointer-events-auto ${showMobileReviews ? 'hidden' : 'flex flex-col'}`}>
 
               {/* Image Section */}
-              <div className="h-[40%] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
+              <div className="h-[32%] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
                 <img
                   src={selectedProduct.image}
                   className="w-full h-full object-cover object-center md:rounded-l-[50px] md:cursor-zoom-in"
