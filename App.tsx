@@ -200,7 +200,8 @@ const App: React.FC = () => {
         }));
 
         setProducts(prev => prev.map(localP => {
-          const remoteP = formatted.find(rp => rp.id === localP.id);
+          // Loose equality for ID match (string vs number)
+          const remoteP = formatted.find(rp => String(rp.id) === String(localP.id));
           return remoteP ? { ...localP, reviews: remoteP.reviews } : localP;
         }));
       }
@@ -1497,7 +1498,7 @@ const App: React.FC = () => {
               </div>
 
               {/* Details Section */}
-              <div className="md:flex-1 flex flex-col p-5 md:p-12 md:max-h-full overflow-hidden bg-white relative">
+              <div className="flex-1 flex flex-col p-5 md:p-12 md:max-h-full overflow-hidden bg-white relative">
 
                 <div className="space-y-2 md:space-y-4 text-center md:text-left">
                   <span className="hidden md:inline-block bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-bold md:font-ghibli-title md:text-white md:bg-[#C14B3A] px-3 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-wider">
