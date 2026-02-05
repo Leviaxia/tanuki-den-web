@@ -253,16 +253,47 @@ const App: React.FC = () => {
     refreshProfile();
 
     // 3. Realtime Subscription (Instant Sync across devices)
+    // 3. Realtime Subscription (Instant Sync across devices)
     if (user.id !== 'guest') {
-      const channel = supabase.channel(`public:profiles:id=eq.${user.id}`)
+      const profileChannel = supabase.channel(`public:profiles:id=eq.${user.id}`)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, (payload) => {
-          console.log('[RT] Profile updated:', payload);
+          // console.log('[RT] Profile updated:', payload);
           const newFavs = payload.new.favorites;
           if (newFavs && Array.isArray(newFavs)) setFavorites(newFavs);
         })
         .subscribe();
 
-      return () => { supabase.removeChannel(channel); };
+      const reviewsChannel = supabase.channel('public:reviews')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reviews' }, async (payload) => {
+          // console.log('[RT] New Review:', payload);
+          // Re-fetch products to get new reviews (simplest way to sync deeply nested reviews)
+          // ideally we'd just append to state, but nested jsonb/relation is complex.
+          // Actually, we can fetch just reviews for this product? No, "products" state holds it all.
+          // Quick fix: Re-run fetchProducts logic or append locally.
+          // Let's reload everything silently:
+          const { data } = await supabase.from('products').select('*, reviews(*)');
+          if (data) {
+            const formatted = data.map(p => ({
+              ...p,
+              price: Number(p.price),
+              reviews: p.reviews.map((r: any) => ({
+                id: r.id,
+                userName: r.user_name,
+                rating: r.rating,
+                comment: r.comment,
+                date: r.created_at,
+                images: r.images || [] // Ensure images are synced
+              })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            }));
+            setProducts(formatted);
+          }
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(profileChannel);
+        supabase.removeChannel(reviewsChannel);
+      };
     }
   }, [user.id]);
 
@@ -1456,7 +1487,7 @@ const App: React.FC = () => {
               </div>
 
               {/* Details Section */}
-              <div className="flex-grow flex flex-col p-5 md:p-12 h-[60%] md:h-auto bg-white relative">
+              <div className="md:flex-1 flex flex-col p-5 md:p-12 md:max-h-full overflow-hidden bg-white relative">
 
                 <div className="space-y-2 md:space-y-4 text-center md:text-left">
                   <span className="hidden md:inline-block bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-bold md:font-ghibli-title md:text-white md:bg-[#C14B3A] px-3 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-wider">
@@ -1495,7 +1526,7 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Mobile: Full Description with internal scroll */}
-                <div className="mt-4 flex-grow overflow-y-auto pr-2 custom-scrollbar">
+                <div className="mt-4 flex-grow overflow-y-auto pr-2 custom-scrollbar min-h-0">
                   <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">
                     {selectedProduct.description}
                   </p>
@@ -1525,6 +1556,9 @@ const App: React.FC = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Desktop: Ensure this footer is always visible */}
+                <div className="flex-shrink-0 pt-4"></div>
 
               </div>
             </div>
