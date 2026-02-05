@@ -683,8 +683,16 @@ const App: React.FC = () => {
   const handleDeleteReview = async (reviewId: string) => {
     if (!confirm('ADMIN: ¿Eliminar esta reseña permanentemente?')) return;
     try {
-      const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
+      // FIX: Request exact count to detect RLS silent failures
+      const { error, count } = await supabase.from('reviews').delete({ count: 'exact' }).eq('id', reviewId);
+
       if (error) throw error;
+
+      // Check if row was actually deleted
+      if (count === 0) {
+        alert("⚠️ No se pudo eliminar. La base de datos denegó el permiso.\nAsegúrate de haber ejecutado el script SQL 'FIX_RLS_POLICY_FINAL.sql'.");
+        return; // Do not update UI
+      }
 
       setProducts(prev => prev.map(p => {
         if (p.id === selectedProduct?.id) {
