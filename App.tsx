@@ -192,13 +192,24 @@ const App: React.FC = () => {
         data.forEach(r => {
           const pid = String(r.product_id); // Normalize ID
           if (!reviewsByProduct[pid]) reviewsByProduct[pid] = [];
+
+          let parsedImages: string[] = [];
+          try {
+            if (Array.isArray(r.images)) parsedImages = r.images;
+            else if (typeof r.images === 'string') {
+              if (r.images.startsWith('[')) parsedImages = JSON.parse(r.images);
+              else if (r.images.startsWith('{')) parsedImages = r.images.replace(/[{}"]/g, '').split(',').filter(Boolean);
+              else parsedImages = [r.images];
+            }
+          } catch (e) { parsedImages = []; }
+
           reviewsByProduct[pid].push({
             id: r.id,
             userName: r.user_name,
             rating: r.rating,
             comment: r.comment,
             date: r.created_at,
-            images: Array.isArray(r.images) ? r.images : (r.images ? [r.images] : [])
+            images: parsedImages
           });
         });
 
