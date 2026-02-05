@@ -132,7 +132,7 @@ const Navbar: React.FC<NavbarProps> = ({
       </nav>
 
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[9999] bg-[#FDF5E6] lg:hidden animate-fade-in flex flex-col pt-24 px-6 overflow-hidden">
+        <div className="fixed inset-0 z-[9999] bg-[#FDF5E6] lg:hidden animate-fade-in flex flex-col pt-36 px-6 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#3A332F]/10 to-transparent pointer-events-none"></div>
           <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-[#C14B3A]/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -143,7 +143,7 @@ const Navbar: React.FC<NavbarProps> = ({
             <X size={24} />
           </button>
 
-          <div className="w-full flex flex-col items-center gap-6 mt-10 relative z-10 flex-grow">
+          <div className="w-full flex flex-col items-center gap-6 mt-4 relative z-10 flex-shrink-0">
             {navItems.map((item, index) => (
               <button
                 key={item.id}
@@ -167,7 +167,7 @@ const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          <div className="pb-12 text-center space-y-4 relative z-10">
+          <div className="pb-12 mt-12 text-center space-y-4 relative z-10">
             <p className="text-[10px] font-black uppercase text-[#3A332F]/40 tracking-[0.3em]">Sigue al gremio</p>
             <div className="flex items-center justify-center gap-6">
               <button className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"><Instagram size={20} /></button>

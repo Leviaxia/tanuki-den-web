@@ -1116,20 +1116,42 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <div className="fixed bottom-4 md:bottom-12 right-6 z-[100] flex flex-col items-center gap-4">
+      {/* Mobile: Split Buttons (Left & Right) */}
+      <div className="fixed bottom-4 left-6 z-[100] md:hidden">
         <button
           onClick={() => setIsRouletteOpen(true)}
-          className={`w-12 h-12 md:w-16 md:h-16 bg-[#D4AF37] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 relative overflow-hidden animate-wiggle ${hasSpunFirst ? 'opacity-60 grayscale-[0.5]' : ''}`}
+          className={`w-16 h-16 bg-[#D4AF37] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 relative overflow-hidden animate-wiggle ${hasSpunFirst ? 'opacity-60 grayscale-[0.5]' : ''}`}
+        >
+          <Gift className="text-white" size={24} />
+          {!hasSpunFirst && <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent animate-shine"></div>}
+        </button>
+      </div>
+
+      <div className="fixed bottom-4 right-6 z-[100] md:hidden">
+        <button
+          onClick={() => window.open('https://wa.me/573226870628?text=%C2%A1Hola+Guardianes+del+Tanuki+Den!+He+visto+sus+tesoros+y+necesito+ayuda+para+mi+colecci%C3%B3n.+%C2%BFPodr%C3%ADan+asesorarme%3F', '_blank')}
+          className="w-16 h-16 bg-[#4A6741] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 animate-float"
+          aria-label="Contactar por WhatsApp"
+        >
+          <img src="/assets/whatsapp_custom.png" className="w-8 h-8 object-contain" alt="WhatsApp" />
+        </button>
+      </div>
+
+      {/* Desktop: Stacked Buttons (Right) */}
+      <div className="hidden md:flex fixed bottom-12 right-6 z-[100] flex-col items-center gap-4">
+        <button
+          onClick={() => setIsRouletteOpen(true)}
+          className={`w-16 h-16 bg-[#D4AF37] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 relative overflow-hidden animate-wiggle ${hasSpunFirst ? 'opacity-60 grayscale-[0.5]' : ''}`}
         >
           <Gift className="text-white" size={24} />
           {!hasSpunFirst && <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent animate-shine"></div>}
         </button>
         <button
           onClick={() => window.open('https://wa.me/573226870628?text=%C2%A1Hola+Guardianes+del+Tanuki+Den!+He+visto+sus+tesoros+y+necesito+ayuda+para+mi+colecci%C3%B3n.+%C2%BFPodr%C3%ADan+asesorarme%3F', '_blank')}
-          className="w-16 h-16 md:w-20 md:h-20 bg-[#3A332F] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 animate-float"
+          className="w-20 h-20 bg-[#4A6741] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 animate-float"
           aria-label="Contactar por WhatsApp"
         >
-          <img src="/assets/whatsapp_custom.png" className="w-8 h-8 md:w-10 md:h-10 object-contain" alt="WhatsApp" />
+          <img src="/assets/whatsapp_custom.png" className="w-10 h-10 object-contain" alt="WhatsApp" />
         </button>
       </div>
 
