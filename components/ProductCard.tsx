@@ -73,7 +73,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
           </div>
         </div>
 
-        <h3 className="font-ghibli-title md:font-ghibli-title text-base md:text-xl text-[#C14B3A] line-clamp-2 leading-tight h-10 md:h-14">
+        <h3 className="font-ghibli-title md:font-ghibli-title text-base md:text-xl text-[#C14B3A] line-clamp-2 leading-tight h-10 md:h-14 text-center">
           {product.name}
         </h3>
 

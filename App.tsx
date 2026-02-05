@@ -1335,7 +1335,7 @@ const App: React.FC = () => {
         >
           {/* Mobile "Window" Modal */}
           <div
-            className="bg-white w-[90vw] max-h-[85vh] md:w-full md:max-w-5xl md:h-auto md:max-h-[85vh] rounded-[30px] md:rounded-[60px] flex flex-col md:flex-row border-4 border-[#D4AF37] md:border-8 md:border-white shadow-2xl animate-pop cursor-default relative overflow-hidden"
+            className="bg-white w-[90vw] max-h-[85vh] md:w-full md:max-w-5xl md:h-auto md:max-h-[85vh] rounded-[30px] md:rounded-[60px] flex flex-col md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
@@ -1398,10 +1398,18 @@ const App: React.FC = () => {
                     {selectedProduct.name}
                   </h2>
 
-                  {/* Desktop Only Reviews Summary */}
-                  <div className="hidden md:flex items-center gap-2">
-                    <div className="flex text-[#C14B3A]">{[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < Math.floor(selectedProduct.rating) ? "currentColor" : "none"} />)}</div>
-                    <span className="text-xs font-bold text-[#8C8279] underline">{selectedProduct.reviews?.length || 0} Opiniones</span>
+                  {/* Desktop Reviews Summary: Adjusted to match mobile style */}
+                  <div className="hidden md:flex items-center gap-2 justify-center md:justify-start">
+                    <div className="flex items-center gap-1 bg-[#FDF5E6] px-3 py-1.5 rounded-full border border-[#F0E6D2]">
+                      <Star size={16} className="text-[#C14B3A] fill-[#C14B3A]" />
+                      <span className="text-sm font-bold text-[#3A332F]">{selectedProduct.rating}</span>
+                    </div>
+                    <span className="text-xs font-ghibli-title uppercase text-[#8C8279] tracking-wider px-2 border-l border-[#8C8279]/30">
+                      {collections.find(c => c.id === selectedProduct.collectionId)?.title || "Colección Especial"}
+                    </span>
+                    <span className="text-[10px] font-bold text-[#8C8279] underline ml-2 cursor-pointer hover:text-[#C14B3A] transition-colors">
+                      {selectedProduct.reviews?.length || 0} Opiniones
+                    </span>
                   </div>
                 </div>
 
@@ -1429,11 +1437,10 @@ const App: React.FC = () => {
                       <button onClick={() => setDetailQuantity(q => q + 1)} className="p-1"><Plus size={14} className="md:w-5 md:h-5" /></button>
                     </div>
 
-                    {/* Add to Cart */}
-                    <button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-3 md:py-6 rounded-full text-xs md:text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-2 md:gap-4 active:scale-95">
-                      <ShoppingCart size={18} className="md:hidden" />
-                      <span className="md:hidden">Añadir</span>
-                      <span className="hidden md:inline">AÑADIR AL SACO</span> <ArrowRight size={18} className="hidden md:block" />
+                    {/* Add to Cart - Desktop: Icon Only requested */}
+                    <button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-3 md:py-6 rounded-full text-xs md:text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-2 md:gap-4 active:scale-95 group">
+                      <ShoppingCart size={24} className="group-hover:scale-110 transition-transform" />
+                      {/* Text hidden on both mobile (previously) and now desktop as per request "reemplazado por el ícono" */}
                     </button>
                   </div>
                 </div>
