@@ -1530,7 +1530,7 @@ const App: React.FC = () => {
             </div>
 
             {/* REVIEWS CONTENT (Mobile & Desktop Overlay) */}
-            <div className={`flex-col h-full bg-white px-4 pb-4 pt-12 ${showMobileReviews ? 'flex absolute inset-0 z-20 md:p-12' : 'hidden'} min-h-[60vh]`}>
+            <div className={`flex-col h-full bg-white px-4 pb-4 pt-12 ${showMobileReviews ? 'flex md:absolute md:inset-0 md:z-20 md:p-12' : 'hidden'} min-h-[60vh]`}>
               <div className="mt-2 flex-grow overflow-y-auto space-y-4 pb-8">
                 <h3 className="font-ghibli-title text-xl text-[#3A332F] uppercase text-center mb-4">Opiniones del Gremio</h3>
 
