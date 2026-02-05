@@ -1312,7 +1312,7 @@ const App: React.FC = () => {
             <div className={`w-full h-full transition-all duration-300 md:flex md:flex-row md:static md:translate-x-0 md:opacity-100 md:pointer-events-auto ${showMobileReviews ? 'hidden' : 'flex flex-col'}`}>
 
               {/* Image Section */}
-              <div className="h-[32%] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
+              <div className="h-[20%] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
                 <img
                   src={selectedProduct.image}
                   className="w-full h-full object-cover object-center md:rounded-l-[50px] md:cursor-zoom-in"
@@ -1407,7 +1407,7 @@ const App: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center py-10 opacity-60 space-y-3">
+                  <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-center py-10 opacity-60 space-y-3">
                     <div className="w-16 h-16 bg-[#FDF5E6] rounded-full flex items-center justify-center mb-2">
                       <MessageSquare size={32} className="text-[#C14B3A]" />
                     </div>
