@@ -638,6 +638,27 @@ const App: React.FC = () => {
     setTallerDetails(''); // Reset after sending
   };
 
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('ADMIN: ¿Eliminar esta reseña permanentemente?')) return;
+    try {
+      const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
+      if (error) throw error;
+
+      // Update UI
+      setProducts(prev => prev.map(p =>
+        p.id === selectedProduct?.id
+          ? { ...p, reviews: p.reviews.filter(r => r.id !== reviewId) }
+          : p
+      ));
+      if (selectedProduct) {
+        setSelectedProduct(prev => prev ? { ...prev, reviews: prev.reviews.filter(r => r.id !== reviewId) } : null);
+      }
+    } catch (e) {
+      console.error('Error deleting review:', e);
+      alert('Error al eliminar: Verifica tus permisos de administrador.');
+    }
+  };
+
 
 
   const handleAuthComplete = (userData: Partial<UserType>) => {
@@ -1604,7 +1625,18 @@ const App: React.FC = () => {
                           {/* RAW DEBUGGING: Show exactly what is stored */}
                           {/* <pre className="text-[8px] text-blue-600 bg-gray-100 p-1 mt-1 rounded max-w-[200px] overflow-hidden">{JSON.stringify(r.images)}</pre> */}
                         </div>
-                        <span className="text-[9px] text-[#8C8279] font-bold">{new Date(r.date).toLocaleDateString()}</span>
+                        <span className="text-[9px] text-[#8C8279] font-bold">
+                          {new Date(r.date).toLocaleDateString()}
+                          {user.email === 'kaieke37@gmail.com' && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteReview(r.id); }}
+                              className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
+                              title="Borrar Reseña (Admin)"
+                            >
+                              <Trash2 size={10} />
+                            </button>
+                          )}
+                        </span>
                       </div>
 
                       <p className="text-xs text-[#3A332F]/80 leading-tight">{r.comment}</p>
