@@ -66,19 +66,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
             </div>
             {/* Collection Name Tag */}
             {collectionName && (
-              <span className="text-[8px] md:text-[10px] uppercase font-bold text-[#8C8279] tracking-wider truncate max-w-[80px] md:max-w-none">
+              <span className="text-[8px] md:text-[10px] uppercase font-ghibli-title md:font-ghibli-title text-[#8C8279] tracking-wider truncate max-w-[80px] md:max-w-none">
                 {collectionName}
               </span>
             )}
           </div>
         </div>
 
-        <h3 className="font-ghibli-title md:font-ghibli-title text-base md:text-xl text-[#3A332F] line-clamp-2 leading-tight h-10 md:h-14">
+        <h3 className="font-ghibli-title md:font-ghibli-title text-base md:text-xl text-[#C14B3A] line-clamp-2 leading-tight h-10 md:h-14">
           {product.name}
         </h3>
 
         <div className="flex items-center justify-between pt-2 md:pt-4 border-t md:border-t-2 border-[#FDF5E6] mt-auto">
-          <span className="text-base md:text-xl font-black md:font-ghibli-title text-[#3A332F]">
+          <span className="text-base md:text-xl font-ghibli-title md:font-ghibli-title text-[#3A332F]">
             <span className="text-[#C14B3A] mr-0.5 md:mr-1 text-sm md:text-xl">$</span>{formatCurrency(product.price)}
           </span>
           <button
