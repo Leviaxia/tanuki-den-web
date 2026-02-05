@@ -539,16 +539,20 @@ const App: React.FC = () => {
                   if (activeCategory === 'Favoritos') return favorites.includes(p.id);
                   return activeCategory === 'All' || p.category === activeCategory;
                 })
-                .map(product => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onAddToCart={(p) => addToCart(p, 1)}
-                    onViewDetails={(p) => { setSelectedProduct(p); setDetailQuantity(1); }}
-                    isFavorite={favorites.includes(product.id)}
-                    onToggleFavorite={() => toggleFavorite(product.id)}
-                  />
-                ))}
+                .map(product => {
+                  const collectionTitle = collections.find(c => c.id === product.collectionId)?.title;
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      collectionName={collectionTitle}
+                      onAddToCart={(p) => addToCart(p, 1)}
+                      onViewDetails={(p) => { setSelectedProduct(p); setDetailQuantity(1); }}
+                      isFavorite={favorites.includes(product.id)}
+                      onToggleFavorite={() => toggleFavorite(product.id)}
+                    />
+                  );
+                })}
             </div>
           </div>
         );
@@ -635,6 +639,7 @@ const App: React.FC = () => {
                     <ProductCard
                       key={product.id}
                       product={product}
+                      collectionName={collection?.title}
                       onAddToCart={(p) => addToCart(p, 1)}
                       onViewDetails={(p) => { setSelectedProduct(p); setDetailQuantity(1); }}
                       isFavorite={favorites.includes(product.id)}

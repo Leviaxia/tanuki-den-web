@@ -7,13 +7,14 @@ import { formatCurrency } from '../src/lib/utils';
 
 interface ProductCardProps {
   product: Product;
+  collectionName?: string;
   onAddToCart: (p: Product, quantity?: number) => void;
   onViewDetails: (p: Product) => void;
   isFavorite: boolean;
   onToggleFavorite: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onViewDetails, isFavorite, onToggleFavorite }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAddToCart, onViewDetails, isFavorite, onToggleFavorite }) => {
   return (
     <div
       onClick={() => onViewDetails(product)}
@@ -57,13 +58,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onViewD
       {/* Info Section */}
       <div className="px-3 pb-3 md:px-8 md:pb-8 md:pt-2 space-y-2 md:space-y-3 flex-grow flex flex-col">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-0.5 md:gap-1">
-            <Star size={12} className="md:w-[14px] md:h-[14px] text-[#C14B3A] fill-[#C14B3A]" />
-            <span className="text-[10px] md:text-[10px] font-bold text-[#3A332F] ml-0.5 md:ml-1">{product.rating}</span>
+          <div className="flex items-center gap-2">
+            {/* Unified Rating Style: Star + specific Number for both desktop and mobile */}
+            <div className="flex items-center gap-1 bg-[#FDF5E6] px-2 py-1 rounded-full border border-[#F0E6D2]">
+              <Star size={12} className="md:w-[14px] md:h-[14px] text-[#C14B3A] fill-[#C14B3A]" />
+              <span className="text-[10px] md:text-xs font-bold text-[#3A332F]">{product.rating}</span>
+            </div>
+            {/* Collection Name Tag */}
+            {collectionName && (
+              <span className="text-[8px] md:text-[10px] uppercase font-bold text-[#8C8279] tracking-wider truncate max-w-[80px] md:max-w-none">
+                {collectionName}
+              </span>
+            )}
           </div>
         </div>
 
-        <h3 className="font-bold md:font-ghibli-title text-sm md:text-xl text-[#3A332F] line-clamp-2 leading-tight h-10 md:h-14">
+        <h3 className="font-ghibli-title md:font-ghibli-title text-base md:text-xl text-[#3A332F] line-clamp-2 leading-tight h-10 md:h-14">
           {product.name}
         </h3>
 
