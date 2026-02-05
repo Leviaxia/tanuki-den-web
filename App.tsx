@@ -247,6 +247,19 @@ const App: React.FC = () => {
     };
 
     refreshProfile();
+
+    // 3. Realtime Subscription (Instant Sync across devices)
+    if (user.id !== 'guest') {
+      const channel = supabase.channel(`public:profiles:id=eq.${user.id}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, (payload) => {
+          console.log('[RT] Profile updated:', payload);
+          const newFavs = payload.new.favorites;
+          if (newFavs && Array.isArray(newFavs)) setFavorites(newFavs);
+        })
+        .subscribe();
+
+      return () => { supabase.removeChannel(channel); };
+    }
   }, [user.id]);
 
   // Savers
@@ -1436,12 +1449,12 @@ const App: React.FC = () => {
                   <div className="hidden md:block mt-2">
                     <button
                       onClick={() => {
-                        setShowMobileReviews(true); // Re-use the overlay for now, simpler than duplicating layout
-                        setIsWritingReview(true); // Open directly to write
+                        setShowMobileReviews(true);
+                        setIsWritingReview(false); // Open in "View" mode first
                       }}
                       className="text-[10px] uppercase font-bold text-[#C14B3A] border border-[#C14B3A] px-3 py-1 rounded-full hover:bg-[#C14B3A] hover:text-white transition-colors flex items-center gap-1 w-fit"
                     >
-                      <MessageSquare size={12} /> Escribir Reseña
+                      <MessageSquare size={12} /> Ver Opiniones
                     </button>
                   </div>
                 </div>
@@ -1481,8 +1494,8 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* REVIEWS CONTENT (Mobile Overlay) */}
-            <div className={`md:hidden flex-col h-full bg-white px-4 pb-4 pt-12 ${showMobileReviews ? 'flex' : 'hidden'} min-h-[60vh]`}>
+            {/* REVIEWS CONTENT (Mobile & Desktop Overlay) */}
+            <div className={`flex-col h-full bg-white px-4 pb-4 pt-12 ${showMobileReviews ? 'flex absolute inset-0 z-20 md:p-12' : 'hidden'} min-h-[60vh]`}>
               <div className="mt-2 flex-grow overflow-y-auto space-y-4 pb-8">
                 <h3 className="font-ghibli-title text-xl text-[#3A332F] uppercase text-center mb-4">Opiniones del Gremio</h3>
 
