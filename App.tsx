@@ -962,8 +962,8 @@ const App: React.FC = () => {
         );
       default:
         return (
-          <div className="space-y-40 pb-24">
-            <section className="relative min-h-[85vh] flex items-start pt-8 md:pt-20 overflow-hidden">
+          <div className="space-y-24 pb-24">
+            <section className="relative min-h-[85vh] flex items-start pt-24 md:pt-32 overflow-hidden">
               <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 items-center gap-16 relative z-10">
                 <div className="text-center lg:text-left space-y-6 pt-8 md:pt-0">
                   <div className="inline-flex items-center gap-4 py-2 px-6 bg-[#FDF5E6] rounded-full border-2 border-[#E6D5B8]">
@@ -1041,7 +1041,7 @@ const App: React.FC = () => {
                   <h2 className="text-4xl sm:text-6xl md:text-[5.5rem] lg:text-[7.5rem] font-ghibli-title text-white uppercase tracking-tighter drop-shadow-xl leading-[0.85]">Forja tu <br /><span className="text-[#D4AF37]">Colección</span></h2>
                   <p className="text-white/60 text-base md:text-2xl font-bold max-w-2xl mx-auto leading-relaxed">Únete al gremio más exclusivo de coleccionistas en Colombia.</p>
                   <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
-                    <button onClick={() => handleNavClick('figuras')} className="bg-[#C14B3A] text-white font-ghibli-title py-6 px-16 rounded-full text-lg shadow-xl hover:bg-white hover:text-[#C14B3A] transition-all uppercase tracking-widest active:scale-95">ENTRAR AL BOSQUE</button>
+                    <button onClick={() => handleNavClick('colecciones')} className="bg-[#C14B3A] text-white font-ghibli-title py-6 px-16 rounded-full text-lg shadow-xl hover:bg-white hover:text-[#C14B3A] transition-all uppercase tracking-widest active:scale-95">ENTRAR AL BOSQUE</button>
                     <button onClick={() => handleSubscriptionClick()} className="bg-transparent border-4 border-white text-white font-ghibli-title py-6 px-16 rounded-full text-lg hover:bg-white hover:text-[#3A332F] transition-all uppercase tracking-widest active:scale-95">VER MEMBRESÍAS</button>
                   </div>
                 </div>
