@@ -139,6 +139,7 @@ const App: React.FC = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
 
+
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem(`tanuki_cart_${user.id}`);
@@ -211,6 +212,16 @@ const App: React.FC = () => {
   useEffect(() => {
     fetchReviews();
   }, []);
+
+  // Lock Body Scroll when Modal is Open
+  useEffect(() => {
+    if (selectedProduct) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [selectedProduct]);
 
 
 
@@ -584,7 +595,7 @@ const App: React.FC = () => {
           : p
       ));
 
-      alert("¡Tu leyenda ha sido grabada en el bosque!");
+      // alert("¡Tu leyenda ha sido grabada en el bosque!"); // Removed as requested
       setIsWritingReview(false);
       setReviewComment("");
       setReviewRating(5);
