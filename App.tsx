@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Plus, Minus, Trash2, X, Send, Sparkles, ShoppingBag,
+  Plus, Minus, Trash2, X, Send, Sparkles, ShoppingBag, ShoppingCart,
   Star, Mail, MapPin, Instagram, Facebook, Twitter, Youtube,
   Video, Music2, Printer, ThumbsUp, ThumbsDown, ChevronRight, ArrowRight,
-  Gift, Ticket, Lock, User as UserIcon, MessageSquare, Camera, Phone, CheckCircle2, Calendar, Map, Heart, PenLine, Crown, Zap, ShieldCheck, Truck, Shield, Clock, RotateCcw, Edit3, Save, UserPlus, Upload, Image as ImageIcon, CreditCard, Wallet, Landmark, QrCode, Home, Palette, Compass, Layers, Gem, Box, MoveLeft
+  Gift, Ticket, Lock, User as UserIcon, MessageSquare, Camera, Phone, CheckCircle2, Calendar, Map, Heart, PenLine, Crown, Zap, ShieldCheck, Truck, Shield, Clock, RotateCcw, Edit3, Save, UserPlus, Upload, Image as ImageIcon, CreditCard, Wallet, Landmark, QrCode, Home, Palette, Compass, Layers, Gem, Box, MoveLeft, ArrowLeft
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
@@ -146,6 +146,7 @@ const App: React.FC = () => {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showMobileReviews, setShowMobileReviews] = useState(false);
   const [detailQuantity, setDetailQuantity] = useState(1);
 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -1276,7 +1277,7 @@ const App: React.FC = () => {
 
       {selectedProduct && (
         <div
-          className="fixed inset-0 z-[2100] bg-black/60 md:bg-[#3A332F]/90 backdrop-blur-sm md:backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer overflow-hidden"
+          className="fixed inset-0 z-[9999] bg-black/60 md:bg-[#3A332F]/90 backdrop-blur-sm md:backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer overflow-hidden"
           onClick={() => setSelectedProduct(null)}
         >
           {/* Mobile "Window" Modal */}
@@ -1308,7 +1309,7 @@ const App: React.FC = () => {
             </div>
 
             {/* MAIN CONTENT (Desktop: Always Visible | Mobile: Visible if !showMobileReviews) */}
-            <div className={`flex flex-col md:flex-row w-full h-full transition-transform duration-300 ${showMobileReviews ? '-translate-x-full absolute opacity-0 pointer-events-none' : 'translate-x-0'} md:translate-x-0 md:opacity-100 md:pointer-events-auto md:static`}>
+            <div className={`w-full h-full transition-all duration-300 md:flex md:flex-row md:static md:translate-x-0 md:opacity-100 md:pointer-events-auto ${showMobileReviews ? 'hidden' : 'flex flex-col'}`}>
 
               {/* Image Section */}
               <div className="h-[40%] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
