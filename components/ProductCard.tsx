@@ -62,7 +62,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
             {/* Unified Rating Style: Star + specific Number for both desktop and mobile */}
             <div className="flex items-center gap-1 bg-[#FDF5E6] px-2 py-1 rounded-full border border-[#F0E6D2]">
               <Star size={12} className="md:w-[14px] md:h-[14px] text-[#C14B3A] fill-[#C14B3A]" />
-              <span className="text-[10px] md:text-xs font-bold text-[#3A332F]">{product.rating}</span>
+              <span className="text-[10px] md:text-xs font-bold text-[#3A332F]">{Number(product.rating).toFixed(1)}</span>
             </div>
             {/* Collection Name Tag */}
             {collectionName && (

@@ -1586,7 +1586,7 @@ const App: React.FC = () => {
                   <div className="hidden md:flex items-center gap-2 justify-center md:justify-start">
                     <div className="flex items-center gap-1 bg-[#FDF5E6] px-3 py-1.5 rounded-full border border-[#F0E6D2]">
                       <Star size={16} className="text-[#C14B3A] fill-[#C14B3A]" />
-                      <span className="text-sm font-bold text-[#3A332F]">{selectedProduct.rating}</span>
+                      <span className="text-sm font-bold text-[#3A332F]">{Number(selectedProduct.rating).toFixed(1)}</span>
                     </div>
                     <span className="text-xs font-ghibli-title uppercase text-[#8C8279] tracking-wider px-2 border-l border-[#8C8279]/30">
                       {collections.find(c => c.id === selectedProduct.collectionId)?.title || "Colección Especial"}
