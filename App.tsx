@@ -1627,6 +1627,8 @@ const App: React.FC = () => {
                           <h4 className="font-bold text-[#3A332F] text-sm">{r.userName}
                           </h4>
                           <div className="flex text-[#D4AF37]">{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < r.rating ? "currentColor" : "none"} />)}</div>
+                          {/* RAW DEBUGGING: Show exactly what is stored */}
+                          {/* <pre className="text-[8px] text-blue-600 bg-gray-100 p-1 mt-1 rounded max-w-[200px] overflow-hidden">{JSON.stringify(r.images)}</pre> */}
                         </div>
                         <span className="text-[9px] text-[#8C8279] font-bold">{new Date(r.date).toLocaleDateString()}</span>
                       </div>
