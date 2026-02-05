@@ -601,7 +601,7 @@ const App: React.FC = () => {
         user_name: user.name,
         rating: reviewRating,
         comment: reviewComment,
-        images: imageUrls
+        images: JSON.stringify(imageUrls)
       }).select();
 
       if (error) throw error;
