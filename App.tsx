@@ -213,9 +213,13 @@ const App: React.FC = () => {
         setProducts(prev => prev.map(p => {
           const pid = String(p.id);
           if (reviewsByProduct[pid]) {
+            const reviews = reviewsByProduct[pid].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            // Dynamic Rating Calculation
+            const avgRating = reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length;
             return {
               ...p,
-              reviews: reviewsByProduct[pid].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              reviews: reviews,
+              rating: Number(avgRating.toFixed(1)) // Update rating
             };
           }
           return { ...p, reviews: [] }; // Clear if no remote reviews found (optional, keeps sync strict)
@@ -593,11 +597,18 @@ const App: React.FC = () => {
         dislikes: 0
       };
 
-      setProducts(prev => prev.map(p =>
-        p.id === selectedProduct.id
-          ? { ...p, reviews: [newReview, ...p.reviews] }
-          : p
-      ));
+      setProducts(prev => prev.map(p => {
+        if (p.id === selectedProduct.id) {
+          const updatedReviews = [newReview, ...p.reviews];
+          const avgRating = updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length;
+          return {
+            ...p,
+            reviews: updatedReviews,
+            rating: Number(avgRating.toFixed(1))
+          };
+        }
+        return p;
+      }));
 
       // alert("¡Tu leyenda ha sido grabada en el bosque!"); // Removed as requested
       setIsWritingReview(false);
@@ -605,7 +616,16 @@ const App: React.FC = () => {
       setReviewRating(5);
 
       // Update Selected Product View
-      setSelectedProduct(prev => prev ? { ...prev, reviews: [newReview, ...prev.reviews] } : null);
+      setSelectedProduct(prev => {
+        if (!prev) return null;
+        const updatedReviews = [newReview, ...prev.reviews];
+        const avgRating = updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length;
+        return {
+          ...prev,
+          reviews: updatedReviews,
+          rating: Number(avgRating.toFixed(1))
+        };
+      });
 
       setReviewComment('');
       setReviewRating(5);
@@ -644,14 +664,33 @@ const App: React.FC = () => {
       const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
       if (error) throw error;
 
-      // Update UI
-      setProducts(prev => prev.map(p =>
-        p.id === selectedProduct?.id
-          ? { ...p, reviews: p.reviews.filter(r => r.id !== reviewId) }
-          : p
-      ));
+      setProducts(prev => prev.map(p => {
+        if (p.id === selectedProduct?.id) {
+          const updatedReviews = p.reviews.filter(r => r.id !== reviewId);
+          // Calculate new average or default to INITIAL rating if empty, or 5, or 0.
+          // If no reviews left, maybe reset to 5 or 0? Let's assume 5 for "new" product feel or 0.
+          // However, if we revert to p.rating (base) it might be misleading.
+          // Let's use 0 if empty for now, or keep the last known if we want.
+          // Actually, if reviews are empty, we should probably fall back to the initial product rating provided in constants.
+          // BUT, p.rating in state is already modified.
+          // Let's safe guard: if length 0, return 5 (default)
+          const avgRating = updatedReviews.length > 0
+            ? updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length
+            : 5;
+
+          return { ...p, reviews: updatedReviews, rating: Number(avgRating.toFixed(1)) };
+        }
+        return p;
+      }));
       if (selectedProduct) {
-        setSelectedProduct(prev => prev ? { ...prev, reviews: prev.reviews.filter(r => r.id !== reviewId) } : null);
+        setSelectedProduct(prev => {
+          if (!prev) return null;
+          const updatedReviews = prev.reviews.filter(r => r.id !== reviewId);
+          const avgRating = updatedReviews.length > 0
+            ? updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length
+            : 5;
+          return { ...prev, reviews: updatedReviews, rating: Number(avgRating.toFixed(1)) };
+        });
       }
     } catch (e) {
       console.error('Error deleting review:', e);
