@@ -184,14 +184,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                                 <img src={item.image} className="w-14 h-14 rounded-xl object-cover" alt={item.name} />
                                                 <div className="flex-grow min-w-0">
                                                     <h4 className="font-bold text-sm text-[#3A332F] truncate">{item.name}</h4>
-                                                    {discount > 0 ? (
-                                                        <div className="flex flex-col">
-                                                            <p className="text-[10px] text-[#8C8279] line-through decoration-1">{formatCurrency(item.price)}</p>
-                                                            <p className="text-[#C14B3A] font-black text-xs">{formatCurrency(item.price * (1 - discount / 100))}</p>
-                                                        </div>
-                                                    ) : (
-                                                        <p className="text-[#C14B3A] font-black text-xs">{formatCurrency(item.price)}</p>
-                                                    )}
+                                                    <p className="text-[#C14B3A] font-black text-xs">{formatCurrency(item.price)}</p>
                                                 </div>
                                                 <div className="flex items-center gap-2 bg-[#FDF5E6] px-2 py-1 rounded-full border border-[#3A332F]/5 translate-x-[-10px]">
                                                     {!item.id.startsWith('sub-') && <button onClick={() => onUpdateQuantity(item.id, -1)} className="p-1 hover:text-[#C14B3A]"><Minus size={12} /></button>}
@@ -202,9 +195,17 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                         ))}
                                     </div>
                                     <div className="pt-4 border-t-2 border-[#3A332F]/5">
-                                        <div className="flex justify-between items-center mb-6">
-                                            <span className="font-ghibli-title text-xl text-[#3A332F]">Total</span>
-                                            <span className="font-ghibli-title text-2xl text-[#C14B3A]"><span className="text-[#C14B3A] text-lg">$</span>{formatCurrency(total)}</span>
+                                        <div className="flex flex-col items-end mb-6">
+                                            {discount > 0 && (
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-xs font-bold text-[#8C8279] line-through">${formatCurrency(total)}</span>
+                                                    <span className="bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">-{discount}% OFF</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between items-center w-full">
+                                                <span className="font-ghibli-title text-xl text-[#3A332F]">Total</span>
+                                                <span className="font-ghibli-title text-2xl text-[#C14B3A]"><span className="text-[#C14B3A] text-lg">$</span>{formatCurrency(finalTotal)}</span>
+                                            </div>
                                         </div>
                                         <button onClick={() => setStep('shipping')} className="w-full bg-[#3A332F] text-white font-ghibli-title py-4 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all flex items-center justify-center gap-3">IR A ENVÍO <ArrowRight size={18} /></button>
                                     </div>
