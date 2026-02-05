@@ -1193,8 +1193,8 @@ const App: React.FC = () => {
       )}
 
       {isCartOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/80 backdrop-blur-sm flex justify-end">
-          <div className="w-[85vw] max-w-[360px] md:w-[500px] h-full bg-white shadow-2xl animate-slide-in flex flex-col border-l-4 md:border-l-8 border-[#D4AF37] rounded-l-[30px] md:rounded-l-none overflow-hidden">
+        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/80 backdrop-blur-sm flex justify-end" onClick={() => setIsCartOpen(false)}>
+          <div className="w-[85vw] max-w-[360px] md:w-[500px] h-full bg-white shadow-2xl animate-slide-in flex flex-col border-l-4 md:border-l-8 border-[#D4AF37] rounded-l-[30px] md:rounded-l-none overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 md:p-8 border-b-4 border-[#FDF5E6] flex items-center justify-between">
               <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase">Mi Carrito</h2>
               <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-[#FDF5E6] rounded-full transition-all"><X size={24} className="md:w-7 md:h-7" /></button>
@@ -1282,7 +1282,7 @@ const App: React.FC = () => {
         >
           {/* Mobile "Window" Modal */}
           <div
-            className="bg-white w-[90vw] max-h-[85vh] md:w-full md:max-w-5xl md:h-auto md:max-h-[85vh] rounded-[30px] md:rounded-[60px] flex flex-col md:flex-row border-4 md:border-8 border-white shadow-2xl animate-pop cursor-default relative overflow-hidden"
+            className="bg-white w-[90vw] max-h-[85vh] md:w-full md:max-w-5xl md:h-auto md:max-h-[85vh] rounded-[30px] md:rounded-[60px] flex flex-col md:flex-row border-4 border-[#D4AF37] md:border-8 md:border-white shadow-2xl animate-pop cursor-default relative overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
