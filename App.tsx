@@ -1342,9 +1342,12 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <p className="hidden md:block text-[#3A332F]/80 text-lg font-medium leading-relaxed mt-4 leading-relaxed">
-                  {selectedProduct.description}
-                </p>
+                {/* Mobile: Full Description with internal scroll */}
+                <div className="mt-4 flex-grow overflow-y-auto pr-2 custom-scrollbar">
+                  <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed">
+                    {selectedProduct.description}
+                  </p>
+                </div>
 
                 <div className="flex-grow flex flex-col justify-end gap-4 mt-2 md:mt-8">
                   {/* Price */}
@@ -1394,9 +1397,12 @@ const App: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-10 opacity-50 space-y-2">
-                    <MessageSquare size={40} className="mx-auto text-[#C14B3A]" />
-                    <p className="text-sm font-bold">Sin opiniones aún</p>
+                  <div className="flex flex-col items-center justify-center h-full text-center py-10 opacity-60 space-y-3">
+                    <div className="w-16 h-16 bg-[#FDF5E6] rounded-full flex items-center justify-center mb-2">
+                      <MessageSquare size={32} className="text-[#C14B3A]" />
+                    </div>
+                    <h4 className="font-ghibli-title text-lg text-[#3A332F]">Sin opiniones aún</h4>
+                    <p className="text-xs text-[#8C8279] max-w-[200px]">Este tesoro espera su primera leyenda. ¡Sé el primero en contarla!</p>
                   </div>
                 )}
               </div>
