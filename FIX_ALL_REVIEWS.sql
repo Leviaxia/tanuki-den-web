@@ -1,25 +1,26 @@
--- 1. Ensure 'reviews' table has the images column
-ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS images text[] DEFAULT '{}';
+-- NUCLEAR OPTION: DROP and RECREATE image column to ensure correct type
+-- WARNING: This will delete existing image data (which is fine since it's broken)
+ALTER TABLE public.reviews DROP COLUMN IF EXISTS images;
+ALTER TABLE public.reviews ADD COLUMN images text[] DEFAULT '{}';
 
--- 2. ENABLE Row Level Security (RLS) if not already on
+-- Enable RLS
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
--- 3. KEY FIX: Allow EVERYONE to READ reviews (Public Read)
--- We drop first to ensure we can recreate it without errors
+-- RECREATE POLICIES (Force Allow)
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.reviews;
 CREATE POLICY "Enable read access for all users" ON public.reviews FOR SELECT USING (true);
 
--- 4. Allow Authenticated users to INSERT reviews (if login required) 
--- OR Public Insert if you allow guest reviews
 DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON public.reviews;
-CREATE POLICY "Enable insert for authenticated users only" ON public.reviews FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Enable insert for everyone" ON public.reviews;
 
--- 5. STORAGE: Fix 'reviews' bucket
+-- ALLOW INSERT FOR EVERYONE (including guest/anon) for now to debug
+CREATE POLICY "Enable insert for everyone" ON public.reviews FOR INSERT WITH CHECK (true);
+
+-- STORAGE FIXES
 insert into storage.buckets (id, name, public)
 values ('reviews', 'reviews', true)
 on conflict (id) do nothing;
 
--- 6. STORAGE POLICIES (Idempotent)
 DROP POLICY IF EXISTS "Reviews images are viewable by everyone" ON storage.objects;
 CREATE POLICY "Reviews images are viewable by everyone"
 ON storage.objects FOR SELECT

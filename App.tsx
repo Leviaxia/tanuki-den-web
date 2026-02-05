@@ -1625,8 +1625,6 @@ const App: React.FC = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <h4 className="font-bold text-[#3A332F] text-sm">{r.userName}
-                            {/* DEBUG: Show image count to diagnose persistence */}
-                            <span className="text-[9px] text-red-500 ml-2">(Img: {Array.isArray(r.images) ? r.images.length : '0'})</span>
                           </h4>
                           <div className="flex text-[#D4AF37]">{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < r.rating ? "currentColor" : "none"} />)}</div>
                         </div>
