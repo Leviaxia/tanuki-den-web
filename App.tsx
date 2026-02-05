@@ -1798,6 +1798,26 @@ const App: React.FC = () => {
       )
       }
 
+      {fullScreenImage && (
+        <div
+          className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out backdrop-blur-xl animate-fade-in"
+          onClick={() => setFullScreenImage(null)}
+        >
+          <button
+            onClick={() => setFullScreenImage(null)}
+            className="absolute top-4 right-4 md:top-8 md:right-8 text-white/50 hover:text-white transition-colors p-2"
+          >
+            <X size={32} />
+          </button>
+
+          <img
+            src={fullScreenImage}
+            className="max-w-full max-h-full object-contain rounded-lg md:rounded-2xl shadow-2xl scale-100 animate-pop"
+            alt="Zoom"
+          />
+        </div>
+      )}
+
       <footer className="bg-[#1A1614] text-[#FDF5E6] pt-12 pb-24 md:pt-32 md:pb-12 rounded-t-[40px] md:rounded-t-[100px] mt-12 md:mt-24 relative z-[50] border-t-8 border-[#D4AF37] shadow-2xl">
         <div className="max-w-7xl mx-auto px-6 space-y-12 md:space-y-24">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-16 text-center md:text-left">
@@ -1834,7 +1854,7 @@ const App: React.FC = () => {
               </ul>
             </div>
 
-            <div className="space-y-4 md:space-y-8 bg-white/5 p-6 md:p-8 rounded-[30px] md:rounded-[50px] border border-white/10 shadow-2xl mx-2 md:mx-0">
+            <div className="hidden md:block space-y-4 md:space-y-8 bg-white/5 p-6 md:p-8 rounded-[30px] md:rounded-[50px] border border-white/10 shadow-2xl mx-2 md:mx-0">
               {/* Simplified Newsletter for mobile */}
               <h4 className="font-ghibli-title text-xl md:text-2xl text-white uppercase tracking-widest">Susurros</h4>
               <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest hidden md:block">Recibe novedades del bosque mágico.</p>
