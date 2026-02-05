@@ -1278,7 +1278,7 @@ const App: React.FC = () => {
       {selectedProduct && (
         <div
           className="fixed inset-0 z-[9999] bg-black/60 md:bg-[#3A332F]/90 backdrop-blur-sm md:backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer overflow-hidden"
-          onClick={() => setSelectedProduct(null)}
+          onClick={() => { setSelectedProduct(null); setShowMobileReviews(false); }}
         >
           {/* Mobile "Window" Modal */}
           <div
@@ -1287,7 +1287,7 @@ const App: React.FC = () => {
           >
             {/* Close Button */}
             <button
-              onClick={() => setSelectedProduct(null)}
+              onClick={() => { setSelectedProduct(null); setShowMobileReviews(false); }}
               className="absolute top-3 right-3 md:top-6 md:right-6 z-50 p-2 bg-white/80 hover:bg-white text-[#3A332F] rounded-full shadow-lg transition-all border border-[#3A332F]/10"
             >
               <X size={20} className="md:w-8 md:h-8" />
