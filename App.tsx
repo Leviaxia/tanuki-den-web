@@ -181,6 +181,36 @@ const App: React.FC = () => {
     fetchCollections();
   }, []);
 
+  // Fetch Reviews (Products)
+  const fetchReviews = async () => {
+    try {
+      const { data } = await supabase.from('products').select('*, reviews(*)');
+      if (data) {
+        const formatted = data.map(p => ({
+          ...p,
+          price: Number(p.price),
+          reviews: p.reviews.map((r: any) => ({
+            id: r.id,
+            userName: r.user_name,
+            rating: r.rating,
+            comment: r.comment,
+            date: r.created_at,
+            images: r.images || []
+          })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        }));
+
+        setProducts(prev => prev.map(localP => {
+          const remoteP = formatted.find(rp => rp.id === localP.id);
+          return remoteP ? { ...localP, reviews: remoteP.reviews } : localP;
+        }));
+      }
+    } catch (e) { console.error("Error fetching reviews", e); }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
 
 
   // PERMANENCE ENGINE: User-Scoped Data Sync
@@ -263,30 +293,10 @@ const App: React.FC = () => {
         })
         .subscribe();
 
+
       const reviewsChannel = supabase.channel('public:reviews')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reviews' }, async (payload) => {
-          // console.log('[RT] New Review:', payload);
-          // Re-fetch products to get new reviews (simplest way to sync deeply nested reviews)
-          // ideally we'd just append to state, but nested jsonb/relation is complex.
-          // Actually, we can fetch just reviews for this product? No, "products" state holds it all.
-          // Quick fix: Re-run fetchProducts logic or append locally.
-          // Let's reload everything silently:
-          const { data } = await supabase.from('products').select('*, reviews(*)');
-          if (data) {
-            const formatted = data.map(p => ({
-              ...p,
-              price: Number(p.price),
-              reviews: p.reviews.map((r: any) => ({
-                id: r.id,
-                userName: r.user_name,
-                rating: r.rating,
-                comment: r.comment,
-                date: r.created_at,
-                images: r.images || [] // Ensure images are synced
-              })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            }));
-            setProducts(formatted);
-          }
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reviews' }, () => {
+          fetchReviews();
         })
         .subscribe();
 
@@ -1427,7 +1437,7 @@ const App: React.FC = () => {
         >
           {/* Mobile "Window" Modal */}
           <div
-            className="bg-white w-[90vw] max-h-[85vh] md:w-full md:max-w-5xl md:h-auto md:max-h-[85vh] rounded-[30px] md:rounded-[60px] flex flex-col md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-hidden"
+            className="bg-white w-[90vw] max-h-[85vh] md:w-full md:max-w-5xl md:h-[80vh] rounded-[30px] md:rounded-[60px] flex flex-col md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
