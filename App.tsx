@@ -1478,7 +1478,7 @@ const App: React.FC = () => {
         >
           {/* Mobile "Window" Modal */}
           <div
-            className="bg-white w-[90vw] h-[85vh] md:h-auto md:w-full md:max-w-5xl md:max-h-[85vh] rounded-[30px] md:rounded-[60px] flex flex-col md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-y-auto md:overflow-hidden"
+            className="bg-white w-[90vw] h-[85vh] md:h-auto md:w-full md:max-w-5xl md:max-h-[85vh] rounded-[30px] md:rounded-[60px] block md:flex md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-y-auto md:overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
@@ -1624,7 +1624,10 @@ const App: React.FC = () => {
                     <div key={i} className="bg-[#FDF5E6]/40 p-4 rounded-[20px] space-y-2 border border-[#F0E6D2]">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-bold text-[#3A332F] text-sm">{r.userName}</h4>
+                          <h4 className="font-bold text-[#3A332F] text-sm">{r.userName}
+                            {/* DEBUG: Show image count to diagnose persistence */}
+                            <span className="text-[9px] text-red-500 ml-2">(Img: {Array.isArray(r.images) ? r.images.length : '0'})</span>
+                          </h4>
                           <div className="flex text-[#D4AF37]">{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < r.rating ? "currentColor" : "none"} />)}</div>
                         </div>
                         <span className="text-[9px] text-[#8C8279] font-bold">{new Date(r.date).toLocaleDateString()}</span>
