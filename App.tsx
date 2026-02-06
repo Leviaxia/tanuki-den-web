@@ -1662,8 +1662,8 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Mobile: Full Description with internal scroll */}
-                <div className="mt-4 flex-grow overflow-y-auto pr-2 custom-scrollbar min-h-0">
+                {/* Mobile & Desktop: Full Description with internal scroll if needed */}
+                <div className="mt-4 flex-grow overflow-y-auto pr-2 custom-scrollbar min-h-0 md:max-h-[50vh]">
                   <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">
                     {selectedProduct.description}
                   </p>
