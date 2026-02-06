@@ -1564,7 +1564,7 @@ const App: React.FC = () => {
         >
           {/* Mobile "Window" Modal */}
           <div
-            className="bg-white w-[90vw] h-[85vh] md:h-auto md:w-full md:max-w-5xl md:max-h-[85vh] rounded-[30px] md:rounded-[60px] block md:flex md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-y-auto md:overflow-hidden"
+            className="bg-white w-[90vw] h-[85vh] md:h-[85vh] md:w-full md:max-w-5xl rounded-[30px] md:rounded-[60px] block md:flex md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-y-auto md:overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
