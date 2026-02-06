@@ -337,7 +337,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                     </div>
 
                                     <div className="space-y-0.5 md:space-y-1 mb-2 md:mb-4 shrink-0">
-                                        <p className="font-ghibli-title text-base md:text-2xl text-[#C14B3A] leading-none">+57 322 687 0628</p>
+                                        <p className="font-ghibli-title text-base md:text-2xl text-[#C14B3A] leading-none">0089453443</p>
                                         <p className="font-ghibli-title text-[10px] md:text-sm text-[#C14B3A] bg-[#FDF5E6] py-0.5 md:py-1 px-2 md:px-4 rounded-full inline-block">EMEDICAL EYDER RODRIGUEZ</p>
                                     </div>
 
