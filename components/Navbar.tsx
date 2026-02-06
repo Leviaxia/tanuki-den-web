@@ -183,7 +183,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 <Music2 size={20} />
               </button>
               <button
-                onClick={() => window.open('https://facebook.com/TanukiDen', '_blank')}
+                onClick={() => window.open('https://www.facebook.com/tanukiden.store', '_blank')}
                 className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"
               >
                 <Facebook size={20} />

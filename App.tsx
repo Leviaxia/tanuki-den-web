@@ -1838,7 +1838,7 @@ const App: React.FC = () => {
                   <Music2 size={16} className="md:w-[18px] md:h-[18px]" />
                 </button>
                 <button
-                  onClick={() => window.open('https://facebook.com/TanukiDen', '_blank')}
+                  onClick={() => window.open('https://www.facebook.com/tanukiden.store', '_blank')}
                   className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
                 >
                   <Facebook size={16} className="md:w-[18px] md:h-[18px]" />
