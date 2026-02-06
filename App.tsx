@@ -1824,11 +1824,37 @@ const App: React.FC = () => {
             <div className="space-y-4 md:space-y-8">
               <h3 className="text-3xl md:text-6xl font-ghibli-title leading-none uppercase tracking-tighter">TANUKI <br /><span className="text-[#D4AF37]">DEN</span></h3>
               <p className="text-white/40 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] leading-loose max-w-xs mx-auto md:mx-0">Tesoros con alma. El refugio de todo coleccionista de corazón en Colombia.</p>
-              <div className="flex justify-center md:justify-start gap-5">
-                <button className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Instagram size={16} className="md:w-[18px] md:h-[18px]" /></button>
-                <button className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Facebook size={16} className="md:w-[18px] md:h-[18px]" /></button>
-                <button className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Twitter size={16} className="md:w-[18px] md:h-[18px]" /></button>
-                <button className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"><Youtube size={16} className="md:w-[18px] md:h-[18px]" /></button>
+              <div className="flex justify-center md:justify-start gap-4">
+                <button
+                  onClick={() => window.open('https://instagram.com/Tanukiden', '_blank')}
+                  className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
+                >
+                  <Instagram size={16} className="md:w-[18px] md:h-[18px]" />
+                </button>
+                <button
+                  onClick={() => window.open('https://tiktok.com/@Tanukidenstore', '_blank')}
+                  className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
+                >
+                  <Music2 size={16} className="md:w-[18px] md:h-[18px]" />
+                </button>
+                <button
+                  onClick={() => window.open('https://facebook.com/TanukiDen', '_blank')}
+                  className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
+                >
+                  <Facebook size={16} className="md:w-[18px] md:h-[18px]" />
+                </button>
+                <button
+                  onClick={() => window.open('https://x.com/Tanukidenstore', '_blank')}
+                  className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
+                >
+                  <Twitter size={16} className="md:w-[18px] md:h-[18px]" />
+                </button>
+                <button
+                  onClick={() => window.open('https://youtube.com/@TanukiDen', '_blank')}
+                  className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
+                >
+                  <Youtube size={16} className="md:w-[18px] md:h-[18px]" />
+                </button>
               </div>
               {/* Accordion-style sections for mobile could be nice, but simple hiding is safer for now */}
             </div>
