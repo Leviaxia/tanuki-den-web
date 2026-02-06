@@ -1129,7 +1129,7 @@ const App: React.FC = () => {
 
       <div className="fixed bottom-4 right-6 z-[100] md:hidden">
         <button
-          onClick={() => window.open('https://wa.me/573226870628?text=%C2%A1Hola+Guardianes+del+Tanuki+Den!+He+visto+sus+tesoros+y+necesito+ayuda+para+mi+colecci%C3%B3n.+%C2%BFPodr%C3%ADan+asesorarme%3F', '_blank')}
+          onClick={() => window.open('https://wa.me/573114286263?text=%C2%A1Hola+Guardianes+del+Tanuki+Den!+He+visto+sus+tesoros+y+necesito+ayuda+para+mi+colecci%C3%B3n.+%C2%BFPodr%C3%ADan+asesorarme%3F', '_blank')}
           className="w-16 h-16 bg-[#4A6741] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all active:scale-95"
           aria-label="Contactar por WhatsApp"
         >
@@ -1147,7 +1147,7 @@ const App: React.FC = () => {
           {!hasSpunFirst && <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent animate-shine"></div>}
         </button>
         <button
-          onClick={() => window.open('https://wa.me/573226870628?text=%C2%A1Hola+Guardianes+del+Tanuki+Den!+He+visto+sus+tesoros+y+necesito+ayuda+para+mi+colecci%C3%B3n.+%C2%BFPodr%C3%ADan+asesorarme%3F', '_blank')}
+          onClick={() => window.open('https://wa.me/573114286263?text=%C2%A1Hola+Guardianes+del+Tanuki+Den!+He+visto+sus+tesoros+y+necesito+ayuda+para+mi+colecci%C3%B3n.+%C2%BFPodr%C3%ADan+asesorarme%3F', '_blank')}
           className="w-20 h-20 bg-[#4A6741] rounded-full border-4 border-white shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 animate-float"
           aria-label="Contactar por WhatsApp"
         >
