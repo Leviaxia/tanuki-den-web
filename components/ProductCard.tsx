@@ -56,40 +56,40 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
       </div>
 
       {/* Info Section */}
-      <div className="px-3 pb-3 md:px-8 md:pb-8 md:pt-2 space-y-2 md:space-y-3 flex-grow flex flex-col">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {/* Unified Rating Style: Star + specific Number for both desktop and mobile */}
-            <div className="flex items-center gap-1 bg-[#FDF5E6] px-2 py-1 rounded-full border border-[#F0E6D2]">
-              <Star size={12} className="md:w-[14px] md:h-[14px] text-[#C14B3A] fill-[#C14B3A]" />
-              <span className="text-[10px] md:text-xs font-bold text-[#3A332F]">{Number(product.rating).toFixed(1)}</span>
-            </div>
-            {/* Collection Name Tag */}
-            {collectionName && (
-              <span className="text-[8px] md:text-[10px] uppercase font-ghibli-title md:font-ghibli-title text-[#8C8279] tracking-wider truncate max-w-[80px] md:max-w-none">
-                {collectionName}
-              </span>
-            )}
+      <div className="p-3 md:p-5 flex flex-col flex-grow relative z-10">
+        <div className="flex justify-between items-start mb-1 md:mb-2">
+          {/* Badge de Colección (Mobile & Desktop) */}
+          <span className="text-[10px] md:text-[10px] font-ghibli-title uppercase text-[#8C8279] tracking-wider px-2 py-0.5 border border-[#8C8279]/30 rounded-full bg-[#FDF5E6]">
+            {collectionName || "Colección"}
+          </span>
+          {/* Rating Unificado */}
+          <div className="flex items-center gap-1 bg-[#FDF5E6] px-2 py-0.5 rounded-full border border-[#F0E6D2]">
+            <Star size={12} className="text-[#C14B3A] fill-[#C14B3A] md:w-3.5 md:h-3.5" />
+            <span className="text-[10px] md:text-xs font-bold text-[#3A332F]">{Number(product.rating).toFixed(1)}</span>
           </div>
         </div>
 
-        <h3 className="font-ghibli-title md:font-ghibli-title text-base md:text-xl text-[#C14B3A] line-clamp-2 leading-tight h-10 md:h-14">
+        <h3 className="font-ghibli-title text-sm md:text-xl text-[#3A332F] leading-tight mb-1 md:mb-2 line-clamp-2 min-h-[40px] md:min-h-[50px] uppercase">
           {product.name}
         </h3>
 
-        <div className="flex items-center justify-between pt-2 md:pt-4 border-t md:border-t-2 border-[#FDF5E6] mt-auto">
-          <span className="text-base md:text-xl font-ghibli-title md:font-ghibli-title text-[#3A332F]">
-            <span className="text-[#C14B3A] mr-0.5 md:mr-1 text-sm md:text-xl">$</span>{formatCurrency(product.price)}
-          </span>
+        <div className="mt-auto flex items-center justify-between gap-2 md:gap-4 pt-2 border-t md:border-t-2 border-[#F0E6D2]">
+          <div className="flex flex-col">
+            <span className="text-[8px] md:text-[10px] font-bold text-[#8C8279] uppercase tracking-widest hidden md:block">Precio</span>
+            <span className="font-ghibli-title text-base md:text-2xl text-[#C14B3A]">
+              <span className="text-sm md:text-lg mr-0.5">$</span>{formatCurrency(product.price)}
+            </span>
+          </div>
+
           <button
             onClick={(e) => {
               e.stopPropagation();
               onAddToCart(product, 1);
             }}
-            className="p-2 md:p-3 bg-[#3A332F] md:bg-[#C14B3A] text-white hover:bg-[#C14B3A] md:hover:bg-[#3A332F] transition-all rounded-full shadow-md active:scale-90 border-2 border-transparent md:border-white relative z-10"
+            className="p-2 md:p-3 bg-[#3A332F] rounded-full text-white shadow-lg hover:bg-[#C14B3A] hover:scale-110 active:scale-90 transition-all group/btn"
             aria-label="Añadir al carrito"
           >
-            <ShoppingCart size={16} className="md:w-5 md:h-5" />
+            <ShoppingCart size={18} className="md:w-5 md:h-5 group-hover/btn:animate-bounce-subtle" />
           </button>
         </div>
       </div>
