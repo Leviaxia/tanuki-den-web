@@ -1626,7 +1626,8 @@ const App: React.FC = () => {
               {/* Details Section */}
               <div className="flex-1 flex flex-col p-5 md:p-12 md:max-h-full md:overflow-hidden bg-white relative">
 
-                <div className="space-y-2 md:space-y-4 text-center md:text-left">
+                {/* Header Section */}
+                <div className="space-y-2 md:space-y-4 text-center md:text-left flex-shrink-0">
                   <span className="hidden md:inline-block bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-bold md:font-ghibli-title md:text-white md:bg-[#C14B3A] px-3 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-wider">
                     {selectedProduct.category}
                   </span>
@@ -1663,13 +1664,13 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Mobile & Desktop: Full Description with internal scroll if needed */}
-                <div className="mt-4 flex-grow overflow-y-auto pr-2 custom-scrollbar min-h-0 md:max-h-[50vh]">
+                <div className="mt-4 pr-2 custom-scrollbar min-h-0 flex-1 overflow-y-auto">
                   <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">
                     {selectedProduct.description}
                   </p>
                 </div>
 
-                <div className="flex-grow flex flex-col justify-end gap-4 mt-2 md:mt-8">
+                <div className="flex flex-col justify-end gap-4 mt-2 md:mt-8 flex-shrink-0">
                   {/* Price */}
                   <div className="text-center md:text-left border-t border-[#F0E6D2] pt-3 md:pt-6 md:border-none">
                     <span className="font-ghibli-title text-3xl md:text-5xl text-[#3A332F]">
