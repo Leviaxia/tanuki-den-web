@@ -1873,31 +1873,31 @@ const App: React.FC = () => {
               <p className="text-white/40 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] leading-loose max-w-xs mx-auto md:mx-0">Tesoros con alma. El refugio de todo coleccionista de corazón en Colombia.</p>
               <div className="flex justify-center md:justify-start gap-4">
                 <button
-                  onClick={() => window.open('https://instagram.com/Tanukiden', '_blank')}
+                  onClick={() => window.location.href = 'https://instagram.com/Tanukiden'}
                   className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
                 >
                   <Instagram size={16} className="md:w-[18px] md:h-[18px]" />
                 </button>
                 <button
-                  onClick={() => window.open('https://tiktok.com/@Tanukidenstore', '_blank')}
+                  onClick={() => window.location.href = 'https://tiktok.com/@Tanukidenstore'}
                   className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
                 >
                   <Music2 size={16} className="md:w-[18px] md:h-[18px]" />
                 </button>
                 <button
-                  onClick={() => window.open('https://www.facebook.com/tanukiden.store', '_blank')}
+                  onClick={() => window.location.href = 'https://www.facebook.com/tanukiden.store'}
                   className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
                 >
                   <Facebook size={16} className="md:w-[18px] md:h-[18px]" />
                 </button>
                 <button
-                  onClick={() => window.open('https://x.com/Tanukidenstore', '_blank')}
+                  onClick={() => window.location.href = 'https://x.com/Tanukidenstore'}
                   className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
                 >
                   <Twitter size={16} className="md:w-[18px] md:h-[18px]" />
                 </button>
                 <button
-                  onClick={() => window.open('https://youtube.com/@TanukiDen', '_blank')}
+                  onClick={() => window.location.href = 'https://youtube.com/@TanukiDen'}
                   className="p-2 md:p-3 bg-white/5 rounded-full hover:bg-[#D4AF37] transition-all"
                 >
                   <Youtube size={16} className="md:w-[18px] md:h-[18px]" />

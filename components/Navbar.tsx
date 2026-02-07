@@ -171,31 +171,31 @@ const Navbar: React.FC<NavbarProps> = ({
             <p className="text-[10px] font-black uppercase text-[#3A332F]/40 tracking-[0.3em]">Sigue al gremio</p>
             <div className="flex items-center justify-center gap-4 md:gap-6">
               <button
-                onClick={() => window.open('https://instagram.com/Tanukiden', '_blank')}
+                onClick={() => window.location.href = 'https://instagram.com/Tanukiden'}
                 className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"
               >
                 <Instagram size={20} />
               </button>
               <button
-                onClick={() => window.open('https://tiktok.com/@Tanukidenstore', '_blank')}
+                onClick={() => window.location.href = 'https://tiktok.com/@Tanukidenstore'}
                 className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"
               >
                 <Music2 size={20} />
               </button>
               <button
-                onClick={() => window.open('https://www.facebook.com/tanukiden.store', '_blank')}
+                onClick={() => window.location.href = 'https://www.facebook.com/tanukiden.store'}
                 className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"
               >
                 <Facebook size={20} />
               </button>
               <button
-                onClick={() => window.open('https://x.com/Tanukidenstore', '_blank')}
+                onClick={() => window.location.href = 'https://x.com/Tanukidenstore'}
                 className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"
               >
                 <Twitter size={20} />
               </button>
               <button
-                onClick={() => window.open('https://youtube.com/@TanukiDen', '_blank')}
+                onClick={() => window.location.href = 'https://youtube.com/@TanukiDen'}
                 className="p-3 bg-white rounded-full text-[#3A332F] shadow-sm hover:scale-110 hover:text-[#C14B3A] transition-all"
               >
                 <Youtube size={20} />
