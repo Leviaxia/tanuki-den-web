@@ -254,45 +254,53 @@ const App: React.FC = () => {
     fetchReviews();
   }, []);
 
-  // HISTORY MANAGEMENT: Handle Back Button for Modals
+  // HISTORY MANAGEMENT: Handle Back Button for Modals & Navigation
   useEffect(() => {
+    // Ensure initial state exists for proper "Back to Home" behavior
+    if (!window.history.state) {
+      window.history.replaceState({ tab: 'inicio' }, '', '?tab=inicio');
+    }
+
     const handlePopState = (event: PopStateEvent) => {
-      // If back button is pressed, close the top-most modal
-      if (fullScreenImage) {
-        setFullScreenImage(null);
-        return;
+      // 1. Modals (High Priority) - Close and Return
+      if (fullScreenImage) { setFullScreenImage(null); return; }
+      if (selectedProduct) { setSelectedProduct(null); setShowMobileReviews(false); return; }
+      if (isCheckoutOpen) { setIsCheckoutOpen(false); return; }
+      if (isCartOpen) { setIsCartOpen(false); return; }
+      if (isProfileModalOpen) { setIsProfileModalOpen(false); return; }
+      if (isSubscriptionModalOpen) { setIsSubscriptionModalOpen(false); return; }
+      if (isRouletteOpen) { setIsRouletteOpen(false); return; }
+
+      // 2. Navigation State
+      const state = event.state;
+      if (state) {
+        if (state.collection) {
+          setActiveTab('colecciones');
+          setSelectedCollectionId(state.collection);
+        } else if (state.tab) {
+          setActiveTab(state.tab);
+          setSelectedCollectionId(null);
+        }
+      } else {
+        // Fallback to Home if state is null (e.g. external link back)
+        setActiveTab('inicio');
+        setSelectedCollectionId(null);
       }
-      if (selectedProduct) {
-        setSelectedProduct(null);
-        setShowMobileReviews(false);
-        return;
-      }
-      if (isCheckoutOpen) {
-        setIsCheckoutOpen(false);
-        return;
-      }
-      if (isCartOpen) {
-        setIsCartOpen(false);
-        return;
-      }
-      if (isProfileModalOpen) {
-        setIsProfileModalOpen(false);
-        return;
-      }
-      if (isSubscriptionModalOpen) {
-        setIsSubscriptionModalOpen(false);
-        return;
-      }
-      if (isRouletteOpen) {
-        setIsRouletteOpen(false);
-        return;
-      }
-      // If no modal is open, let default back behavior happen
     };
 
     window.addEventListener('popstate', handlePopState);
 
-    // When a modal opens, push a state so we have something to "go back" from
+    // Modal Push State Logic (Only push if not already effectively there? No, always push for modal open)
+    // Note: This logic runs on every render when dependencies change.
+    // We strictly guard it by checking if we just OPENED one. 
+    // Implementing "Did Open" check inside effect is hard without ref. 
+    // BUT we rely on the fact that if (selectedProduct) is true, we push. 
+    // Wait! If I press back, selectedProduct becomes null. Effect runs. No push.
+    // If I open product, Effect runs. Push.
+    // What if I swap products? Start -> Product A (Push) -> Product B (Push). 
+    // Stack: Start, Product A, Product B. Back -> Product A.
+    // This is acceptable behavior.
+
     if (fullScreenImage || selectedProduct || isCheckoutOpen || isCartOpen || isProfileModalOpen || isSubscriptionModalOpen || isRouletteOpen) {
       window.history.pushState({ modal: true }, '');
     }
@@ -627,6 +635,18 @@ const App: React.FC = () => {
   const handleNavClick = (id: string) => {
     setActiveTab(id);
     setSelectedCollectionId(null);
+    window.history.pushState({ tab: id }, '', `?tab=${id}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCollectionClick = (id: number | null) => {
+    setSelectedCollectionId(id);
+    if (id) {
+      window.history.pushState({ tab: 'colecciones', collection: id }, '', `?tab=colecciones&collection=${id}`);
+    } else {
+      // Return to collections root
+      window.history.pushState({ tab: 'colecciones' }, '', `?tab=colecciones`);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -916,7 +936,7 @@ const App: React.FC = () => {
           return (
             <div className="max-w-7xl mx-auto px-6 pt-10 pb-32 md:pb-24 section-reveal space-y-16">
               <button
-                onClick={() => setSelectedCollectionId(null)}
+                onClick={() => handleCollectionClick(null)}
                 className="flex items-center gap-4 font-ghibli-title text-[#3A332F] hover:text-[#C14B3A] transition-colors uppercase tracking-widest text-xs group"
               >
                 <div className="w-10 h-10 bg-[#FDF5E6] rounded-full flex items-center justify-center group-hover:-translate-x-2 transition-transform shadow-md"><MoveLeft size={18} /></div>
@@ -979,7 +999,7 @@ const App: React.FC = () => {
               {collections.map((item) => (
                 <div
                   key={item.id}
-                  onClick={() => { setSelectedCollectionId(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  onClick={() => handleCollectionClick(item.id)}
                   className="group relative cursor-pointer"
                 >
                   <div className="absolute inset-0 bg-[#3A332F]/5 rounded-[50px] translate-x-4 translate-y-4 -z-10 group-hover:translate-x-6 group-hover:translate-y-6 transition-transform"></div>
@@ -1147,7 +1167,7 @@ const App: React.FC = () => {
         cartCount={cart.reduce((a, c) => a + c.quantity, 0)}
         onOpenCart={() => setIsCartOpen(true)}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleNavClick}
         user={user}
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
