@@ -254,26 +254,72 @@ const App: React.FC = () => {
     fetchReviews();
   }, []);
 
+  // HISTORY MANAGEMENT: Handle Back Button for Modals
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // If back button is pressed, close the top-most modal
+      if (fullScreenImage) {
+        setFullScreenImage(null);
+        return;
+      }
+      if (selectedProduct) {
+        setSelectedProduct(null);
+        setShowMobileReviews(false);
+        return;
+      }
+      if (isCheckoutOpen) {
+        setIsCheckoutOpen(false);
+        return;
+      }
+      if (isCartOpen) {
+        setIsCartOpen(false);
+        return;
+      }
+      if (isProfileModalOpen) {
+        setIsProfileModalOpen(false);
+        return;
+      }
+      if (isSubscriptionModalOpen) {
+        setIsSubscriptionModalOpen(false);
+        return;
+      }
+      if (isRouletteOpen) {
+        setIsRouletteOpen(false);
+        return;
+      }
+      // If no modal is open, let default back behavior happen
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // When a modal opens, push a state so we have something to "go back" from
+    if (fullScreenImage || selectedProduct || isCheckoutOpen || isCartOpen || isProfileModalOpen || isSubscriptionModalOpen || isRouletteOpen) {
+      window.history.pushState({ modal: true }, '');
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [fullScreenImage, selectedProduct, isCheckoutOpen, isCartOpen, isProfileModalOpen, isSubscriptionModalOpen, isRouletteOpen]);
+
   // Lock Body Scroll when Modal is Open
   useEffect(() => {
-    if (selectedProduct) {
+    if (selectedProduct || isCheckoutOpen || isCartOpen || isProfileModalOpen || isSubscriptionModalOpen || isRouletteOpen || fullScreenImage) {
       document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden'; // Lock text html as well
-      document.body.style.position = 'fixed'; // Nuclear option for mobile
-      document.body.style.width = '100%';
+      // Only set fixed position on mobile if absolutely needed to prevent background scroll
+      // document.body.style.position = 'fixed'; 
+      // document.body.style.width = '100%';
     } else {
       document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+      // document.body.style.position = '';
+      // document.body.style.width = '';
     }
     return () => {
       document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+      // document.body.style.position = '';
+      // document.body.style.width = '';
     };
-  }, [selectedProduct]);
+  }, [selectedProduct, isCheckoutOpen, isCartOpen, isProfileModalOpen, isSubscriptionModalOpen, isRouletteOpen, fullScreenImage]);
 
 
 
