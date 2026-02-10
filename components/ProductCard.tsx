@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ShoppingCart, Star, Heart, MessageSquare } from 'lucide-react';
+import { ShoppingCart, Star, Heart, Share2 } from 'lucide-react';
 import { Product } from '../types';
 
 import { formatCurrency } from '../src/lib/utils';
@@ -12,32 +12,49 @@ interface ProductCardProps {
   onViewDetails: (p: Product) => void;
   isFavorite: boolean;
   onToggleFavorite: () => void;
+  onShare: (p: Product) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAddToCart, onViewDetails, isFavorite, onToggleFavorite }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAddToCart, onViewDetails, isFavorite, onToggleFavorite, onShare }) => {
   return (
     <div
       onClick={() => onViewDetails(product)}
       className="group relative bg-white rounded-[20px] md:rounded-[40px] overflow-hidden border-2 md:border-4 border-[#3A332F] hover:shadow-[8px_8px_0px_0px_#C14B3A] md:hover:shadow-[12px_12px_0px_0px_#C14B3A] transition-all duration-300 hover:-translate-y-1 md:hover:-translate-y-2 flex flex-col h-full cursor-pointer"
     >
 
-      {/* Botón de Favoritos */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleFavorite();
-        }}
-        className={`absolute top-3 right-3 md:top-8 md:right-8 z-30 p-2 md:p-3 bg-white rounded-full transition-all shadow-md md:shadow-xl border-2 active:scale-75 ${isFavorite
-          ? 'text-[#C14B3A] border-[#C14B3A] scale-100 md:scale-110'
-          : 'text-[#3A332F] border-[#F0E6D2]'
-          }`}
-        aria-label={isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"}
-      >
-        <Heart
-          size={16}
-          className={`md:w-5 md:h-5 ${isFavorite ? "fill-[#C14B3A] animate-wiggle" : ""}`}
-        />
-      </button>
+      {/* Botones de Acción (Favorito + Share) */}
+      <div className="absolute top-3 right-3 md:top-8 md:right-8 z-30 flex flex-col gap-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite();
+          }}
+          className={`p-2 md:p-3 bg-white rounded-full transition-all shadow-md md:shadow-xl border-2 active:scale-75 ${isFavorite
+            ? 'text-[#C14B3A] border-[#C14B3A] scale-100 md:scale-110'
+            : 'text-[#3A332F] border-[#F0E6D2]'
+            }`}
+          aria-label={isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"}
+        >
+          <Heart
+            size={16}
+            className={`md:w-5 md:h-5 ${isFavorite ? "fill-[#C14B3A] animate-wiggle" : ""}`}
+          />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onShare(product);
+          }}
+          className="p-2 md:p-3 bg-white rounded-full transition-all shadow-md md:shadow-xl border-2 border-[#F0E6D2] text-[#3A332F] active:scale-75 hover:text-[#C14B3A] hover:border-[#C14B3A]"
+          aria-label="Compartir"
+        >
+          <Share2
+            size={16}
+            className="md:w-5 md:h-5"
+          />
+        </button>
+      </div>
 
       {/* Product Image Area */}
       <div className="relative aspect-square md:aspect-[4/5] m-2 md:m-4 rounded-[15px] md:rounded-[30px] overflow-hidden bg-[#FDF5E6] border md:border-2 border-[#F0E6D2] z-10">
