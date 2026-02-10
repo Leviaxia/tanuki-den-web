@@ -74,7 +74,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ product, onClose }) => {
     ];
 
     return (
-        <div className="fixed inset-0 z-[3000] bg-[#3A332F]/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[10000] bg-[#3A332F]/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#FDF5E6] w-full max-w-sm rounded-[30px] p-6 relative animate-pop border-4 border-white shadow-2xl">
                 <button onClick={onClose} className="absolute top-4 right-4 p-1 hover:bg-[#3A332F]/10 rounded-full transition-colors"><X size={24} /></button>
 
