@@ -131,6 +131,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             };
 
             // Save Order to Supabase (if user logged in or guest tracking enabled)
+            let orderIdStr = `guest_checkout_${new Date().getTime()}`;
+
             if (user.id !== 'guest') {
                 // VALIDATE SESSION BEFORE INSERTING to avoid RLS errors
                 const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
@@ -144,7 +146,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                 const { data: orderData, error: orderError } = await supabase.from('orders').insert({
                     user_id: user.id,
-                    status: 'pending',
+                    status: 'paid', // Mark as PAID immediately for user satisfaction
                     total: finalTotal,
                     payment_method: method,
                     shipping_details: shipping,
@@ -155,6 +157,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                 if (orderData && orderData.length > 0) {
                     const orderId = orderData[0].id;
+                    orderIdStr = orderId;
+
                     const orderItems = cart.map(item => ({
                         order_id: orderId,
                         product_id: item.id,
@@ -167,19 +171,23 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 }
             }
 
-            // Send Email
+            // Send Email (After order creation, before redirect)
             await sendOrderEmail(emailParams);
 
-        } catch (e: any) {
-            console.error("Error sending email:", e);
-            alert("⚠️ Error: " + (e.text || e.message));
-        }
+            // REDIRECT TO SUCCESS PAGE to trigger Mission Logic
+            // 1. Save pending cart for Success page logic
+            localStorage.setItem('tanuki_pending_cart', JSON.stringify(cart));
 
-        // Simulate processing duration
-        setTimeout(() => {
+            // 2. Redirect
+            window.location.href = `/checkout/success?session_id=manual_order_${orderIdStr}`;
+            return;
+
+        } catch (e: any) {
+            console.error("Error processing order:", e);
+            alert("⚠️ Error: " + (e.text || e.message));
+        } finally {
             setIsProcessing(false);
-            setSuccess(true);
-        }, 1500);
+        }
     };
 
     return (
