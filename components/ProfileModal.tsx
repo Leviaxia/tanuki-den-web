@@ -46,8 +46,15 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
     useEffect(() => {
         if (isOpen) {
+            // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
             // Fetch orders when modal opens
             fetchOrders();
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
         }
     }, [isOpen, user.id]);
 
@@ -111,9 +118,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 backdrop-blur-md flex items-center justify-center p-4">
+            {/* Modal Overlay to catch clicks and prevent closing if clicked inside? No, user wants to block touch outside to prevent back scroll, which overflow:hidden handles. */}
             <div
                 className="bg-[#FDF5E6] w-full max-w-5xl h-[85vh] rounded-[30px] md:rounded-[50px] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-pop border-4 relative"
                 style={{ borderColor: accentColor }}
+                onClick={(e) => e.stopPropagation()} // Prevent closing/bubbling
             >
                 <button
                     onClick={onClose}
@@ -123,7 +132,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                 </button>
 
                 {/* Sidebar Tabs */}
-                <div className="w-full md:w-1/4 bg-white/50 border-b md:border-b-0 md:border-r border-[#3A332F]/10 p-4 md:p-6 flex md:flex-col gap-2 md:gap-4 overflow-x-auto md:overflow-visible shrink-0">
+                <div className="w-full md:w-1/4 bg-white/50 border-b md:border-b-0 md:border-r border-[#3A332F]/10 p-4 md:p-6 flex md:flex-col gap-2 md:gap-4 overflow-x-auto md:overflow-visible shrink-0 relative z-20">
                     <div className="hidden md:block mb-6 text-center">
                         <div
                             className="w-20 h-20 mx-auto rounded-full border-4 overflow-hidden shadow-md mb-2"
@@ -143,8 +152,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={`flex items-center gap-3 p-3 md:p-4 rounded-xl md:rounded-2xl transition-all whitespace-nowrap ${activeTab === tab.id
-                                    ? `bg-[#3A332F] text-white shadow-lg`
-                                    : 'hover:bg-white/60 text-[#3A332F]/70'
+                                ? `bg-[#3A332F] text-white shadow-lg`
+                                : 'hover:bg-white/60 text-[#3A332F]/70'
                                 }`}
                         >
                             <tab.icon size={20} className={activeTab === tab.id ? 'text-[#D4AF37]' : ''} />
@@ -253,8 +262,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                                     <p className="text-xs text-[#8C8279]">{new Date(order.created_at).toLocaleDateString()}</p>
                                                 </div>
                                                 <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${order.status === 'paid' ? 'bg-green-100 text-green-700' :
-                                                        order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                                                            'bg-yellow-100 text-yellow-700'
+                                                    order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
+                                                        'bg-yellow-100 text-yellow-700'
                                                     }`}>
                                                     {order.status === 'paid' ? 'PAGADO' : order.status === 'shipped' ? 'ENVIADO' : 'PENDIENTE'}
                                                 </div>
