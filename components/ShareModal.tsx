@@ -76,7 +76,13 @@ const ShareModal: React.FC<ShareModalProps> = ({ product, onClose }) => {
     return (
         <div className="fixed inset-0 z-[10000] bg-[#3A332F]/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#FDF5E6] w-full max-w-sm rounded-[30px] p-6 relative animate-pop border-4 border-white shadow-2xl">
-                <button onClick={onClose} className="absolute top-4 right-4 p-1 hover:bg-[#3A332F]/10 rounded-full transition-colors"><X size={24} /></button>
+                <button
+                    onClick={onClose}
+                    className="absolute -top-3 -right-3 md:top-4 md:right-4 p-3 bg-white text-[#3A332F] hover:bg-[#C14B3A] hover:text-white rounded-full shadow-lg border-2 border-[#E6D5B8] transition-all active:scale-95 z-50"
+                    aria-label="Cerrar"
+                >
+                    <X size={20} className="md:w-6 md:h-6" />
+                </button>
 
                 <h3 className="text-2xl font-ghibli-title text-[#3A332F] text-center mb-6 uppercase">Compartir Tesoro</h3>
 
