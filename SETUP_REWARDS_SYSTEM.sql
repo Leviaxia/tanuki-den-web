@@ -1,7 +1,3 @@
--- Enable RLS
-alter table if exists public.rewards enable row level security;
-alter table if exists public.user_rewards enable row level security;
-
 -- 1. Create Rewards Table (Catalog)
 create table if not exists public.rewards (
     id text primary key,
@@ -26,7 +22,11 @@ create table if not exists public.user_rewards (
     expires_at timestamp with time zone -- 12 months policy
 );
 
--- 3. RLS Policies
+-- 3. Enable RLS (Must be done AFTER table creation)
+alter table public.rewards enable row level security;
+alter table public.user_rewards enable row level security;
+
+-- 4. RLS Policies
 -- Rewards: Public read, Admin write
 drop policy if exists "Enable read access for all users" on public.rewards;
 create policy "Enable read access for all users" on public.rewards for select using (true);
@@ -41,11 +41,7 @@ create policy "Enable insert access for own rewards" on public.user_rewards for 
 drop policy if exists "Enable update access for own rewards" on public.user_rewards;
 create policy "Enable update access for own rewards" on public.user_rewards for update using (auth.uid() = user_id);
 
--- 4. Initial Data Seed (As per User Requirements)
-
--- clear existing to avoid duplicates if re-run (optional, or use ON CONFLICT)
--- delete from public.rewards; 
-
+-- 5. Initial Data Seed (As per User Requirements)
 insert into public.rewards (id, title, description, cost, tier, type, value, stock) values
 -- Tier 1: Engagement
 ('bg_tanuki', 'Fondo de Perfil Tanuki', 'Fondo exclusivo para tu perfil.', 100, 1, 'digital', '{"asset": "bg_tanuki_v1"}', null),
@@ -67,9 +63,8 @@ insert into public.rewards (id, title, description, cost, tier, type, value, sto
 on conflict (id) do update set 
     title = excluded.title,
     description = excluded.description,
-
     cost = excluded.cost,
     value = excluded.value;
 
--- 5. Cleanup Removed Rewards (Optional, for updates)
+-- 6. Cleanup Removed Rewards (Optional, for updates)
 delete from public.rewards where id in ('early_access', 'figure_limited');
