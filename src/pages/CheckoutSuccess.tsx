@@ -28,56 +28,94 @@ export const CheckoutSuccess = () => {
 
                     // 3. Update SESSION STORAGE (User)
                     const savedUser = sessionStorage.getItem('tanuki_user');
-                    if (savedUser) {
-                        const userFn = JSON.parse(savedUser);
-                        const updatedUser = {
-                            ...userFn,
-                            membership: membershipItem.name, // 'Tanuki Sabio' etc
-                            isRegistered: true
-                        };
+                    let userFn = savedUser ? JSON.parse(savedUser) : null;
 
-                        sessionStorage.setItem('tanuki_user', JSON.stringify(updatedUser)); // Update Session
-
-                        // Force App.tsx to update immediately!
-                        window.dispatchEvent(new Event('tanuki_user_update'));
-
-                        // 4. Update Supabase Profile
-                        if (userFn.id && userFn.id !== 'guest') {
-                            // ... update DB logic same as before
-                            await supabase.from('profiles').update({
-                                membership: membershipItem.name
-                            }).eq('id', userFn.id);
+                    if (savedUser && userFn.id && userFn.id !== 'guest') {
+                        // Update Membership if bought
+                        if (membershipItem) {
+                            userFn.membership = membershipItem.name;
+                            await supabase.from('profiles').update({ membership: membershipItem.name }).eq('id', userFn.id);
                         }
+
+                        // --- NEW: TRACKING & MISSIONS ---
+                        const totalAmount = pendingCart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+                        const has3DPrint = pendingCart.some((item: any) => item.category === 'Personalización' || item.category === '3D' || item.name.toLowerCase().includes('3d'));
+
+                        // Fetch current stats
+                        const { data: profile } = await supabase.from('profiles').select('total_spent, total_orders, total_3d_orders').eq('id', userFn.id).single();
+
+                        if (profile) {
+                            const newTotalSpent = (profile.total_spent || 0) + totalAmount;
+                            const newTotalOrders = (profile.total_orders || 0) + 1;
+                            const newTotal3D = (profile.total_3d_orders || 0) + (has3DPrint ? 1 : 0);
+
+                            // Update Profile Stats
+                            await supabase.from('profiles').update({
+                                total_spent: newTotalSpent,
+                                total_orders: newTotalOrders,
+                                total_3d_orders: newTotal3D,
+                                // If membership updated, it's already done above, but we can combine if refactoring. Separated is fine.
+                            }).eq('id', userFn.id);
+
+                            // Helper to update mission
+                            const checkMission = async (missionId: string, currentVal: number, target: number) => {
+                                const { data: existing } = await supabase.from('user_missions').select('*').eq('user_id', userFn.id).eq('mission_id', missionId).single();
+                                const isCompleted = currentVal >= target;
+                                const wasCompleted = existing?.completed || false;
+
+                                // Only update if progress increased or completed status changed
+                                if ((existing?.progress || 0) < currentVal || (!wasCompleted && isCompleted)) {
+                                    await supabase.from('user_missions').upsert({
+                                        user_id: userFn.id,
+                                        mission_id: missionId,
+                                        progress: currentVal,
+                                        completed: isCompleted || wasCompleted, // Keep completed true if already was
+                                        claimed: existing?.claimed || false
+                                    }, { onConflict: 'user_id, mission_id' });
+                                }
+                            };
+
+                            await checkMission('second_treasure', newTotalOrders, 2);
+                            await checkMission('persistent_collector', newTotalOrders, 5);
+                            await checkMission('great_hoarder', newTotalSpent, 500000);
+                            await checkMission('legend_clan', newTotalSpent, 1000000);
+
+                            if (has3DPrint) {
+                                await checkMission('workshop_forger', newTotal3D, 1);
+                                await checkMission('mold_master', newTotal3D, 3);
+                            }
+                        }
+
+                        // Update Local Session with new Membership if changed
+                        sessionStorage.setItem('tanuki_user', JSON.stringify(userFn));
+                        // Force App.tsx to reload user data (which will now fetch updated stats from DB!)
+                        window.dispatchEvent(new Event('tanuki_user_update'));
                     }
+
+                    // 5. Clear pending cart
+                    localStorage.removeItem('tanuki_pending_cart');
+                } catch (error) {
+                    console.error("Error procesando orden:", error);
+                } finally {
+                    setIsProcessing(false);
                 }
+            };
 
-                // 5. Clear pending cart
-                localStorage.removeItem('tanuki_pending_cart');
-                // IMPORTANTE: Disparar evento para que el Navbar actualice el carrito a 0
-                // (Opcional, pero App.tsx suele leer de estado. Al recargar la página se limpia).
 
-            } catch (error) {
-                console.error("Error procesando orden:", error);
-            } finally {
+            const timeoutId = setTimeout(() => {
+                console.warn("Forzando fin de proceso por tiempo de espera.");
+                setIsProcessing(false);
+            }, 5000); // 5 segundos de seguridad
+
+            if (sessionId) {
+                processOrder().finally(() => clearTimeout(timeoutId));
+            } else {
+                clearTimeout(timeoutId);
                 setIsProcessing(false);
             }
-        };
 
-
-        const timeoutId = setTimeout(() => {
-            console.warn("Forzando fin de proceso por tiempo de espera.");
-            setIsProcessing(false);
-        }, 5000); // 5 segundos de seguridad
-
-        if (sessionId) {
-            processOrder().finally(() => clearTimeout(timeoutId));
-        } else {
-            clearTimeout(timeoutId);
-            setIsProcessing(false);
-        }
-
-        return () => clearTimeout(timeoutId);
-    }, [sessionId]);
+            return () => clearTimeout(timeoutId);
+        }, [sessionId]);
 
     return (
         <div className="min-h-screen bg-[#FDF5E6] flex items-center justify-center p-4">

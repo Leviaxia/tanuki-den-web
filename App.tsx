@@ -99,10 +99,19 @@ const App: React.FC = () => {
           realName: meta.full_name || '',
           isRegistered: true,
           photo: meta.avatar_url || '/assets/default_avatar.png',
-          membership: undefined,
+          membership: meta.membership,
           location: meta.location || '',
           birthDate: meta.birth_date || '',
-          phone: meta.phone || ''
+          phone: meta.phone || '',
+          // Stats
+          totalSpent: meta.total_spent || 0,
+          totalOrders: meta.total_orders || 0,
+          total3dOrders: meta.total_3d_orders || 0,
+          loginStreak: meta.login_days_consecutive || 1,
+          lastLogin: meta.last_login_date || new Date().toISOString(),
+          productsViewed: meta.products_viewed_count || 0,
+          productsFavorited: meta.products_favorited_count || 0,
+          productsShared: meta.products_shared_count || 0
         };
       } catch (e) { console.error("Token parse error", e); }
     }
@@ -184,6 +193,13 @@ const App: React.FC = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [productToShare, setProductToShare] = useState<Product | null>(null);
 
+  // Trigger Share
+  const handleShare = (p: Product) => {
+    setProductToShare(p);
+    setIsShareModalOpen(true);
+    trackAction('share', 1);
+  };
+
   const [isSharedWishlistOpen, setIsSharedWishlistOpen] = useState(false);
   const [sharedWishlistTargetId, setSharedWishlistTargetId] = useState<string | null>(null);
 
@@ -206,6 +222,7 @@ const App: React.FC = () => {
 
   // Category Scroll
   const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const prevFavoritesLength = useRef(favorites.length);
 
   const scrollCategories = (direction: 'left' | 'right') => {
     if (categoryScrollRef.current) {
@@ -681,44 +698,41 @@ const App: React.FC = () => {
     const fetchMissionsData = async () => {
       try {
         // Fetch Profile for Coins & Streak
-        const { data: profile } = await supabase.from('profiles').select('coins, login_streak, last_login').eq('id', user.id).single();
+        const { data: profile } = await supabase.from('profiles').select('coins, login_streak, last_login, login_days_total').eq('id', user.id).single();
         if (profile) {
           setUserCoins(profile.coins || 0);
 
-          // CHECK LOGIN STREAK
+          // CHECK LOGIN STREAK & TOTAL DAYS
           const lastLogin = profile.last_login ? new Date(profile.last_login) : null;
           const now = new Date();
           const oneDay = 24 * 60 * 60 * 1000;
 
           let newStreak = profile.login_streak || 0;
+          let newTotalDays = profile.login_days_total || 0;
           let shouldUpdate = false;
 
           if (!lastLogin) {
             newStreak = 1;
+            newTotalDays = 1;
             shouldUpdate = true;
           } else {
-            const diff = now.getTime() - lastLogin.getTime();
-            if (diff > oneDay && diff < (2 * oneDay)) {
-              // Consecutive day
-              newStreak += 1;
+            const isSameDay = now.toDateString() === lastLogin.toDateString();
+            if (!isSameDay) {
+              // New Day
+              newTotalDays += 1;
               shouldUpdate = true;
-            } else if (diff >= (2 * oneDay)) {
-              // Broken streak
-              newStreak = 1;
-              shouldUpdate = true;
-            } else if (now.getDate() !== lastLogin.getDate()) {
-              // Same day check (basic) - actually the above logic covers 24h windows.
-              // If simply different calendar day but within 48h...
-              // Let's stick to the time diff for simplicity or just run it once per session if not upgraded today.
-              // For now, assume it updates if > 24h from last login.
-              // Simplified: if last login was yesterday (calendar date), increment.
-              const isToday = now.toDateString() === lastLogin.toDateString();
-              if (!isToday && diff < (2 * oneDay)) {
+
+              const diff = now.getTime() - lastLogin.getTime();
+              // Allow up to 48h (2 days) to maintain streak if checking strictly time
+              // But strictly calendar days: yesterday vs today.
+              // If lastLogin was yesterday, diff is roughly 24h.
+              // If lastLogin was 2 days ago, streak breaks.
+
+              // Simple check: if diff > 2 days, break.
+              if (diff < (2 * oneDay)) {
                 newStreak += 1;
-                shouldUpdate = true;
-              } else if (diff > (2 * oneDay)) {
+              } else {
                 newStreak = 1;
-                shouldUpdate = true;
               }
             }
           }
@@ -726,14 +740,19 @@ const App: React.FC = () => {
           if (shouldUpdate) {
             await supabase.from('profiles').update({
               login_streak: newStreak,
+              login_days_total: newTotalDays,
               last_login: now.toISOString()
             }).eq('id', user.id);
 
-            // Update specific mission 'active_member'
+            // Update Missions
             updateMissionProgress('active_member', newStreak, true);
+            updateMissionProgress('forest_guardian', newStreak, true);
+            updateMissionProgress('constant_spirit', newTotalDays, true);
           } else {
-            // Just sync visual state of mission if no update needed
+            // Sync Visuals
             updateMissionProgress('active_member', newStreak, true, false);
+            updateMissionProgress('forest_guardian', newStreak, true, false);
+            updateMissionProgress('constant_spirit', newTotalDays, true, false);
           }
         }
 
@@ -878,23 +897,66 @@ const App: React.FC = () => {
     }
   };
 
+  // 7. TRACKING HELPER
+  const trackAction = async (action: 'view' | 'favorite' | 'share', value: number = 1) => {
+    if (!user.isRegistered) return;
+
+    const updates: any = {};
+    if (action === 'view') {
+      const newCount = (user.productsViewed || 0) + value;
+      // Don't spam DB for every view? Maybe. But for now, direct update.
+      // Actually, better to rely on local optimisic update + background sync or Debounce?
+      // Let's stick to direct for accuracy on mission triggers.
+      await supabase.rpc('increment_counter', { column_name: 'products_viewed_count', x: value, row_id: user.id });
+      // NOTE: RPC for increment would be safer, but let's assume update is fine or use optimistic logic.
+      // Since we don't have RPC for generic counters, we'll read-carry-write? 
+      // No, user object has "productsViewed". We can use that.
+
+      updates.products_viewed_count = newCount;
+      setUser(prev => ({ ...prev, productsViewed: newCount }));
+      updateMissionProgress('shrine_explorer', newCount, true, true);
+    } else if (action === 'favorite') {
+      const newCount = (user.productsFavorited || 0) + value;
+      updates.products_favorited_count = newCount;
+      setUser(prev => ({ ...prev, productsFavorited: newCount }));
+      updateMissionProgress('clan_curator', newCount, true, true);
+    } else if (action === 'share') {
+      const newCount = (user.productsShared || 0) + value;
+      updates.products_shared_count = newCount;
+      setUser(prev => ({ ...prev, productsShared: newCount }));
+      updateMissionProgress('tanuki_ambassador', newCount, true, true);
+    }
+
+    // DB Sync
+    if (Object.keys(updates).length > 0) {
+      supabase.from('profiles').update(updates).eq('id', user.id).then(({ error }) => {
+        if (error) console.error("Error tracking action", error);
+      });
+    }
+  };
+
   // 3. Track Product Views
   useEffect(() => {
     if (selectedProduct && user.isRegistered) {
       if (!viewedProductsSession.has(selectedProduct.id)) {
         viewedProductsSession.add(selectedProduct.id);
         updateMissionProgress('collector_fire', 1, false);
+        trackAction('view', 1);
       }
     }
   }, [selectedProduct]);
 
-  // 4. Track Favorites & Cart (Cazador de Tesoros)
+  // 4. Track Favorites & Cart
   useEffect(() => {
     if (user.isRegistered) {
+      // Track 'Clan Curator' (Add to favorites)
+      if (favorites.length > prevFavoritesLength.current) {
+        const added = favorites.length - prevFavoritesLength.current;
+        trackAction('favorite', added);
+      }
+      prevFavoritesLength.current = favorites.length;
+
       const totalItems = favorites.length + cart.length;
-      // Optimization: dont spam update if unchanged
-      // But logic requires checking against current progress. 
-      // Simplest is to just 'set' absolute progress to current total.
       updateMissionProgress('treasure_hunter', totalItems, true);
     }
   }, [favorites.length, cart.length]);

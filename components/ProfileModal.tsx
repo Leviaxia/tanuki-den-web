@@ -461,7 +461,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                     )}
 
                     {activeTab === 'missions' && (
-                        <div className="space-y-6 animate-slide-in h-full flex flex-col">
+                        <div className="space-y-6 animate-slide-in flex flex-col">
                             {/* Header */}
                             <div className="flex justify-between items-center bg-[#D4AF37]/10 p-4 rounded-xl border border-[#D4AF37]/20">
                                 <div>
@@ -494,7 +494,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                             </div>
 
                             {/* Content Wrapper */}
-                            <div className="space-y-4 overflow-y-auto pb-4 scrollbar-hide flex-1">
+                            <div className="space-y-4 pb-4">
                                 {missionSubTab === 'challenges' ? (
                                     missions.map(mission => {
                                         const userMission = userMissions[mission.id] || { progress: 0, completed: false, claimed: false };
@@ -559,8 +559,28 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                                 const isOutOfStock = reward.stock !== null && reward.stock <= 0;
                                                 const alreadyOwned = userRewards.some(ur => ur.reward_id === reward.id && ur.status === 'active');
 
+                                                // NEW: Exclusive Reward Lock
+                                                let isLocked = false;
+                                                if (reward.id === 'forest_spirit_figure') {
+                                                    const legendMission = userMissions['legend_clan'];
+                                                    if (!legendMission || !legendMission.completed) {
+                                                        isLocked = true;
+                                                    }
+                                                }
+
                                                 return (
-                                                    <div key={reward.id} className={`bg-white rounded-[20px] p-4 border-2 flex flex-col gap-3 relative overflow-hidden group transition-all ${canAfford && !isOutOfStock ? 'hover:border-[#C14B3A] hover:shadow-lg' : 'opacity-80'}`}>
+                                                    <div key={reward.id} className={`bg-white rounded-[20px] p-4 border-2 flex flex-col gap-3 relative overflow-hidden group transition-all ${canAfford && !isOutOfStock && !isLocked ? 'hover:border-[#C14B3A] hover:shadow-lg' : 'opacity-80'}`}>
+                                                        {/* LOCK OVERLAY */}
+                                                        {isLocked && (
+                                                            <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center p-4 text-center backdrop-blur-sm transition-opacity hover:opacity-100">
+                                                                <div className="bg-[#3A332F] text-[#D4AF37] p-3 rounded-full mb-2 shadow-lg">
+                                                                    <Lock size={20} />
+                                                                </div>
+                                                                <h4 className="font-ghibli-title text-sm text-[#3A332F] uppercase mb-1">Recompensa Legendaria</h4>
+                                                                <p className="text-[10px] text-[#8C8279] font-bold leading-tight">Completa la misión "Leyenda del Clan" para desbloquear este tesoro.</p>
+                                                            </div>
+                                                        )}
+
                                                         {alreadyOwned && reward.type !== 'coupon' && (
                                                             <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center backdrop-blur-[1px]">
                                                                 <span className="bg-[#81C784] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Adquirido</span>

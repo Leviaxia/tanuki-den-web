@@ -10,6 +10,15 @@ export interface User {
   location?: string;
   isRegistered: boolean;
   membership?: 'bronze' | 'silver' | 'gold' | 'founder';
+  // New Stats for Missions
+  totalSpent?: number;
+  totalOrders?: number;
+  total3dOrders?: number;
+  loginStreak?: number; // days
+  lastLogin?: string; // date string
+  productsViewed?: number;
+  productsFavorited?: number;
+  productsShared?: number;
 }
 
 export interface Review {

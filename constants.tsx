@@ -117,6 +117,95 @@ export const MISSIONS = [
     target: 1,
     reward: 500,
     icon: 'Star'
+  },
+  // NEW MISSIONS
+  {
+    id: 'shrine_explorer',
+    title: 'Explorador del Santuario',
+    description: 'Ver 25 productos diferentes.',
+    target: 25,
+    reward: 150,
+    icon: 'Search'
+  },
+  {
+    id: 'clan_curator',
+    title: 'Curador del Clan',
+    description: 'Agregar 10 productos a favoritos.',
+    target: 10,
+    reward: 200,
+    icon: 'Heart'
+  },
+  {
+    id: 'tanuki_ambassador',
+    title: 'Embajador Tanuki',
+    description: 'Compartir 3 productos.',
+    target: 3,
+    reward: 150,
+    icon: 'Share2'
+  },
+  {
+    id: 'second_treasure',
+    title: 'Segundo Tesoro',
+    description: 'Realiza 2 compras.',
+    target: 2,
+    reward: 300,
+    icon: 'ShoppingBag'
+  },
+  {
+    id: 'persistent_collector',
+    title: 'Coleccionista Persistente',
+    description: 'Realiza 5 compras acumuladas.',
+    target: 5,
+    reward: 600,
+    icon: 'Layers'
+  },
+  {
+    id: 'great_hoarder',
+    title: 'Gran Acumulador',
+    description: 'Alcanzar $500.000 COP en compras acumuladas.',
+    target: 500000,
+    reward: 700,
+    icon: 'Gem'
+  },
+  {
+    id: 'workshop_forger',
+    title: 'Forjador del Taller',
+    description: 'Realiza el primer pedido de impresión 3D.',
+    target: 1,
+    reward: 400,
+    icon: 'Printer'
+  },
+  {
+    id: 'mold_master',
+    title: 'Maestro del Molde',
+    description: 'Realiza 3 pedidos 3D personalizados.',
+    target: 3,
+    reward: 800,
+    icon: 'Box'
+  },
+  {
+    id: 'forest_guardian',
+    title: 'Guardián del Bosque',
+    description: 'Iniciar sesión 7 días consecutivos.',
+    target: 7,
+    reward: 250,
+    icon: 'ShieldCheck'
+  },
+  {
+    id: 'constant_spirit',
+    title: 'Espíritu Constante',
+    description: 'Iniciar sesión 30 días acumulados.',
+    target: 30,
+    reward: 500,
+    icon: 'Calendar'
+  },
+  {
+    id: 'legend_clan',
+    title: 'Leyenda del Clan',
+    description: 'Acumular $1.000.000 COP en compras totales.',
+    target: 1000000,
+    reward: 2000,
+    icon: 'Crown'
   }
 ];
 export const collectionsContent = [
