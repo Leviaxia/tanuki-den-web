@@ -969,15 +969,15 @@ const App: React.FC = () => {
                       if (isCardA && isCardB) return 0;
 
                       // 2. SCALE LOGIC
-                      // Extract scale (1/X) to number (0.14, 0.25). 
-                      // Or "Xcm" -> number.
+                      // Extract "Tamaño: X cm"
                       const getScale = (str: string) => {
-                        const scaleMatch = str.match(/1\/(\d+)/);
-                        if (scaleMatch) return 1 / parseInt(scaleMatch[1]);
+                        // Look for "Tamaño: 25" or "Tamaño: 25cm"
+                        const match = str.match(/Tamaño:?\s*(\d+)/i);
+                        if (match) return parseInt(match[1]);
 
-                        // Fallback: look for cm? (Optional, user asked for scale mainly)
-                        // const cmMatch = str.match(/(\d+)cm/);
-                        // if (cmMatch) return parseInt(cmMatch[1]) / 100; // normalize
+                        // Fallback: 1/X scale (if ever needed again)
+                        const scaleMatch = str.match(/1\/(\d+)/);
+                        if (scaleMatch) return 30 - parseInt(scaleMatch[1]) * 2;
 
                         return 0;
                       };
