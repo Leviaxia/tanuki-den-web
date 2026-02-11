@@ -13,6 +13,8 @@ interface NavbarProps {
   onOpenProfile: () => void;
   onOpenAuth: () => void;
   onOpenSubscription: () => void;
+  isMenuOpen: boolean;
+  setIsMenuOpen: (isOpen: boolean) => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -23,10 +25,10 @@ const Navbar: React.FC<NavbarProps> = ({
   user,
   onOpenProfile,
   onOpenAuth,
-  onOpenSubscription
+  onOpenSubscription,
+  isMenuOpen,
+  setIsMenuOpen
 }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const navItems = [
     { id: 'inicio', label: 'Inicio' },
     { id: 'figuras', label: 'Catálogo' },

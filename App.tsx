@@ -149,6 +149,7 @@ const App: React.FC = () => {
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('default'); // default, relevance, price-asc, price-desc, alpha
   const [isRouletteOpen, setIsRouletteOpen] = useState(false);
@@ -646,6 +647,41 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Body Scroll Lock Hook
+  useEffect(() => {
+    // Check if any modal is open
+    const isAnyModalOpen =
+      isCartOpen ||
+      !!selectedProduct ||
+      isProfileModalOpen ||
+      isAuthModalOpen ||
+      isMobileMenuOpen ||
+      isSubscriptionModalOpen ||
+      isCheckoutOpen ||
+      isShareModalOpen ||
+      isRouletteOpen;
+
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [
+    isCartOpen,
+    selectedProduct,
+    isProfileModalOpen,
+    isAuthModalOpen,
+    isMobileMenuOpen,
+    isSubscriptionModalOpen,
+    isCheckoutOpen,
+    isShareModalOpen,
+    isRouletteOpen
+  ]);
+
   const toggleFavorite = async (id: string) => {
     // 1. Optimistic Update (Local)
     const isAdding = !favorites.includes(id);
@@ -690,6 +726,7 @@ const App: React.FC = () => {
   const handleNavClick = (id: string) => {
     setActiveTab(id);
     setSelectedCollectionId(null);
+    setIsMobileMenuOpen(false);
     window.history.pushState({ tab: id }, '', `?tab=${id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1321,6 +1358,8 @@ const App: React.FC = () => {
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenSubscription={handleSubscriptionClick}
+        isMenuOpen={isMobileMenuOpen}
+        setIsMenuOpen={setIsMobileMenuOpen}
       />
 
 

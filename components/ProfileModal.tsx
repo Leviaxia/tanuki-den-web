@@ -118,11 +118,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 backdrop-blur-md flex items-center justify-center p-4">
-            {/* Modal Overlay to catch clicks and prevent closing if clicked inside? No, user wants to block touch outside to prevent back scroll, which overflow:hidden handles. */}
             <div
                 className="bg-[#FDF5E6] w-full max-w-5xl h-[85vh] rounded-[30px] md:rounded-[50px] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-pop border-4 relative"
                 style={{ borderColor: accentColor }}
-                onClick={(e) => e.stopPropagation()} // Prevent closing/bubbling
+                onClick={(e) => e.stopPropagation()}
             >
                 <button
                     onClick={onClose}
@@ -131,9 +130,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                     <X size={24} color={accentColor} />
                 </button>
 
-                {/* Sidebar Tabs */}
-                <div className="w-full md:w-1/4 bg-white/50 border-b md:border-b-0 md:border-r border-[#3A332F]/10 p-4 md:p-6 flex md:flex-col gap-2 md:gap-4 overflow-x-auto md:overflow-visible shrink-0 relative z-20">
-                    <div className="hidden md:block mb-6 text-center">
+                {/* Sidebar (Desktop) / Bottom Bar (Mobile) */}
+                <div className="hidden md:flex w-1/4 bg-white/50 border-r border-[#3A332F]/10 p-6 flex-col gap-4 shrink-0 relative z-20">
+                    <div className="mb-6 text-center">
                         <div
                             className="w-20 h-20 mx-auto rounded-full border-4 overflow-hidden shadow-md mb-2"
                             style={{ borderColor: accentColor }}
@@ -151,17 +150,17 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-3 p-3 md:p-4 rounded-xl md:rounded-2xl transition-all whitespace-nowrap ${activeTab === tab.id
+                            className={`flex items-center gap-3 p-4 rounded-2xl transition-all whitespace-nowrap ${activeTab === tab.id
                                 ? `bg-[#3A332F] text-white shadow-lg`
                                 : 'hover:bg-white/60 text-[#3A332F]/70'
                                 }`}
                         >
                             <tab.icon size={20} className={activeTab === tab.id ? 'text-[#D4AF37]' : ''} />
-                            <span className="font-ghibli-title text-sm md:text-base">{tab.label}</span>
+                            <span className="font-ghibli-title text-base">{tab.label}</span>
                         </button>
                     ))}
 
-                    <div className="mt-auto hidden md:block">
+                    <div className="mt-auto">
                         <button
                             onClick={onLogout}
                             className="flex items-center gap-3 p-4 rounded-2xl hover:bg-red-50 text-red-500/70 hover:text-red-500 w-full transition-all"
@@ -173,7 +172,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 p-6 md:p-10 overflow-y-auto bg-[#FDF5E6] relative">
+                <div className="flex-1 p-6 md:p-10 overflow-y-auto bg-[#FDF5E6] relative pb-24 md:pb-10">
                     <button onClick={onClose} className="hidden md:block absolute top-6 right-6 p-2 bg-white hover:bg-[#3A332F] hover:text-white rounded-full transition-all shadow-sm">
                         <X size={24} />
                     </button>
@@ -334,6 +333,27 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                             )}
                         </div>
                     )}
+                </div>
+
+                {/* Mobile Bottom Navigation Bar */}
+                <div className="md:hidden absolute bottom-0 left-0 right-0 bg-white border-t border-[#3A332F]/10 p-2 flex justify-around items-center z-30 pb- safe-area-bottom">
+                    {[
+                        { id: 'profile', label: 'Perfil', icon: UserIcon },
+                        { id: 'orders', label: 'Pedidos', icon: Package },
+                        { id: 'wishlist', label: 'Deseos', icon: Heart },
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-full ${activeTab === tab.id
+                                ? 'text-[#C14B3A]'
+                                : 'text-[#3A332F]/60'
+                                }`}
+                        >
+                            <tab.icon size={20} className={activeTab === tab.id ? 'fill-current' : ''} />
+                            <span className="font-ghibli-title text-[10px] uppercase tracking-wider">{tab.label}</span>
+                        </button>
+                    ))}
                 </div>
             </div>
         </div>
