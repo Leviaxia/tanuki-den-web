@@ -304,7 +304,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                     <p className="font-ghibli-title text-lg">Tu lista está vacía</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pb-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pb-4 scrollbar-hide">
                                     {products.filter(p => favorites.includes(p.id)).map(product => {
                                         // Simplified Card for Wishlist
                                         return (
