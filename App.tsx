@@ -10,7 +10,6 @@ import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
 import ProfileModal from './components/ProfileModal';
 import SharedWishlistModal from './components/SharedWishlistModal';
-import MissionsModal from './components/MissionsModal';
 import AuthModal from './components/AuthModal'; // [RESTORED]
 import CheckoutModal from './components/CheckoutModal'; // [RESTORED]
 import ShareModal from './components/ShareModal'; // [RESTORED]
@@ -191,7 +190,8 @@ const App: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
   // MISSIONS STATE
-  const [isMissionsModalOpen, setIsMissionsModalOpen] = useState(false);
+  // const [isMissionsModalOpen, setIsMissionsModalOpen] = useState(false); // Removed in favor of ProfileModal
+  const [profileInitialTab, setProfileInitialTab] = useState<'profile' | 'orders' | 'wishlist' | 'missions'>('profile');
   const [userCoins, setUserCoins] = useState(0);
   const [userMissions, setUserMissions] = useState<Record<string, UserMission>>({});
   const [viewedProductsSession] = useState<Set<string>>(new Set()); // Track unique views this session
@@ -1571,10 +1571,16 @@ const App: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={handleNavClick}
         user={user}
-        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onOpenProfile={() => {
+          setProfileInitialTab('profile');
+          setIsProfileModalOpen(true);
+        }}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenSubscription={handleSubscriptionClick}
-        onOpenMissions={() => setIsMissionsModalOpen(true)}
+        onOpenMissions={() => {
+          setProfileInitialTab('missions');
+          setIsProfileModalOpen(true);
+        }}
         isMenuOpen={isMobileMenuOpen}
         setIsMenuOpen={setIsMobileMenuOpen}
       />
@@ -1659,15 +1665,12 @@ const App: React.FC = () => {
           handleSubscriptionClick();
         }}
         onAddToCart={handleWishlistAddToCart}
-      />
-
-      <MissionsModal
-        isOpen={isMissionsModalOpen}
-        onClose={() => setIsMissionsModalOpen(false)}
-        userCoins={userCoins}
+        // Missions Integration
+        initialTab={profileInitialTab}
         missions={MISSIONS}
         userMissions={userMissions}
-        onClaimAttributes={claimReward}
+        userCoins={userCoins}
+        onClaimReward={claimReward}
       />
 
       <SharedWishlistModal

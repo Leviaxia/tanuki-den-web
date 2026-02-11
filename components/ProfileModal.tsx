@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Camera, Edit3, Mail, MapPin, Phone, Package, Heart, User as UserIcon, LogOut, ChevronRight, ExternalLink, Share2 } from 'lucide-react';
-import { User, Product } from '../types';
+import { X, Camera, Edit3, Mail, MapPin, Phone, Package, Heart, User as UserIcon, LogOut, ChevronRight, ExternalLink, Share2, Sparkles, Trophy, CheckCircle2, Lock, Flame } from 'lucide-react';
+import { User, Product, Mission, UserMission } from '../types';
 import { supabase } from '../src/lib/supabase';
 import ProductCard from './ProductCard'; // Assuming you have this or need to move logic
 import { formatCurrency } from '../src/lib/utils'; // You might need to move utils or duplicate formatCurrency
@@ -16,6 +16,12 @@ interface ProfileModalProps {
     toggleFavorite: (id: string) => void;
     onOpenSubscription: () => void; // To forward the "Estatus del Clan" click
     onAddToCart: (products: Product[]) => void;
+    // Missions Props
+    initialTab?: 'profile' | 'orders' | 'wishlist' | 'missions';
+    missions: Mission[];
+    userMissions: Record<string, UserMission>;
+    userCoins: number;
+    onClaimReward: (missionId: string) => void;
 }
 
 // Helper for currency if not available
@@ -27,14 +33,22 @@ const formatMoney = (amount: number) => {
 };
 
 const ProfileModal: React.FC<ProfileModalProps> = ({
-    isOpen, onClose, user, setUser, onLogout, products, favorites, toggleFavorite, onOpenSubscription, onAddToCart
+    isOpen, onClose, user, setUser, onLogout, products, favorites, toggleFavorite, onOpenSubscription, onAddToCart,
+    initialTab = 'profile', missions, userMissions, userCoins, onClaimReward
 }) => {
-    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'missions'>('profile');
     const [orders, setOrders] = useState<any[]>([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
 
     // Wishlist Selection State
     const [selectedWishlistItems, setSelectedWishlistItems] = useState<Set<string>>(new Set());
+
+    // Icon mapping for missions
+    const getMissionIcon = (iconName: string, completed: boolean) => {
+        const className = `w-6 h-6 ${completed ? 'text-white' : 'text-[#3A332F]/40'}`;
+        // Simple mapping based on icon string
+        return <Trophy className={className} />;
+    };
 
     // Colors based on membership
     const getAccentColor = () => {
@@ -50,6 +64,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
     useEffect(() => {
         if (isOpen) {
+            // Set initial tab if provided, otherwise default to profile (or keep current if switching back? No, props change)
+            // Ideally we reset on open if initialTab passed
+            if (initialTab) setActiveTab(initialTab);
+
             // Prevent background scrolling
             document.body.style.overflow = 'hidden';
             // Fetch orders when modal opens
@@ -60,7 +78,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
         return () => {
             document.body.style.overflow = 'unset';
         }
-    }, [isOpen, user.id]);
+    }, [isOpen, user.id, initialTab]);
 
     const fetchOrders = async () => {
         if (!user.id) return;
@@ -150,6 +168,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                         { id: 'profile', label: 'Mi Perfil', icon: UserIcon },
                         { id: 'orders', label: 'Mis Pedidos', icon: Package },
                         { id: 'wishlist', label: 'Lista de Deseos', icon: Heart },
+                        { id: 'missions', label: 'Misiones', icon: Sparkles }, // [NEW]
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -427,6 +446,85 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                             )}
                         </div>
                     )}
+
+                    {activeTab === 'missions' && (
+                        <div className="space-y-6 animate-slide-in h-full flex flex-col">
+                            <div className="flex justify-between items-center bg-[#D4AF37]/10 p-4 rounded-xl border border-[#D4AF37]/20">
+                                <div>
+                                    <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F]">Misiones del Clan</h2>
+                                    <p className="text-xs text-[#3A332F]/60 font-bold uppercase tracking-wider">Completa retos y gana monedas</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] uppercase font-black text-[#3A332F]/40 tracking-widest">Tu Tesoro</p>
+                                    <div className="flex items-center gap-2 text-[#D4AF37] font-black text-xl">
+                                        <span>{userCoins}</span>
+                                        <span className="text-xs">🪙</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 overflow-y-auto pb-4 scrollbar-hide flex-1">
+                                {missions.map(mission => {
+                                    const userMission = userMissions[mission.id] || { progress: 0, completed: false, claimed: false };
+                                    const progressPercent = Math.min(100, (userMission.progress / mission.target) * 100);
+
+                                    return (
+                                        <div key={mission.id} className={`relative bg-white rounded-[20px] p-4 md:p-5 border-2 transition-all duration-300 group ${userMission.completed ? 'border-[#D4AF37] shadow-md' : 'border-[#3A332F]/5 hover:border-[#3A332F]/20'}`}>
+                                            <div className="flex items-center gap-4">
+                                                {/* Medal/Icon */}
+                                                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center border-2 flex-shrink-0 transition-all duration-500 overflow-hidden relative ${userMission.completed ? 'bg-[#D4AF37] border-[#FDF5E6] rotate-3' : 'bg-[#3A332F]/5 border-[#3A332F]/5 grayscale'}`}>
+                                                    {userMission.completed && <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/30 to-white/0 animate-shine"></div>}
+                                                    {getMissionIcon(mission.icon, userMission.completed)}
+                                                </div>
+
+                                                {/* Info */}
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <h3 className={`font-ghibli-title text-base md:text-lg uppercase ${userMission.completed ? 'text-[#D4AF37]' : 'text-[#3A332F]'}`}>{mission.title}</h3>
+                                                            <p className="text-[#8C8279] text-xs font-bold leading-tight">{mission.description}</p>
+                                                        </div>
+                                                        {userMission.claimed ? (
+                                                            <span className="bg-[#81C784]/20 text-[#2E7D32] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                                                                <CheckCircle2 size={10} /> Listo
+                                                            </span>
+                                                        ) : userMission.completed ? (
+                                                            <button
+                                                                onClick={() => onClaimReward(mission.id)}
+                                                                className="bg-[#D4AF37] text-white px-4 py-1.5 rounded-full font-ghibli-title text-xs uppercase tracking-widest shadow-md hover:scale-105 active:scale-95 transition-all animate-pulse"
+                                                            >
+                                                                Reclamar {mission.reward} 🪙
+                                                            </button>
+                                                        ) : (
+                                                            <span className="bg-[#3A332F]/5 text-[#3A332F]/40 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                                                                <Lock size={10} /> {mission.reward} 🪙
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Progress Bar */}
+                                                    <div className="space-y-1">
+                                                        <div className="flex justify-between text-[10px] font-black uppercase text-[#3A332F]/40 tracking-wider">
+                                                            <span>Progreso</span>
+                                                            <span>{userMission.progress} / {mission.target}</span>
+                                                        </div>
+                                                        <div className="h-3 bg-[#3A332F]/5 rounded-full overflow-hidden border border-[#3A332F]/5">
+                                                            <div
+                                                                className={`h-full rounded-full transition-all duration-1000 ease-out relative ${userMission.completed ? 'bg-[#D4AF37]' : 'bg-[#C14B3A]'}`}
+                                                                style={{ width: `${progressPercent}%` }}
+                                                            >
+                                                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')] opacity-20"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile Bottom Navigation Bar */}
@@ -435,6 +533,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                         { id: 'profile', label: 'Perfil', icon: UserIcon },
                         { id: 'orders', label: 'Pedidos', icon: Package },
                         { id: 'wishlist', label: 'Deseos', icon: Heart },
+                        { id: 'missions', label: 'Misiones', icon: Sparkles }, // [NEW]
                     ].map(tab => (
                         <button
                             key={tab.id}
