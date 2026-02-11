@@ -196,6 +196,9 @@ const App: React.FC = () => {
   const [userMissions, setUserMissions] = useState<Record<string, UserMission>>({});
   const [viewedProductsSession] = useState<Set<string>>(new Set()); // Track unique views this session
 
+  // Calculate if there are any completed but unclaimed missions
+  const hasUnclaimedMissions = Object.values(userMissions).some(m => m.completed && !m.claimed);
+
   // Category Scroll
 
   // Category Scroll
@@ -782,10 +785,7 @@ const App: React.FC = () => {
         supabase.from('user_missions').upsert(dbPayload, { onConflict: 'user_id, mission_id' })
           .then(({ error }) => { if (error) console.error("Mission sync error", error); });
 
-        if (isCompleted && !current.completed) {
-          alert(`✨ ¡Misión Completada! ✨\nHas completado: ${missionDef.title}`);
-          // Optional: Play sound or show toast
-        }
+        // Alert removed as per user request
       }
 
       return { ...prev, [missionId]: nextMissionState };
@@ -1579,6 +1579,7 @@ const App: React.FC = () => {
         onOpenSubscription={handleSubscriptionClick}
         isMenuOpen={isMobileMenuOpen}
         setIsMenuOpen={setIsMobileMenuOpen}
+        hasUnclaimedMissions={hasUnclaimedMissions}
       />
 
 
@@ -1667,6 +1668,7 @@ const App: React.FC = () => {
         userMissions={userMissions}
         userCoins={userCoins}
         onClaimReward={claimReward}
+        hasUnclaimedMissions={hasUnclaimedMissions}
       />
 
       <SharedWishlistModal

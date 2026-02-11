@@ -22,6 +22,7 @@ interface ProfileModalProps {
     userMissions: Record<string, UserMission>;
     userCoins: number;
     onClaimReward: (missionId: string) => void;
+    hasUnclaimedMissions?: boolean; // [NEW]
 }
 
 // Helper for currency if not available
@@ -34,7 +35,7 @@ const formatMoney = (amount: number) => {
 
 const ProfileModal: React.FC<ProfileModalProps> = ({
     isOpen, onClose, user, setUser, onLogout, products, favorites, toggleFavorite, onOpenSubscription, onAddToCart,
-    initialTab = 'profile', missions, userMissions, userCoins, onClaimReward
+    initialTab = 'profile', missions, userMissions, userCoins, onClaimReward, hasUnclaimedMissions = false
 }) => {
     const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'missions'>('profile');
     const [orders, setOrders] = useState<any[]>([]);
@@ -168,17 +169,23 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                         { id: 'profile', label: 'Mi Perfil', icon: UserIcon },
                         { id: 'orders', label: 'Mis Pedidos', icon: Package },
                         { id: 'wishlist', label: 'Lista de Deseos', icon: Heart },
-                        { id: 'missions', label: 'Misiones', icon: Sparkles }, // [NEW]
+                        { id: 'missions', label: 'Misiones', icon: Sparkles, hasNotification: hasUnclaimedMissions }, // [MODIFIED]
                     ].map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-3 p-4 rounded-2xl transition-all whitespace-nowrap ${activeTab === tab.id
+                            className={`flex items-center gap-3 p-4 rounded-2xl transition-all whitespace-nowrap relative ${activeTab === tab.id
                                 ? `bg-[#3A332F] text-white shadow-lg`
                                 : 'hover:bg-white/60 text-[#3A332F]/70'
                                 }`}
                         >
-                            <tab.icon size={20} className={activeTab === tab.id ? 'text-[#D4AF37]' : ''} />
+                            <div className="relative">
+                                <tab.icon size={20} className={activeTab === tab.id ? 'text-[#D4AF37]' : ''} />
+                                {/* Tab Notification Dot */}
+                                {(tab as any).hasNotification && (
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                                )}
+                            </div>
                             <span className="font-ghibli-title text-base">{tab.label}</span>
                         </button>
                     ))}

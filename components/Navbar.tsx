@@ -15,6 +15,7 @@ interface NavbarProps {
   onOpenSubscription: () => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
+  hasUnclaimedMissions?: boolean; // [NEW]
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -27,7 +28,8 @@ const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   onOpenSubscription,
   isMenuOpen,
-  setIsMenuOpen
+  setIsMenuOpen,
+  hasUnclaimedMissions = false // [NEW]
 }) => {
   const navItems = [
     { id: 'inicio', label: 'Inicio' },
@@ -115,14 +117,30 @@ const Navbar: React.FC<NavbarProps> = ({
                 )}
               </button>
 
-              <button
-                onClick={user.isRegistered ? onOpenProfile : onOpenAuth}
-                className="relative p-1 rounded-full transition-all duration-500 group"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-[#3A332F] rounded-full flex items-center justify-center text-white overflow-hidden border-2 border-white relative z-0">
-                  <img src={user.photo} className="w-full h-full object-cover" alt="Profile" />
+              {user.isRegistered ? (
+                <div className="relative group">
+                  <div
+                    className="w-10 h-10 rounded-full border-2 overflow-hidden cursor-pointer transition-transform active:scale-95 shadow-md flex items-center justify-center bg-[#FDF5E6]"
+                    style={{ borderColor: user.membership === 'gold' ? '#C14B3A' : user.membership === 'founder' ? '#D4AF37' : '#3A332F' }}
+                    onClick={onOpenProfile}
+                  >
+                    <img src={user.photo} alt="Profile" className="w-full h-full object-cover" />
+                  </div>
+                  {/* Notification Dot */}
+                  {hasUnclaimedMissions && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse pointer-events-none"></span>
+                  )}
                 </div>
-              </button>
+              ) : (
+                <button
+                  onClick={onOpenAuth}
+                  className="relative p-1 rounded-full transition-all duration-500 group"
+                >
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-[#3A332F] rounded-full flex items-center justify-center text-white overflow-hidden border-2 border-white relative z-0">
+                    <UserIcon size={24} />
+                  </div>
+                </button>
+              )}
 
 
               <button className="lg:hidden p-2 text-[#3A332F]" onClick={() => setIsMenuOpen(!isMenuOpen)}>
