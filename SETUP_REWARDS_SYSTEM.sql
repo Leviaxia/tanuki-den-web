@@ -36,8 +36,7 @@ drop policy if exists "Enable update access for own rewards" on public.user_rewa
 create policy "Enable update access for own rewards" on public.user_rewards for update using (auth.uid() = user_id);
 
 insert into public.rewards (id, title, description, cost, tier, type, value, stock) values
-('bg_tanuki', 'Fondo de Perfil Tanuki', 'Fondo exclusivo para tu perfil.', 100, 1, 'digital', '{"asset": "bg_tanuki_v1"}', null),
-('frame_special', 'Marco Especial de Avatar', 'Destaca tu avatar con un marco único.', 100, 1, 'digital', '{"asset": "frame_v1"}', null),
+-- Tier 1: Engagement
 ('coupon_5k', 'Cupón $5.000 (Min $120k)', 'Descuento en compras superiores a $120.000cop.', 250, 1, 'coupon', '{"discount": 5000, "min_purchase": 120000, "code_prefix": "TNK5"}', null),
 ('shipping_50', 'Envío al 50% (Min $150k)', 'La mitad del envío va por nuestra cuenta.', 600, 2, 'coupon', '{"discount_type": "shipping_percent", "value": 50, "min_purchase": 150000, "code_prefix": "SHIP50"}', null),
 ('coupon_15k', 'Cupón $15.000 (Min $180k)', 'Gran descuento para grandes tesoros.', 800, 2, 'coupon', '{"discount": 15000, "min_purchase": 180000, "code_prefix": "TNK15"}', null),
@@ -49,4 +48,4 @@ on conflict (id) do update set
     cost = excluded.cost,
     value = excluded.value;
 
-delete from public.rewards where id in ('early_access', 'figure_limited');
+delete from public.rewards where id in ('early_access', 'figure_limited', 'bg_tanuki', 'frame_special');
