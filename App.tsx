@@ -807,14 +807,13 @@ const App: React.FC = () => {
           mission_id: missionId,
           progress: newProgress,
           completed: isCompleted,
+          claimed: current.claimed, // EXPLICITLY preserve claimed status
           updated_at: new Date().toISOString()
         };
 
         // Upsert
         supabase.from('user_missions').upsert(dbPayload, { onConflict: 'user_id, mission_id' })
           .then(({ error }) => { if (error) console.error("Mission sync error", error); });
-
-        // Alert removed as per user request
       }
 
       return { ...prev, [missionId]: nextMissionState };
@@ -828,15 +827,26 @@ const App: React.FC = () => {
 
     try {
       // 1. Update Profile Coins
-      const { error: coinsError } = await supabase.rpc('increment_coins', { x: missionDef.reward, user_id: user.id });
-      // Note: Needs RPC or two-step get/update. 
       // Fallback to simple update for now:
       const newCoins = userCoins + missionDef.reward;
-      await supabase.from('profiles').update({ coins: newCoins }).eq('id', user.id);
+
+      const { error: coinsError } = await supabase.from('profiles').update({ coins: newCoins }).eq('id', user.id);
+      if (coinsError) throw coinsError;
+
       setUserCoins(newCoins);
 
-      // 2. Mark Claimed
-      await supabase.from('user_missions').update({ claimed: true }).eq('user_id', user.id).eq('mission_id', missionId);
+      // 2. Mark Claimed - Use UPSERT to be safe and ensure persistence
+      const payload = {
+        user_id: user.id,
+        mission_id: missionId,
+        progress: mission.progress,
+        completed: true,
+        claimed: true, // EXPLICITLY SET TRUE
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: claimError } = await supabase.from('user_missions').upsert(payload, { onConflict: 'user_id, mission_id' });
+      if (claimError) throw claimError;
 
       setUserMissions(prev => ({
         ...prev,
@@ -848,6 +858,7 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Error claiming reward:", error);
       alert("Error al reclamar recompensa. Inténtalo de nuevo.");
+      // Rollback optimistic coins if needed, but for now simple alert
     }
   };
 
