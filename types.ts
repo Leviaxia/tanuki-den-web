@@ -71,3 +71,24 @@ export interface UserMission {
   completed: boolean;
   claimed: boolean;
 }
+
+export interface Reward {
+  id: string;
+  title: string;
+  description: string;
+  cost: number;
+  tier: 1 | 2 | 3 | 4;
+  type: 'digital' | 'coupon' | 'feature' | 'physical';
+  value: any; // Flexible JSON structure
+  stock?: number | null;
+}
+
+export interface UserReward {
+  id: string; // uuid
+  user_id: string;
+  reward_id: string;
+  status: 'active' | 'used' | 'expired';
+  redeemed_at: string;
+  expires_at?: string;
+  coupon_code?: string; // Derived from value logic if applicable
+}

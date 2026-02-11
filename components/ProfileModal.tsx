@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Camera, Edit3, Mail, MapPin, Phone, Package, Heart, User as UserIcon, LogOut, ChevronRight, ExternalLink, Share2, Sparkles, Trophy, CheckCircle2, Lock, Flame } from 'lucide-react';
-import { User, Product, Mission, UserMission } from '../types';
+import { X, Camera, Edit3, Mail, MapPin, Phone, Package, Heart, User as UserIcon, LogOut, ChevronRight, ExternalLink, Share2, Sparkles, Trophy, CheckCircle2, Lock, Flame, Gift, Ticket } from 'lucide-react';
+import { User, Product, Mission, UserMission, Reward, UserReward } from '../types';
 import { supabase } from '../src/lib/supabase';
 import ProductCard from './ProductCard'; // Assuming you have this or need to move logic
 import { formatCurrency } from '../src/lib/utils'; // You might need to move utils or duplicate formatCurrency
@@ -23,6 +23,10 @@ interface ProfileModalProps {
     userCoins: number;
     onClaimReward: (missionId: string) => void;
     hasUnclaimedMissions?: boolean; // [NEW]
+    // Rewards Props
+    rewards: Reward[];
+    userRewards: UserReward[];
+    onPurchaseReward: (reward: Reward) => void;
 }
 
 // Helper for currency if not available
@@ -35,9 +39,11 @@ const formatMoney = (amount: number) => {
 
 const ProfileModal: React.FC<ProfileModalProps> = ({
     isOpen, onClose, user, setUser, onLogout, products, favorites, toggleFavorite, onOpenSubscription, onAddToCart,
-    initialTab = 'profile', missions, userMissions, userCoins, onClaimReward, hasUnclaimedMissions = false
+    initialTab = 'profile', missions, userMissions, userCoins, onClaimReward, hasUnclaimedMissions = false,
+    rewards, userRewards, onPurchaseReward
 }) => {
     const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'missions'>('profile');
+    const [missionSubTab, setMissionSubTab] = useState<'challenges' | 'store'>('challenges');
     const [orders, setOrders] = useState<any[]>([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
 
@@ -456,6 +462,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
                     {activeTab === 'missions' && (
                         <div className="space-y-6 animate-slide-in h-full flex flex-col">
+                            {/* Header */}
                             <div className="flex justify-between items-center bg-[#D4AF37]/10 p-4 rounded-xl border border-[#D4AF37]/20">
                                 <div>
                                     <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F]">Misiones del Clan</h2>
@@ -470,92 +477,201 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                 </div>
                             </div>
 
+                            {/* Sub-Tabs */}
+                            <div className="flex p-1 bg-[#3A332F]/5 rounded-xl">
+                                <button
+                                    onClick={() => setMissionSubTab('challenges')}
+                                    className={`flex-1 py-2 rounded-lg text-xs md:text-sm font-bold uppercase tracking-widest transition-all ${missionSubTab === 'challenges' ? 'bg-[#3A332F] text-white shadow-md' : 'text-[#3A332F]/60'}`}
+                                >
+                                    Desafíos
+                                </button>
+                                <button
+                                    onClick={() => setMissionSubTab('store')}
+                                    className={`flex-1 py-2 rounded-lg text-xs md:text-sm font-bold uppercase tracking-widest transition-all ${missionSubTab === 'store' ? 'bg-[#C14B3A] text-white shadow-md' : 'text-[#3A332F]/60'}`}
+                                >
+                                    Tienda de Tesoros
+                                </button>
+                            </div>
+
+                            {/* Content Wrapper */}
                             <div className="space-y-4 overflow-y-auto pb-4 scrollbar-hide flex-1">
-                                {missions.map(mission => {
-                                    const userMission = userMissions[mission.id] || { progress: 0, completed: false, claimed: false };
-                                    const progressPercent = Math.min(100, (userMission.progress / mission.target) * 100);
+                                {missionSubTab === 'challenges' ? (
+                                    missions.map(mission => {
+                                        const userMission = userMissions[mission.id] || { progress: 0, completed: false, claimed: false };
+                                        const progressPercent = Math.min(100, (userMission.progress / mission.target) * 100);
 
-                                    return (
-                                        <div key={mission.id} className={`relative bg-white rounded-[20px] p-4 md:p-5 border-2 transition-all duration-300 group ${userMission.completed ? 'border-[#D4AF37] shadow-md' : 'border-[#3A332F]/5 hover:border-[#3A332F]/20'}`}>
-                                            <div className="flex items-center gap-4">
-                                                {/* Medal/Icon */}
-                                                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center border-2 flex-shrink-0 transition-all duration-500 overflow-hidden relative ${userMission.completed ? 'bg-[#D4AF37] border-[#FDF5E6] rotate-3' : 'bg-[#3A332F]/5 border-[#3A332F]/5 grayscale'}`}>
-                                                    {userMission.completed && <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/30 to-white/0 animate-shine"></div>}
-                                                    {getMissionIcon(mission.icon, userMission.completed)}
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="flex-1 space-y-2">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <h3 className={`font-ghibli-title text-base md:text-lg uppercase ${userMission.completed ? 'text-[#D4AF37]' : 'text-[#3A332F]'}`}>{mission.title}</h3>
-                                                            <p className="text-[#8C8279] text-xs font-bold leading-tight">{mission.description}</p>
-                                                        </div>
-                                                        {userMission.claimed ? (
-                                                            <span className="bg-[#81C784]/20 text-[#2E7D32] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
-                                                                <CheckCircle2 size={10} /> Listo
-                                                            </span>
-                                                        ) : userMission.completed ? (
-                                                            <button
-                                                                onClick={() => onClaimReward(mission.id)}
-                                                                className="bg-[#D4AF37] text-white px-4 py-1.5 rounded-full font-ghibli-title text-xs uppercase tracking-widest shadow-md hover:scale-105 active:scale-95 transition-all animate-pulse"
-                                                            >
-                                                                Reclamar {mission.reward} 🪙
-                                                            </button>
-                                                        ) : (
-                                                            <span className="bg-[#3A332F]/5 text-[#3A332F]/40 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
-                                                                <Lock size={10} /> {mission.reward} 🪙
-                                                            </span>
-                                                        )}
+                                        return (
+                                            <div key={mission.id} className={`relative bg-white rounded-[20px] p-4 md:p-5 border-2 transition-all duration-300 group ${userMission.completed ? 'border-[#D4AF37] shadow-md' : 'border-[#3A332F]/5 hover:border-[#3A332F]/20'}`}>
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center border-2 flex-shrink-0 transition-all duration-500 overflow-hidden relative ${userMission.completed ? 'bg-[#D4AF37] border-[#FDF5E6] rotate-3' : 'bg-[#3A332F]/5 border-[#3A332F]/5 grayscale'}`}>
+                                                        {userMission.completed && <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/30 to-white/0 animate-shine"></div>}
+                                                        {getMissionIcon(mission.icon, userMission.completed)}
                                                     </div>
-
-                                                    {/* Progress Bar */}
-                                                    <div className="space-y-1">
-                                                        <div className="flex justify-between text-[10px] font-black uppercase text-[#3A332F]/40 tracking-wider">
-                                                            <span>Progreso</span>
-                                                            <span>{userMission.progress} / {mission.target}</span>
+                                                    <div className="flex-1 space-y-2">
+                                                        <div className="flex justify-between items-start">
+                                                            <div>
+                                                                <h3 className={`font-ghibli-title text-base md:text-lg uppercase ${userMission.completed ? 'text-[#D4AF37]' : 'text-[#3A332F]'}`}>{mission.title}</h3>
+                                                                <p className="text-[#8C8279] text-xs font-bold leading-tight">{mission.description}</p>
+                                                            </div>
+                                                            {userMission.claimed ? (
+                                                                <span className="bg-[#81C784]/20 text-[#2E7D32] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                                                                    <CheckCircle2 size={10} /> Listo
+                                                                </span>
+                                                            ) : userMission.completed ? (
+                                                                <button
+                                                                    onClick={() => onClaimReward(mission.id)}
+                                                                    className="bg-[#D4AF37] text-white px-4 py-1.5 rounded-full font-ghibli-title text-xs uppercase tracking-widest shadow-md hover:scale-105 active:scale-95 transition-all animate-pulse"
+                                                                >
+                                                                    Reclamar {mission.reward} 🪙
+                                                                </button>
+                                                            ) : (
+                                                                <span className="bg-[#3A332F]/5 text-[#3A332F]/40 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                                                                    <Lock size={10} /> {mission.reward} 🪙
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                        <div className="h-3 bg-[#3A332F]/5 rounded-full overflow-hidden border border-[#3A332F]/5">
-                                                            <div
-                                                                className={`h-full rounded-full transition-all duration-1000 ease-out relative ${userMission.completed ? 'bg-[#D4AF37]' : 'bg-[#C14B3A]'}`}
-                                                                style={{ width: `${progressPercent}%` }}
-                                                            >
-                                                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')] opacity-20"></div>
+                                                        <div className="space-y-1">
+                                                            <div className="flex justify-between text-[10px] font-black uppercase text-[#3A332F]/40 tracking-wider">
+                                                                <span>Progreso</span>
+                                                                <span>{userMission.progress} / {mission.target}</span>
+                                                            </div>
+                                                            <div className="h-3 bg-[#3A332F]/5 rounded-full overflow-hidden border border-[#3A332F]/5">
+                                                                <div
+                                                                    className={`h-full rounded-full transition-all duration-1000 ease-out relative ${userMission.completed ? 'bg-[#D4AF37]' : 'bg-[#C14B3A]'}`}
+                                                                    style={{ width: `${progressPercent}%` }}
+                                                                >
+                                                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')] opacity-20"></div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="space-y-6">
+                                        {/* REWARD STORE GRID */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {rewards.map(reward => {
+                                                const canAfford = userCoins >= reward.cost;
+                                                const isStockLow = reward.stock !== null && reward.stock < 10;
+                                                const isOutOfStock = reward.stock !== null && reward.stock <= 0;
+                                                const alreadyOwned = userRewards.some(ur => ur.reward_id === reward.id && ur.status === 'active');
+
+                                                return (
+                                                    <div key={reward.id} className={`bg-white rounded-[20px] p-4 border-2 flex flex-col gap-3 relative overflow-hidden group transition-all ${canAfford && !isOutOfStock ? 'hover:border-[#C14B3A] hover:shadow-lg' : 'opacity-80'}`}>
+                                                        {alreadyOwned && reward.type !== 'coupon' && (
+                                                            <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center backdrop-blur-[1px]">
+                                                                <span className="bg-[#81C784] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Adquirido</span>
+                                                            </div>
+                                                        )}
+
+                                                        {isOutOfStock && (
+                                                            <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center backdrop-blur-[1px]">
+                                                                <span className="bg-[#3A332F] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Agotado</span>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex justify-between items-start">
+                                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${reward.tier === 4 ? 'bg-[#D4AF37] border-white text-white' : 'bg-[#FDF5E6] border-[#E6D5B8] text-[#C14B3A]'}`}>
+                                                                {reward.type === 'coupon' ? <Ticket size={20} /> : reward.type === 'digital' ? <Sparkles size={20} /> : <Gift size={20} />}
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className={`font-black text-lg ${canAfford ? 'text-[#C14B3A]' : 'text-[#3A332F]/40'}`}>
+                                                                    {reward.cost} 🪙
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex-1">
+                                                            <h4 className="font-ghibli-title text-sm text-[#3A332F] leading-tight mb-1">{reward.title}</h4>
+                                                            <p className="text-[10px] text-[#8C8279] font-bold leading-tight">{reward.description}</p>
+                                                        </div>
+
+                                                        <button
+                                                            disabled={!canAfford || isOutOfStock || (alreadyOwned && reward.type !== 'coupon')}
+                                                            onClick={() => onPurchaseReward(reward)}
+                                                            className={`w-full py-2 rounded-full font-ghibli-title text-[10px] uppercase tracking-widest transition-all ${canAfford && !isOutOfStock
+                                                                ? 'bg-[#3A332F] text-white hover:bg-[#C14B3A] shadow-md active:scale-95'
+                                                                : 'bg-[#3A332F]/10 text-[#3A332F]/40 cursor-not-allowed'
+                                                                }`}
+                                                        >
+                                                            {canAfford ? 'Canjear' : 'Insuficiente'}
+                                                        </button>
+
+                                                        {isStockLow && !isOutOfStock && (
+                                                            <span className="absolute top-2 right-2 text-[8px] text-red-500 font-black uppercase animate-pulse">
+                                                                ¡Quedan {reward.stock}!
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                    );
-                                })}
+
+                                        {/* INVENTORY PREVIEW (Active Coupons) */}
+                                        {userRewards.length > 0 && (
+                                            <div className="border-t border-[#3A332F]/10 pt-4">
+                                                <h3 className="font-ghibli-title text-sm text-[#3A332F] mb-3 uppercase">Tus Recompensas Activas</h3>
+                                                <div className="space-y-2">
+                                                    {userRewards.filter(ur => ur.status === 'active').map(ur => {
+                                                        const r = rewards.find(rew => rew.id === ur.reward_id);
+                                                        if (!r) return null;
+                                                        return (
+                                                            <div key={ur.id} className="flex justify-between items-center bg-[#FDF5E6] p-3 rounded-xl border border-[#D4AF37]/30">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/20">
+                                                                        <Ticket size={14} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="font-bold text-[#3A332F] text-xs">{r.title}</p>
+                                                                        <p className="text-[9px] text-[#8C8279]">Vence: {ur.expires_at ? new Date(ur.expires_at).toLocaleDateString() : 'Nunca'}</p>
+                                                                    </div>
+                                                                </div>
+                                                                {r.type === 'coupon' && (
+                                                                    <div className="px-2 py-1 bg-white rounded border border-dashed border-[#3A332F]/20 text-[10px] font-mono text-[#3A332F]">
+                                                                        {r.value.code_prefix ? `${r.value.code_prefix}-${ur.id.slice(0, 4).toUpperCase()}` : 'CODE-XYZ'}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {userRewards.filter(ur => ur.status === 'active').length === 0 && (
+                                                        <p className="text-center text-[10px] text-[#3A332F]/40 italic">No tienes recompensas activas.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
-                </div>
 
-                {/* Mobile Bottom Navigation Bar */}
-                <div className="md:hidden absolute bottom-0 left-0 right-0 bg-white border-t border-[#3A332F]/10 p-2 flex justify-around items-center z-30 pb- safe-area-bottom">
-                    {[
-                        { id: 'profile', label: 'Perfil', icon: UserIcon },
-                        { id: 'orders', label: 'Pedidos', icon: Package },
-                        { id: 'wishlist', label: 'Deseos', icon: Heart },
-                        { id: 'missions', label: 'Misiones', icon: Sparkles }, // [NEW]
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-full ${activeTab === tab.id
-                                ? 'text-[#C14B3A]'
-                                : 'text-[#3A332F]/60'
-                                }`}
-                        >
-                            <tab.icon size={20} className={activeTab === tab.id ? 'fill-current' : ''} />
-                            <span className="font-ghibli-title text-[10px] uppercase tracking-wider">{tab.label}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+                    {/* Mobile Bottom Navigation Bar */}
+                    <div className="md:hidden absolute bottom-0 left-0 right-0 bg-white border-t border-[#3A332F]/10 p-2 flex justify-around items-center z-30 pb- safe-area-bottom">
+                        {[
+                            { id: 'profile', label: 'Perfil', icon: UserIcon },
+                            { id: 'orders', label: 'Pedidos', icon: Package },
+                            { id: 'wishlist', label: 'Deseos', icon: Heart },
+                            { id: 'missions', label: 'Misiones', icon: Sparkles }, // [NEW]
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-full ${activeTab === tab.id
+                                    ? 'text-[#C14B3A]'
+                                    : 'text-[#3A332F]/60'
+                                    }`}
+                            >
+                                <tab.icon size={20} className={activeTab === tab.id ? 'fill-current' : ''} />
+                                <span className="font-ghibli-title text-[10px] uppercase tracking-wider">{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div >
+            </div >
         </div>
     );
 };

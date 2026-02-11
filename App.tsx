@@ -14,7 +14,7 @@ import AuthModal from './components/AuthModal'; // [RESTORED]
 import CheckoutModal from './components/CheckoutModal'; // [RESTORED]
 import ShareModal from './components/ShareModal'; // [RESTORED]
 import { PRODUCTS as INITIAL_PRODUCTS, heroText, MISSIONS } from './constants';
-import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission } from './types';
+import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission, Reward, UserReward } from './types';
 
 import { supabase } from './src/lib/supabase';
 import { formatCurrency } from './src/lib/utils';
@@ -195,6 +195,9 @@ const App: React.FC = () => {
   const [userCoins, setUserCoins] = useState(0);
   const [userMissions, setUserMissions] = useState<Record<string, UserMission>>({});
   const [viewedProductsSession] = useState<Set<string>>(new Set()); // Track unique views this session
+  // REWARDS STATE
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [userRewards, setUserRewards] = useState<UserReward[]>([]);
 
   // Calculate if there are any completed but unclaimed missions
   const hasUnclaimedMissions = Object.values(userMissions).some(m => m.completed && !m.claimed);
@@ -742,6 +745,13 @@ const App: React.FC = () => {
         });
         setUserMissions(missionsMap);
 
+        // Fetch Rewards Catalog & Inventory
+        const { data: rewardsData } = await supabase.from('rewards').select('*').order('cost', { ascending: true });
+        if (rewardsData) setRewards(rewardsData);
+
+        const { data: userRewardsData } = await supabase.from('user_rewards').select('*').eq('user_id', user.id);
+        if (userRewardsData) setUserRewards(userRewardsData);
+
         // CHECK REGISTRATION MISSION
         if (user.isRegistered) {
           updateMissionProgress('first_step', 1, true);
@@ -819,6 +829,52 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Error claiming reward:", error);
       alert("Error al reclamar recompensa. Inténtalo de nuevo.");
+    }
+  };
+
+  const handlePurchaseReward = async (reward: Reward) => {
+    if (userCoins < reward.cost) {
+      alert("No tienes suficientes monedas.");
+      return;
+    }
+
+    if (reward.stock !== null && reward.stock <= 0) {
+      alert("¡Agotado!");
+      return;
+    }
+
+    // Optimistic Update
+    setUserCoins(prev => prev - reward.cost);
+
+    // 1. Deduct Coins (Update Profile)
+    const { error: profileError } = await supabase.from('profiles').update({ coins: userCoins - reward.cost }).eq('id', user.id);
+
+    if (profileError) {
+      console.error("Error updating coins", profileError);
+      setUserCoins(prev => prev + reward.cost); // Rollback
+      return;
+    }
+
+    // 2. Add to User Rewards
+    // Calculate expiry if needed (e.g. 1 year from now)
+    const expiresAt = new Date();
+    expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
+    const { data: newReward, error: rewardError } = await supabase.from('user_rewards').insert({
+      user_id: user.id,
+      reward_id: reward.id,
+      status: 'active',
+      redeemed_at: null, // Not redeemed yet, just purchased/acquired
+      expires_at: expiresAt.toISOString()
+    }).select().single();
+
+    if (rewardError) {
+      console.error("Error adding reward", rewardError);
+      setUserCoins(prev => prev + reward.cost); // Rollback
+      alert("Error al procesar la recompensa.");
+    } else if (newReward) {
+      setUserRewards(prev => [...prev, newReward]);
+      alert(`¡Has adquirido ${reward.title}!`);
     }
   };
 
@@ -1669,6 +1725,10 @@ const App: React.FC = () => {
         userCoins={userCoins}
         onClaimReward={claimReward}
         hasUnclaimedMissions={hasUnclaimedMissions}
+        // Rewards Integration
+        rewards={rewards}
+        userRewards={userRewards}
+        onPurchaseReward={handlePurchaseReward}
       />
 
       <SharedWishlistModal
