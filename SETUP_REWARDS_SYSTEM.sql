@@ -67,5 +67,9 @@ insert into public.rewards (id, title, description, cost, tier, type, value, sto
 on conflict (id) do update set 
     title = excluded.title,
     description = excluded.description,
+
     cost = excluded.cost,
     value = excluded.value;
+
+-- 5. Cleanup Removed Rewards (Optional, for updates)
+delete from public.rewards where id in ('early_access', 'figure_limited');
