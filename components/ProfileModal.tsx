@@ -75,15 +75,18 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
             // Ideally we reset on open if initialTab passed
             if (initialTab) setActiveTab(initialTab);
 
-            // Prevent background scrolling
+            // Prevent background scrolling - STRONGER LOCK
             document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden'; // Lock HTML too
             // Fetch orders when modal opens
             fetchOrders();
         } else {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
         }
         return () => {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
         }
     }, [isOpen, user.id, initialTab]);
 
@@ -402,7 +405,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                                     <img src={product.image} className="w-20 h-20 rounded-xl object-cover" alt={product.name} />
                                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                                                         <h4 className="font-bold text-[#3A332F] text-sm truncate mb-1">{product.name}</h4>
-                                                        <p className="text-[#C14B3A] font-black text-sm">${formatMoney(product.price)}</p>
+                                                        <p className="text-[#C14B3A] font-black text-base md:text-sm">${formatMoney(product.price)}</p>
 
                                                         <div className="mt-2 flex gap-2">
                                                             <button

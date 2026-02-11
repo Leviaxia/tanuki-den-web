@@ -252,6 +252,16 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   }, [activeTab]);
 
+  // Listen for Cart Clear Event (from CheckoutSuccess)
+  useEffect(() => {
+    const handleCartClear = () => {
+      setCart([]);
+      localStorage.removeItem(`tanuki_cart_${user.id}`);
+    };
+    window.addEventListener('tanuki_cart_clear', handleCartClear);
+    return () => window.removeEventListener('tanuki_cart_clear', handleCartClear);
+  }, [user.id]);
+
   // Fetch Collections
   useEffect(() => {
     const fetchCollections = async () => {
