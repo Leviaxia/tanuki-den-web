@@ -187,6 +187,20 @@ const App: React.FC = () => {
 
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
+  // Category Scroll
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      const { current } = categoryScrollRef;
+      const scrollAmount = 300;
+      if (direction === 'left') {
+        current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      } else {
+        current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }
+  };
 
   // Dynamic Collections State
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -923,18 +937,39 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
-                {['All', ...Array.from(new Set(products.map(p => p.category))).filter(c => c !== 'All'), 'Favoritos'].map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`flex-shrink-0 px-8 py-3 rounded-full text-[10px] md:text-sm font-ghibli-title uppercase border-4 transition-all snap-start flex items-center gap-2 ${activeCategory === cat ? 'bg-[#C14B3A] text-white border-[#C14B3A] shadow-lg shadow-[#C14B3A]/30' : 'bg-white text-[#D4AF37] border-[#FDF5E6]'
-                      }`}
-                  >
-                    {cat === 'Favoritos' && <Heart size={14} fill={activeCategory === 'Favoritos' ? 'white' : 'none'} />}
-                    {cat}
-                  </button>
-                ))}
+              <div className="relative group">
+                {/* Left Button */}
+                <button
+                  onClick={() => scrollCategories('left')}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg text-[#3A332F] opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0 -ml-4 hidden md:block"
+                >
+                  <ChevronRight className="h-6 w-6 rotate-180" />
+                </button>
+
+                <div
+                  ref={categoryScrollRef}
+                  className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x px-1"
+                >
+                  {['All', ...Array.from(new Set(products.map(p => p.category))).filter(c => c !== 'All'), 'Favoritos'].map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`flex-shrink-0 px-8 py-3 rounded-full text-[10px] md:text-sm font-ghibli-title uppercase border-4 transition-all snap-start flex items-center gap-2 ${activeCategory === cat ? 'bg-[#C14B3A] text-white border-[#C14B3A] shadow-lg shadow-[#C14B3A]/30' : 'bg-white text-[#D4AF37] border-[#FDF5E6]'
+                        }`}
+                    >
+                      {cat === 'Favoritos' && <Heart size={14} fill={activeCategory === 'Favoritos' ? 'white' : 'none'} />}
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Right Button */}
+                <button
+                  onClick={() => scrollCategories('right')}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg text-[#3A332F] opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0 -mr-4 hidden md:block"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 lg:gap-12">
