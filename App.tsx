@@ -915,7 +915,8 @@ const App: React.FC = () => {
                     <option value="price-asc">Precio: Menor a Mayor</option>
                     <option value="price-desc">Precio: Mayor a Menor</option>
                     <option value="alpha">Alfabético (A-Z)</option>
-                    <option value="size">Tamaño (Escala)</option>
+                    <option value="size-desc">Tamaño: Mayor a Menor</option>
+                    <option value="size-asc">Tamaño: Menor a Mayor</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-[#3A332F]/50">
                     <ChevronRight className="h-4 w-4 rotate-90" />
@@ -957,18 +958,37 @@ const App: React.FC = () => {
                       return b.price - a.price;
                     case 'alpha':
                       return a.name.localeCompare(b.name);
-                    case 'size': {
-                      // Extract scale (1/X) from name or description
+                    case 'size-desc':
+                    case 'size-asc': {
+                      // 1. CARDS ALWAYS LAST
+                      const isCardA = a.category.toLowerCase().includes('cartas') || a.category.toLowerCase().includes('tcg') || a.name.toLowerCase().includes('carta');
+                      const isCardB = b.category.toLowerCase().includes('cartas') || b.category.toLowerCase().includes('tcg') || b.name.toLowerCase().includes('carta');
+
+                      if (isCardA && !isCardB) return 1;
+                      if (!isCardA && isCardB) return -1;
+                      if (isCardA && isCardB) return 0;
+
+                      // 2. SCALE LOGIC
+                      // Extract scale (1/X) to number (0.14, 0.25). 
+                      // Or "Xcm" -> number.
                       const getScale = (str: string) => {
-                        const match = str.match(/1\/(\d+)/);
-                        return match ? 1 / parseInt(match[1]) : 0;
+                        const scaleMatch = str.match(/1\/(\d+)/);
+                        if (scaleMatch) return 1 / parseInt(scaleMatch[1]);
+
+                        // Fallback: look for cm? (Optional, user asked for scale mainly)
+                        // const cmMatch = str.match(/(\d+)cm/);
+                        // if (cmMatch) return parseInt(cmMatch[1]) / 100; // normalize
+
+                        return 0;
                       };
+
                       const scaleA = Math.max(getScale(a.name), getScale(a.description || ''));
                       const scaleB = Math.max(getScale(b.name), getScale(b.description || ''));
-                      // If both have scale, larger scale (bigger number) first. 
-                      // 1/4 (0.25) > 1/7 (0.14).
-                      if (scaleA > 0 || scaleB > 0) return scaleB - scaleA;
-                      return 0; // Keep original order if no scale found
+
+                      // size-desc: Mayor a Menor (1/4 > 1/7) -> return B - A
+                      if (sortBy === 'size-desc') return scaleB - scaleA;
+                      // size-asc: Menor a Mayor (1/7 < 1/4) -> return A - B
+                      return scaleA - scaleB;
                     }
                     case 'relevance':
                     default:
