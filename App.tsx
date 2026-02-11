@@ -4,7 +4,7 @@ import {
   Plus, Minus, Trash2, X, Send, Sparkles, ShoppingBag, ShoppingCart,
   Star, Mail, MapPin, Instagram, Facebook, Twitter, Youtube,
   Video, Music2, Printer, ThumbsUp, ThumbsDown, ChevronRight, ArrowRight,
-  Gift, Ticket, Lock, User as UserIcon, MessageSquare, Camera, Phone, CheckCircle2, Calendar, Map, Heart, PenLine, Crown, Zap, ShieldCheck, Truck, Shield, Clock, RotateCcw, Edit3, Save, UserPlus, Upload, Image as ImageIcon, CreditCard, Wallet, Landmark, QrCode, Home, Palette, Compass, Layers, Gem, Box, MoveLeft, ArrowLeft, ZoomIn, Share2
+  Gift, Ticket, Lock, User as UserIcon, MessageSquare, Camera, Phone, CheckCircle2, Calendar, Map, Heart, PenLine, Crown, Zap, ShieldCheck, Truck, Shield, Clock, RotateCcw, Edit3, Save, UserPlus, Upload, Image as ImageIcon, CreditCard, Wallet, Landmark, QrCode, Home, Palette, Compass, Layers, Gem, Box, MoveLeft, ArrowLeft, ZoomIn, Share2, Search
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
@@ -148,6 +148,7 @@ const App: React.FC = () => {
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isRouletteOpen, setIsRouletteOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [hasSpunFirst, setHasSpunFirst] = useState(() => localStorage.getItem(`tanuki_has_spun_${user.id}`) === 'true');
@@ -875,6 +876,29 @@ const App: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-32 md:pb-24 space-y-12 section-reveal">
             <div className="space-y-6 md:space-y-8 text-center lg:text-left">
               <h2 className="text-4xl md:text-5xl lg:text-[5.5rem] font-ghibli-title text-[#3A332F] leading-[0.9] uppercase tracking-tighter">Catálogo <span className="text-[#C14B3A]">Completo</span></h2>
+
+              {/* Search Bar */}
+              <div className="relative max-w-md mx-auto lg:mx-0 w-full group !mt-8">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-[#3A332F]/50 group-focus-within:text-[#C14B3A] transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  className="block w-full pl-12 pr-4 py-4 bg-white border-4 border-[#FDF5E6] rounded-full leading-5 placeholder-[#3A332F]/30 focus:outline-none focus:bg-white focus:border-[#C14B3A] focus:ring-4 focus:ring-[#C14B3A]/10 transition-all duration-300 font-bold text-[#3A332F]"
+                  placeholder="Buscar tesoros, colecciones..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#3A332F]/30 hover:text-[#C14B3A] transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+
               <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
                 {['All', ...Array.from(new Set(products.map(p => p.category))).filter(c => c !== 'All'), 'Favoritos'].map(cat => (
                   <button
@@ -892,8 +916,14 @@ const App: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 lg:gap-12">
               {products
                 .filter(p => {
-                  if (activeCategory === 'Favoritos') return favorites.includes(p.id);
-                  return activeCategory === 'All' || p.category === activeCategory;
+                  const collectionTitle = collections.find(c => c.id === p.collectionId)?.title || '';
+                  const matchesSearch =
+                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    collectionTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+                  if (activeCategory === 'Favoritos') return favorites.includes(p.id) && matchesSearch;
+                  return (activeCategory === 'All' || p.category === activeCategory) && matchesSearch;
                 })
                 .map(product => {
                   const collectionTitle = collections.find(c => c.id === product.collectionId)?.title;
