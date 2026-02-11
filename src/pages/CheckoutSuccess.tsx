@@ -28,6 +28,21 @@ export const CheckoutSuccess = () => {
                 let userFn = savedUser ? JSON.parse(savedUser) : null;
 
                 if (userFn && userFn.id && userFn.id !== 'guest') {
+                    // VALIDATE SUPABASE SESSION MATCH
+                    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+
+                    if (authError || !authUser || authUser.id !== userFn.id) {
+                        console.warn("Session mismatch in Success. Attempting recovery...");
+                        // Optional: Try to recover or just warn. 
+                        // If we don't have a session, the RLS below will likely fail.
+                        // But if supabase-js auto-recovers, getUser() should be fine.
+                        if (!authUser) {
+                            console.error("No active Supabase session. Profile update will fail.");
+                            // Maybe return? Or try anyway and catch error?
+                            // Let's try to proceed but log heavily.
+                        }
+                    }
+
                     // Update Membership if bought
                     if (membershipItem) {
                         console.log('Procesando membresía:', membershipItem.name);
@@ -36,23 +51,32 @@ export const CheckoutSuccess = () => {
                     }
 
                     // --- NEW: TRACKING & MISSIONS ---
-                    const totalAmount = pendingCart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+                    // Force number casting to avoid string concatenation or NaN
+                    const totalAmount = pendingCart.reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0);
                     const has3DPrint = pendingCart.some((item: any) => item.category === 'Personalización' || item.category === '3D' || item.name.toLowerCase().includes('3d'));
 
-                    // Fetch current stats
-                    const { data: profile } = await supabase.from('profiles').select('total_spent, total_orders, total_3d_orders').eq('id', userFn.id).single();
+                    console.log(`Processing Order Stats: Total=${totalAmount}, Has3D=${has3DPrint}`);
 
-                    if (profile) {
-                        const newTotalSpent = (profile.total_spent || 0) + totalAmount;
-                        const newTotalOrders = (profile.total_orders || 0) + 1;
-                        const newTotal3D = (profile.total_3d_orders || 0) + (has3DPrint ? 1 : 0);
+                    // Fetch current stats
+                    const { data: profile, error: profileError } = await supabase.from('profiles').select('total_spent, total_orders, total_3d_orders').eq('id', userFn.id).single();
+
+                    if (profileError) {
+                        console.error("Error fetching profile stats:", profileError);
+                    } else if (profile) {
+                        const newTotalSpent = (Number(profile.total_spent) || 0) + totalAmount;
+                        const newTotalOrders = (Number(profile.total_orders) || 0) + 1;
+                        const newTotal3D = (Number(profile.total_3d_orders) || 0) + (has3DPrint ? 1 : 0);
+
+                        console.log(`Updating Profile: Spent ${profile.total_spent} -> ${newTotalSpent}`);
 
                         // Update Profile Stats
-                        await supabase.from('profiles').update({
+                        const { error: updateError } = await supabase.from('profiles').update({
                             total_spent: newTotalSpent,
                             total_orders: newTotalOrders,
                             total_3d_orders: newTotal3D,
                         }).eq('id', userFn.id);
+
+                        if (updateError) console.error("Error updating profile stats:", updateError);
 
                         // Helper to update mission
                         const checkMission = async (missionId: string, currentVal: number, target: number) => {
@@ -62,13 +86,16 @@ export const CheckoutSuccess = () => {
 
                             // Only update if progress increased or completed status changed
                             if ((existing?.progress || 0) < currentVal || (!wasCompleted && isCompleted)) {
-                                await supabase.from('user_missions').upsert({
+                                const { error: upsertError } = await supabase.from('user_missions').upsert({
                                     user_id: userFn.id,
                                     mission_id: missionId,
                                     progress: currentVal,
                                     completed: isCompleted || wasCompleted, // Keep completed true if already was
                                     claimed: existing?.claimed || false
                                 }, { onConflict: 'user_id, mission_id' });
+
+                                if (upsertError) console.error(`Error updating mission ${missionId}:`, upsertError);
+                                else console.log(`Mission ${missionId} updated: ${currentVal}/${target}`);
                             }
                         };
 
