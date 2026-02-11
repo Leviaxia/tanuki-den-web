@@ -1577,10 +1577,6 @@ const App: React.FC = () => {
         }}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenSubscription={handleSubscriptionClick}
-        onOpenMissions={() => {
-          setProfileInitialTab('missions');
-          setIsProfileModalOpen(true);
-        }}
         isMenuOpen={isMobileMenuOpen}
         setIsMenuOpen={setIsMobileMenuOpen}
       />
