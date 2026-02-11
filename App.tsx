@@ -4,7 +4,7 @@ import {
   Plus, Minus, Trash2, X, Send, Sparkles, ShoppingBag, ShoppingCart,
   Star, Mail, MapPin, Instagram, Facebook, Twitter, Youtube,
   Video, Music2, Printer, ThumbsUp, ThumbsDown, ChevronRight, ArrowRight,
-  Gift, Ticket, Lock, User as UserIcon, MessageSquare, Camera, Phone, CheckCircle2, Calendar, Map, Heart, PenLine, Crown, Zap, ShieldCheck, Truck, Shield, Clock, RotateCcw, Edit3, Save, UserPlus, Upload, Image as ImageIcon, CreditCard, Wallet, Landmark, QrCode, Home, Palette, Compass, Layers, Gem, Box, MoveLeft, ArrowLeft, ZoomIn, Share2, Search
+  Gift, Ticket, Lock, User as UserIcon, MessageSquare, Camera, Phone, CheckCircle2, Calendar, Map, Heart, PenLine, Crown, Zap, ShieldCheck, Truck, Shield, Clock, RotateCcw, Edit3, Save, UserPlus, Upload, Image as ImageIcon, CreditCard, Wallet, Landmark, QrCode, Home, Palette, Compass, Layers, Gem, Box, MoveLeft, ArrowLeft, ZoomIn, Share2, Search, ArrowUpDown
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
@@ -149,6 +149,7 @@ const App: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('relevance'); // relevance, price-asc, price-desc, alpha, size
   const [isRouletteOpen, setIsRouletteOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [hasSpunFirst, setHasSpunFirst] = useState(() => localStorage.getItem(`tanuki_has_spun_${user.id}`) === 'true');
@@ -877,26 +878,49 @@ const App: React.FC = () => {
             <div className="space-y-6 md:space-y-8 text-center lg:text-left">
               <h2 className="text-4xl md:text-5xl lg:text-[5.5rem] font-ghibli-title text-[#3A332F] leading-[0.9] uppercase tracking-tighter">Catálogo <span className="text-[#C14B3A]">Completo</span></h2>
 
-              {/* Search Bar */}
-              <div className="relative max-w-md mx-auto lg:mx-0 w-full group !mt-8">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-[#3A332F]/50 group-focus-within:text-[#C14B3A] transition-colors" />
+              <div className="flex flex-col md:flex-row gap-4 items-center max-w-4xl mx-auto lg:mx-0 !mt-8">
+                {/* Search Bar */}
+                <div className="relative w-full md:flex-1 group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-[#3A332F]/50 group-focus-within:text-[#C14B3A] transition-colors" />
+                  </div>
+                  <input
+                    type="text"
+                    className="block w-full pl-12 pr-4 py-4 bg-white border-4 border-[#FDF5E6] rounded-full leading-5 placeholder-[#3A332F]/30 focus:outline-none focus:bg-white focus:border-[#C14B3A] focus:ring-4 focus:ring-[#C14B3A]/10 transition-all duration-300 font-bold text-[#3A332F]"
+                    placeholder="Buscar tesoros, colecciones..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#3A332F]/30 hover:text-[#C14B3A] transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  className="block w-full pl-12 pr-4 py-4 bg-white border-4 border-[#FDF5E6] rounded-full leading-5 placeholder-[#3A332F]/30 focus:outline-none focus:bg-white focus:border-[#C14B3A] focus:ring-4 focus:ring-[#C14B3A]/10 transition-all duration-300 font-bold text-[#3A332F]"
-                  placeholder="Buscar tesoros, colecciones..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#3A332F]/30 hover:text-[#C14B3A] transition-colors"
+
+                {/* Sort Dropdown */}
+                <div className="relative w-full md:w-auto min-w-[220px] group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <ArrowUpDown className="h-4 w-4 text-[#3A332F]/50 group-focus-within:text-[#C14B3A] transition-colors" />
+                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="block w-full pl-10 pr-10 py-4 bg-white border-4 border-[#FDF5E6] rounded-full leading-5 focus:outline-none focus:bg-white focus:border-[#C14B3A] focus:ring-4 focus:ring-[#C14B3A]/10 transition-all duration-300 font-bold text-[#3A332F] appearance-none cursor-pointer truncate"
                   >
-                    <X size={18} />
-                  </button>
-                )}
+                    <option value="relevance">Relevancia (Top)</option>
+                    <option value="price-asc">Precio: Menor a Mayor</option>
+                    <option value="price-desc">Precio: Mayor a Menor</option>
+                    <option value="alpha">Alfabético (A-Z)</option>
+                    <option value="size">Tamaño (Escala)</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-[#3A332F]/50">
+                    <ChevronRight className="h-4 w-4 rotate-90" />
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
@@ -924,6 +948,36 @@ const App: React.FC = () => {
 
                   if (activeCategory === 'Favoritos') return favorites.includes(p.id) && matchesSearch;
                   return (activeCategory === 'All' || p.category === activeCategory) && matchesSearch;
+                })
+                .sort((a, b) => {
+                  switch (sortBy) {
+                    case 'price-asc':
+                      return a.price - b.price;
+                    case 'price-desc':
+                      return b.price - a.price;
+                    case 'alpha':
+                      return a.name.localeCompare(b.name);
+                    case 'size': {
+                      // Extract scale (1/X) from name or description
+                      const getScale = (str: string) => {
+                        const match = str.match(/1\/(\d+)/);
+                        return match ? 1 / parseInt(match[1]) : 0;
+                      };
+                      const scaleA = Math.max(getScale(a.name), getScale(a.description || ''));
+                      const scaleB = Math.max(getScale(b.name), getScale(b.description || ''));
+                      // If both have scale, larger scale (bigger number) first. 
+                      // 1/4 (0.25) > 1/7 (0.14).
+                      if (scaleA > 0 || scaleB > 0) return scaleB - scaleA;
+                      return 0; // Keep original order if no scale found
+                    }
+                    case 'relevance':
+                    default:
+                      // Relevance = High Rating + Low Stock (Scarcity) + Favorites
+                      // Logic: Rating * 10 - Stock + (IsFavorite ? 5 : 0)
+                      const scoreA = (a.rating * 10) - (a.stock * 0.5) + (favorites.includes(a.id) ? 5 : 0);
+                      const scoreB = (b.rating * 10) - (b.stock * 0.5) + (favorites.includes(b.id) ? 5 : 0);
+                      return scoreB - scoreA;
+                  }
                 })
                 .map(product => {
                   const collectionTitle = collections.find(c => c.id === product.collectionId)?.title;
