@@ -16,7 +16,7 @@ const SharedWishlistModal: React.FC<SharedWishlistModalProps> = ({
     isOpen, onClose, targetUserId, products, onAddToCart
 }) => {
     const [targetUser, setTargetUser] = useState<any>(null);
-    const [wishlistProducts, setWishlistProducts] = useState<Product[]>([]);
+    const [targetFavoriteIds, setTargetFavoriteIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
@@ -45,20 +45,22 @@ const SharedWishlistModal: React.FC<SharedWishlistModalProps> = ({
                 .eq('user_id', targetUserId);
 
             if (favorites) {
-                const favIds = favorites.map(f => f.product_id);
-                // Filter products that are in the favorites list
-                const foundProducts = products.filter(p => favIds.includes(p.id));
-                setWishlistProducts(foundProducts);
-                // Select all by default for convenience? No, maybe better to let user choose.
-                // Let's select none by default explicitly.
+                const favIds = new Set(favorites.map((f: any) => f.product_id));
+                setTargetFavoriteIds(favIds);
+                // Reset selection when loading new user
                 setSelectedItems(new Set());
             }
         } catch (error) {
             console.error("Error fetching shared wishlist:", error);
+            // DEBUG: Show error to user
+            setTargetUser({ full_name: 'Error' });
         } finally {
             setLoading(false);
         }
     };
+
+    // DERIVE PRODUCTS FROM PROPS (Reactive to updates)
+    const wishlistProducts = products.filter(p => targetFavoriteIds.has(p.id));
 
     const toggleSelection = (productId: string) => {
         const newSelected = new Set(selectedItems);
@@ -82,7 +84,6 @@ const SharedWishlistModal: React.FC<SharedWishlistModalProps> = ({
         const selectedProducts = wishlistProducts.filter(p => selectedItems.has(p.id));
         onAddToCart(selectedProducts);
         onClose();
-        // You might want to open the cart here or show a success message
     };
 
     const totalPrice = wishlistProducts
@@ -130,7 +131,9 @@ const SharedWishlistModal: React.FC<SharedWishlistModalProps> = ({
                     ) : wishlistProducts.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-[#3A332F]/40 space-y-4">
                             <Heart size={64} strokeWidth={1} />
-                            <p className="font-ghibli-title text-lg">Esta lista está vacía</p>
+                            <p className="font-ghibli-title text-lg">Esta lista está vacía o es privada</p>
+                            <p className="text-xs max-w-xs text-center">Asegúrate de haber ejecutado el script SQL 'ENABLE_PUBLIC_WISHLISTS.sql' en Supabase.</p>
+                            {/* Keep the debug note just in case, or remove if confident */}
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -153,6 +156,7 @@ const SharedWishlistModal: React.FC<SharedWishlistModalProps> = ({
                                         <div
                                             key={product.id}
                                             onClick={() => toggleSelection(product.id)}
+
                                             className={`
                                                 relative p-4 rounded-[20px] transition-all cursor-pointer border-2
                                                 ${isSelected
