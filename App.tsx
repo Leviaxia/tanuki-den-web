@@ -149,7 +149,7 @@ const App: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('relevance'); // relevance, price-asc, price-desc, alpha, size
+  const [sortBy, setSortBy] = useState('default'); // default, relevance, price-asc, price-desc, alpha
   const [isRouletteOpen, setIsRouletteOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [hasSpunFirst, setHasSpunFirst] = useState(() => localStorage.getItem(`tanuki_has_spun_${user.id}`) === 'true');
@@ -911,12 +911,11 @@ const App: React.FC = () => {
                     onChange={(e) => setSortBy(e.target.value)}
                     className="block w-full pl-10 pr-10 py-4 bg-white border-4 border-[#FDF5E6] rounded-full leading-5 focus:outline-none focus:bg-white focus:border-[#C14B3A] focus:ring-4 focus:ring-[#C14B3A]/10 transition-all duration-300 font-bold text-[#3A332F] appearance-none cursor-pointer truncate"
                   >
+                    <option value="default">Predeterminado</option>
                     <option value="relevance">Relevancia (Top)</option>
                     <option value="price-asc">Precio: Menor a Mayor</option>
                     <option value="price-desc">Precio: Mayor a Menor</option>
                     <option value="alpha">Alfabético (A-Z)</option>
-                    <option value="size-desc">Tamaño: Mayor a Menor</option>
-                    <option value="size-asc">Tamaño: Menor a Mayor</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-[#3A332F]/50">
                     <ChevronRight className="h-4 w-4 rotate-90" />
@@ -952,51 +951,21 @@ const App: React.FC = () => {
                 })
                 .sort((a, b) => {
                   switch (sortBy) {
+                    case 'default':
+                      return 0; // Preserve original order
                     case 'price-asc':
                       return a.price - b.price;
                     case 'price-desc':
                       return b.price - a.price;
                     case 'alpha':
                       return a.name.localeCompare(b.name);
-                    case 'size-desc':
-                    case 'size-asc': {
-                      // 1. CARDS ALWAYS LAST
-                      const isCardA = a.category.toLowerCase().includes('cartas') || a.category.toLowerCase().includes('tcg') || a.name.toLowerCase().includes('carta');
-                      const isCardB = b.category.toLowerCase().includes('cartas') || b.category.toLowerCase().includes('tcg') || b.name.toLowerCase().includes('carta');
-
-                      if (isCardA && !isCardB) return 1;
-                      if (!isCardA && isCardB) return -1;
-                      if (isCardA && isCardB) return 0;
-
-                      // 2. SCALE LOGIC
-                      // Extract "Tamaño: X cm"
-                      const getScale = (str: string) => {
-                        // Look for "Tamaño: 25" or "Tamaño: 25cm"
-                        const match = str.match(/Tamaño:?\s*(\d+)/i);
-                        if (match) return parseInt(match[1]);
-
-                        // Fallback: 1/X scale (if ever needed again)
-                        const scaleMatch = str.match(/1\/(\d+)/);
-                        if (scaleMatch) return 30 - parseInt(scaleMatch[1]) * 2;
-
-                        return 0;
-                      };
-
-                      const scaleA = Math.max(getScale(a.name), getScale(a.description || ''));
-                      const scaleB = Math.max(getScale(b.name), getScale(b.description || ''));
-
-                      // size-desc: Mayor a Menor (1/4 > 1/7) -> return B - A
-                      if (sortBy === 'size-desc') return scaleB - scaleA;
-                      // size-asc: Menor a Mayor (1/7 < 1/4) -> return A - B
-                      return scaleA - scaleB;
-                    }
                     case 'relevance':
-                    default:
-                      // Relevance = High Rating + Low Stock (Scarcity) + Favorites
                       // Logic: Rating * 10 - Stock + (IsFavorite ? 5 : 0)
                       const scoreA = (a.rating * 10) - (a.stock * 0.5) + (favorites.includes(a.id) ? 5 : 0);
                       const scoreB = (b.rating * 10) - (b.stock * 0.5) + (favorites.includes(b.id) ? 5 : 0);
                       return scoreB - scoreA;
+                    default:
+                      return 0;
                   }
                 })
                 .map(product => {
