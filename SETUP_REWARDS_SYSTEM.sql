@@ -58,11 +58,11 @@ insert into public.rewards (id, title, description, cost, tier, type, value, sto
 
 -- Tier 3: Premium
 ('shipping_free', 'Envío Gratis (Min $200k)', 'El Clan cubre tu envío completamente.', 1200, 3, 'coupon', '{"discount_type": "shipping_free", "min_purchase": 200000, "code_prefix": "FREESHIP"}', null),
-('print_10off', '10% OFF Impresión 3D', 'Tope máximo de $25.000 de descuento.', 1500, 3, 'coupon', '{"discount_percent": 10, "max_discount": 25000, "category": "3d_print", "code_prefix": "3D10"}', null),
+('print_10off', '10% OFF Impresión 3D', 'Tope máximo de $25.000 de descuento.', 1500, 3, 'coupon', '{"discount_percent": 10, "max_discount": 25000, "category": "3d_print", "code_prefix": "3D10"}', null)
 
--- Tier 4: Exclusive
-('early_access', 'Acceso Anticipado 24h', 'Sé el primero en ver y comprar nuevos lanzamientos.', 2500, 4, 'feature', '{"feature": "early_access_24h"}', null),
-('figure_limited', 'Figura Sorpresa Ed. Limitada', 'Figura exclusiva del Clan Tanuki.', 3000, 4, 'physical', '{"item": "mystery_figure_v1"}', 50) -- Stock 50 example
+-- Removed Tier 4 for now (Early Access, Mystery Figure)
+-- ('early_access', 'Acceso Anticipado 24h', ...)
+-- ('figure_limited', 'Figura Sorpresa Ed. Limitada', ...)
 
 on conflict (id) do update set 
     title = excluded.title,
