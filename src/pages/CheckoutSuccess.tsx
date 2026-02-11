@@ -161,11 +161,7 @@ export const CheckoutSuccess = () => {
                         ? 'Estamos confirmando tu ofrenda con los espíritus...'
                         : 'Tu ofrenda ha sido aceptada. Tu estatus en el clan ha sido actualizado.'}
                 </p>
-                {sessionId && !isProcessing && (
-                    <p className="text-xs text-gray-400 mb-8 font-mono bg-gray-50 p-2 rounded">
-                        ID de Referencia: {sessionId.slice(0, 10)}...
-                    </p>
-                )}
+                {/* ID Removed per user request */}
 
                 {!isProcessing && (
                     <a href="/" className="inline-flex items-center gap-3 bg-[#3A332F] text-white font-ghibli-title px-8 py-4 rounded-full shadow-xl hover:bg-[#81C784] transition-all transform hover:scale-105">
