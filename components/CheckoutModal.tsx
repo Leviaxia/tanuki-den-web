@@ -130,6 +130,33 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 total: formatCurrency(finalTotal)
             };
 
+            // Save Order to Supabase (if user logged in or guest tracking enabled)
+            if (user.id !== 'guest') {
+                const { data: orderData, error: orderError } = await supabase.from('orders').insert({
+                    user_id: user.id,
+                    status: 'pending',
+                    total: finalTotal,
+                    payment_method: method,
+                    shipping_details: shipping,
+                    stripe_session_id: null // Placeholder for future Stripe integration
+                }).select();
+
+                if (orderError) throw orderError;
+
+                if (orderData && orderData.length > 0) {
+                    const orderId = orderData[0].id;
+                    const orderItems = cart.map(item => ({
+                        order_id: orderId,
+                        product_id: item.id,
+                        quantity: item.quantity,
+                        price_at_purchase: item.price
+                    }));
+
+                    const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+                    if (itemsError) console.error("Error saving items:", itemsError);
+                }
+            }
+
             // Send Email
             await sendOrderEmail(emailParams);
 

@@ -12,6 +12,7 @@ import { Product, CartItem, UserMessage, Review, User as UserType, Collection } 
 import AuthModal from './components/AuthModal';
 import CheckoutModal from './components/CheckoutModal';
 import ShareModal from './components/ShareModal';
+import ProfileModal from './components/ProfileModal';
 import { PRODUCTS as INITIAL_PRODUCTS, heroText } from './constants';
 
 import { supabase } from './src/lib/supabase';
@@ -428,8 +429,12 @@ const App: React.FC = () => {
             }));
 
             // CLOUD SYNC: Restore cross-device data from DB
-            // Only overwrite local if DB has valid data
-            if (profile.favorites && Array.isArray(profile.favorites)) setFavorites(profile.favorites);
+            // Fetch favorites from separate table
+            const { data: favsData } = await supabase.from('favorites').select('product_id').eq('user_id', user.id);
+            if (favsData) {
+              setFavorites(favsData.map(f => f.product_id));
+            }
+            // Only overwrite local if DB has valid data for other fields
             if (profile.cart && Array.isArray(profile.cart)) setCart(profile.cart);
             if (typeof profile.discount === 'number') setAppliedDiscount(profile.discount);
             if (typeof profile.has_spun === 'boolean') setHasSpunFirst(profile.has_spun);
@@ -482,7 +487,7 @@ const App: React.FC = () => {
     const syncToCloud = async () => {
       try {
         await supabase.from('profiles').update({
-          favorites: favorites,
+          // Favorites handled by separate table
           cart: cart,
           discount: appliedDiscount,
           has_spun: hasSpunFirst
@@ -492,7 +497,7 @@ const App: React.FC = () => {
 
     const timeout = setTimeout(syncToCloud, 2000);
     return () => clearTimeout(timeout);
-  }, [favorites, cart, appliedDiscount, hasSpunFirst, user.id, user.isRegistered, isCloudInitialized]);
+  }, [cart, appliedDiscount, hasSpunFirst, user.id, user.isRegistered, isCloudInitialized]);
 
 
 
@@ -643,9 +648,10 @@ const App: React.FC = () => {
 
   const toggleFavorite = async (id: string) => {
     // 1. Optimistic Update (Local)
-    const newFavorites = favorites.includes(id)
-      ? favorites.filter(fid => fid !== id)
-      : [...favorites, id];
+    const isAdding = !favorites.includes(id);
+    const newFavorites = isAdding
+      ? [...favorites, id]
+      : favorites.filter(fid => fid !== id);
 
     setFavorites(newFavorites);
     localStorage.setItem(`tanuki_favorites_${user.id}`, JSON.stringify(newFavorites));
@@ -653,7 +659,11 @@ const App: React.FC = () => {
     // 2. Cloud Sync (Supabase)
     if (user.id !== 'auth_pending' && user.id !== 'guest') {
       try {
-        await supabase.from('profiles').update({ favorites: newFavorites }).eq('id', user.id);
+        if (isAdding) {
+          await supabase.from('favorites').insert({ user_id: user.id, product_id: id });
+        } else {
+          await supabase.from('favorites').delete().match({ user_id: user.id, product_id: id });
+        }
       } catch (e) { console.error("Error syncing favorites", e); }
     }
   };
@@ -1372,369 +1382,263 @@ const App: React.FC = () => {
         onComplete={handleAuthComplete}
       />
 
-      {isProfileModalOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/90 flex items-center justify-center p-4 md:p-6 backdrop-blur-sm overflow-y-auto">
-          {(() => {
-            const getColor = () => {
-              switch (user.membership) {
-                case 'bronze': return '#4A6741';
-                case 'silver': return '#5D4037';
-                case 'gold': return '#C14B3A';
-                case 'founder': return '#D4AF37';
-                default: return '#9CA3AF'; // Gris para gratis/null
-              }
-            };
-            const accentColor = getColor();
 
-            const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
 
-              try {
-                // 1. Upload to Supabase Storage
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-                const filePath = `${fileName}`;
 
-                const { error: uploadError } = await supabase.storage
-                  .from('avatars')
-                  .upload(filePath, file);
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+        setUser={setUser}
+        onLogout={() => {
+          localStorage.removeItem('tanuki-auth-token');
+          sessionStorage.removeItem('tanuki_user');
+          window.location.reload();
+        }}
+        products={products}
+        favorites={favorites}
+        toggleFavorite={toggleFavorite}
+        onOpenSubscription={() => {
+          setIsProfileModalOpen(false);
+          handleSubscriptionClick();
+        }}
+      />
 
-                if (uploadError) throw uploadError;
+      {
+        isSubscriptionModalOpen && (
+          <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-start justify-center p-4 pt-4 md:p-6 md:pt-12 overflow-y-auto backdrop-blur-md">
+            <div className="bg-[#FDF5E6] w-full max-w-6xl rounded-[40px] md:rounded-[60px] p-6 md:p-10 relative animate-pop border-4 md:border-4 border-white shadow-2xl my-8">
+              <button onClick={() => setIsSubscriptionModalOpen(false)} className="absolute top-4 right-4 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X className="w-6 h-6 md:w-8 md:h-8" /></button>
 
-                // 2. Get Public URL
-                const { data: { publicUrl } } = supabase.storage
-                  .from('avatars')
-                  .getPublicUrl(filePath);
-
-                // 3. Update Profile
-                const { error: updateError } = await supabase
-                  .from('profiles')
-                  .update({ avatar_url: publicUrl })
-                  .eq('id', user.id);
-
-                if (updateError) throw updateError;
-
-                // 4. Update Local State
-                setUser(prev => ({ ...prev, photo: publicUrl }));
-                alert('¡Foto de perfil actualizada con éxito!');
-              } catch (err: any) {
-                console.error('Error uploading photo:', err);
-                alert('No se pudo subir la foto. Asegúrate de crear un bucket público llamado "avatars" en Supabase.');
-              }
-            };
-
-            return (
-              <div
-                className="bg-white w-full max-w-md rounded-[30px] md:rounded-[50px] p-6 md:p-8 border-4 md:border-8 relative animate-pop text-center space-y-6 md:space-y-8 my-auto"
-                style={{ borderColor: accentColor }}
-              >
-                <button onClick={() => setIsProfileModalOpen(false)} className="absolute top-8 right-8"><X size={28} /></button>
-                <div className="relative mx-auto w-36 h-36 group cursor-pointer">
-                  <input
-                    type="file"
-                    id="photo-upload"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePhotoUpload}
-                  />
-                  <div
-                    className="w-full h-full bg-[#3A332F] rounded-full border-4 overflow-hidden shadow-2xl relative z-0 group-hover:opacity-80 transition-opacity"
-                    style={{ borderColor: accentColor }}
-                    onClick={() => document.getElementById('photo-upload')?.click()}
-                  >
-                    <img src={user.photo} className="w-full h-full object-cover" alt="Profile" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                      <Camera className="text-white" size={32} />
-                    </div>
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 bg-[#C14B3A] text-white p-2 rounded-full border-2 border-white shadow-lg pointer-events-none">
-                    <Edit3 size={16} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-ghibli-title text-[#3A332F] leading-tight">{user.name}</h2>
-                  <p
-                    className="font-black uppercase text-[10px] tracking-[0.2em]"
-                    style={{ color: accentColor }}
-                  >
-                    {user.membership ? `MIEMBRO ${user.membership.toUpperCase()}` : 'VIAJERO DEL BOSQUE'}
-                  </p>
-                </div>
-                <div className="bg-[#FDF5E6] p-6 rounded-[30px] text-left space-y-3 border-2 border-[#E6D5B8]">
-                  <div className="flex items-center gap-3">
-                    <Mail size={16} className="text-[#C14B3A]" />
-                    <span className="text-xs font-bold text-[#3A332F]">{user.email}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MapPin size={16} className="text-[#C14B3A]" />
-                    <span className="text-xs font-bold text-[#3A332F]">{user.location}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone size={16} className="text-[#C14B3A]" />
-                    <span className="text-xs font-bold text-[#3A332F]">{user.phone}</span>
-                  </div>
-                </div>
-                <button onClick={() => { setIsProfileModalOpen(false); handleSubscriptionClick(); }} className="w-full bg-[#3A332F] text-white font-ghibli-title py-5 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest text-xs mb-3">ESTATUS DEL CLAN</button>
-                <button onClick={() => {
-                  setUser({
-                    id: 'guest',
-                    name: 'Invitado',
-                    photo: 'https://cdn-icons-png.flaticon.com/512/3222/3222791.png',
-                    isRegistered: false,
-                    membership: undefined,
-                    location: '',
-                    birthDate: ''
-                  });
-                  // Cleanup for pending cart if user logs out
-                  const pendingCart = localStorage.getItem('tanuki_pending_cart');
-                  if (pendingCart) {
-                    try {
-                      // Use session storage for cart too during checkout flow? user might reload.
-                      // Keep cart persistent for nice UX, but user auth volatile.
-                      // No change needed for cart unless user asked.
-                      localStorage.removeItem('tanuki_pending_cart');
-                      setCart([]);
-                    } catch (e) { }
-                  }
-                  sessionStorage.removeItem('tanuki_user'); // Changed from localStorage to sessionStorage
-                  setIsProfileModalOpen(false);
-                }} className="w-full bg-transparent border-2 border-[#3A332F]/10 text-[#3A332F]/60 font-ghibli-title py-4 rounded-full hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all uppercase tracking-widest text-[10px]">CERRAR SESIÓN</button>
-              </div>
-            );
-          })()}
-        </div>
-      )}
-
-      {isSubscriptionModalOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-start justify-center p-4 pt-4 md:p-6 md:pt-12 overflow-y-auto backdrop-blur-md">
-          <div className="bg-[#FDF5E6] w-full max-w-6xl rounded-[40px] md:rounded-[60px] p-6 md:p-10 relative animate-pop border-4 md:border-4 border-white shadow-2xl my-8">
-            <button onClick={() => setIsSubscriptionModalOpen(false)} className="absolute top-4 right-4 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X className="w-6 h-6 md:w-8 md:h-8" /></button>
-
-            {user.membership ? (
-              /* Vista de Usuario Suscrito */
-              (() => {
-                const plans = [
-                  { name: 'Semilla', price: '40000', period: 'Mensual', color: '#4A6741', id: 'bronze', benefits: ['Insignia del Clan', 'Chat Exclusivo', 'Soporte Prioritario', 'Preventas 24h'] },
-                  { name: 'Brote', price: '100000', period: 'Trimestral', color: '#5D4037', id: 'silver', benefits: ['Todo lo Mensual', '5% OFF Base', 'Acceso al Taller Mágico', 'Sticker Pack Digital'] },
-                  { name: 'Rama', price: '180000', period: 'Semestral', color: '#C14B3A', id: 'gold', benefits: ['Todo lo Trimestral', 'Regalo de Cumpleaños', 'Sorteos Exclusivos', 'Unboxing VIP'] },
-                  { name: 'Espíritu', price: '320000', period: 'Anual', color: '#D4AF37', id: 'founder', featured: true, benefits: ['ENVÍOS GRATIS SIEMPRE', 'Todo lo Semestral', 'Carnet Físico Clan', 'Rango Leyenda VIP'] }
-                ];
-                const currentPlan = plans.find(p => p.id === user.membership);
-
-                return (
-                  <div className="text-center space-y-12 py-8">
-                    <div className="space-y-4">
-                      <div className="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center border-4 border-[#3A332F] shadow-lg animate-bounce-subtle mb-6">
-                        <Crown style={{ color: currentPlan?.color || '#3A332F' }} size={40} />
-                      </div>
-                      <h2 className="text-4xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">Mi Pacto <span style={{ color: currentPlan?.color || '#C14B3A' }}>{currentPlan?.name}</span></h2>
-                      <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Eres parte de la leyenda del bosque</p>
-                    </div>
-
-                    <div className="max-w-2xl mx-auto bg-white p-10 rounded-[50px] border-4 border-[#3A332F] shadow-xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={100} /></div>
-                      <h3 className="text-2xl font-ghibli-title text-[#3A332F] uppercase mb-8 border-b-2 border-[#FDF5E6] pb-4">Tus Privilegios Activos</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                        {currentPlan?.benefits.map((benefit, i) => (
-                          <div key={i} className="flex items-center gap-4 group">
-                            <div className="w-10 h-10 rounded-full bg-[#FDF5E6] flex items-center justify-center text-[#C14B3A] group-hover:scale-110 transition-transform">
-                              <CheckCircle2 size={20} />
-                            </div>
-                            <span className="font-bold text-[#3A332F] text-sm md:text-base">{benefit}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-4">
-                      <p className="text-[#3A332F]/60 text-xs font-bold uppercase tracking-widest mb-6">Tu membresía se renueva automáticamente</p>
-                      <button onClick={() => setIsSubscriptionModalOpen(false)} className="bg-[#3A332F] text-white font-ghibli-title py-4 px-12 rounded-full text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest">VOLVER AL BOSQUE</button>
-                    </div>
-                  </div>
-                );
-              })()
-            ) : (
-              /* Vista de Selección de Planes (Original) */
-              <div className="text-center space-y-12">
-                <div className="space-y-4">
-                  <h2 className="text-5xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">Gremio <span className="text-[#C14B3A]">Tanuki</span></h2>
-                  <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Forja tu destino con el Clan más exclusivo de coleccionistas</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-                  {[
+              {user.membership ? (
+                /* Vista de Usuario Suscrito */
+                (() => {
+                  const plans = [
                     { name: 'Semilla', price: '40000', period: 'Mensual', color: '#4A6741', id: 'bronze', benefits: ['Insignia del Clan', 'Chat Exclusivo', 'Soporte Prioritario', 'Preventas 24h'] },
                     { name: 'Brote', price: '100000', period: 'Trimestral', color: '#5D4037', id: 'silver', benefits: ['Todo lo Mensual', '5% OFF Base', 'Acceso al Taller Mágico', 'Sticker Pack Digital'] },
                     { name: 'Rama', price: '180000', period: 'Semestral', color: '#C14B3A', id: 'gold', benefits: ['Todo lo Trimestral', 'Regalo de Cumpleaños', 'Sorteos Exclusivos', 'Unboxing VIP'] },
                     { name: 'Espíritu', price: '320000', period: 'Anual', color: '#D4AF37', id: 'founder', featured: true, benefits: ['ENVÍOS GRATIS SIEMPRE', 'Todo lo Semestral', 'Carnet Físico Clan', 'Rango Leyenda VIP'] }
-                  ].map((plan) => (
-                    <div key={plan.id} className={`relative bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border-4 border-[#3A332F] space-y-6 md:space-y-8 flex flex-col transition-all hover:-translate-y-4 shadow-xl ${plan.featured ? 'ring-4 ring-[#C14B3A]/20 scale-100 md:scale-105 z-10' : ''}`}>
-                      {plan.featured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#C14B3A] text-white px-6 py-1 rounded-full text-[10px] font-ghibli-title uppercase tracking-widest shadow-lg">Más Popular</div>}
-                      <div className="space-y-2 text-center">
-                        <div className="w-16 h-16 bg-[#FDF5E6] rounded-2xl mx-auto flex items-center justify-center border-2 border-[#3A332F] shadow-sm"><Crown style={{ color: plan.color }} size={28} /></div>
-                        <h3 className="font-ghibli-title text-2xl uppercase text-[#3A332F] pt-2">{plan.name}</h3>
-                        <p className="text-[10px] font-black uppercase text-[#8C8279] tracking-widest">{plan.period}</p>
+                  ];
+                  const currentPlan = plans.find(p => p.id === user.membership);
+
+                  return (
+                    <div className="text-center space-y-12 py-8">
+                      <div className="space-y-4">
+                        <div className="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center border-4 border-[#3A332F] shadow-lg animate-bounce-subtle mb-6">
+                          <Crown style={{ color: currentPlan?.color || '#3A332F' }} size={40} />
+                        </div>
+                        <h2 className="text-4xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">Mi Pacto <span style={{ color: currentPlan?.color || '#C14B3A' }}>{currentPlan?.name}</span></h2>
+                        <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Eres parte de la leyenda del bosque</p>
                       </div>
-                      <div className="text-center"><p className="text-3xl md:text-4xl font-ghibli-title text-[#C14B3A] tracking-tighter"><span className="text-lg mr-1">$</span>{formatCurrency(Number(plan.price))}</p></div>
-                      <ul className="flex-grow space-y-3">
-                        {plan.benefits.map((benefit, i) => (
-                          <li key={i} className="flex items-center gap-3 text-left">
-                            <CheckCircle2 size={16} className={plan.featured ? "text-[#C14B3A]" : "text-[#81C784]"} />
-                            <span className={`text-[11px] font-bold ${benefit.includes('GRATIS') ? 'text-[#C14B3A] font-black underline decoration-2' : 'text-[#3A332F]'}`}>{benefit}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <button onClick={() => {
-                        const subProduct: Product = {
-                          id: `sub-${plan.id}`,
-                          name: `Membresía ${plan.name} (${plan.period})`,
-                          category: 'Limited',
-                          price: parseFloat(plan.price),
-                          description: `Acceso y privilegios del Clan Tanuki - Nivel ${plan.name}`,
-                          image: 'https://cdn-icons-png.flaticon.com/512/2589/2589175.png',
-                          stock: 999,
-                          rating: 5,
-                          benefits: plan.benefits
-                        };
-                        setCart(prev => [...prev.filter(item => !item.id.startsWith('sub-')), { ...subProduct, quantity: 1 }]);
-                        setIsSubscriptionModalOpen(false);
-                        setIsCheckoutOpen(true);
-                      }} className={`w-full py-4 rounded-full font-ghibli-title text-sm transition-all shadow-md active:scale-95 ${plan.featured ? 'bg-[#C14B3A] text-white hover:bg-[#3A332F]' : 'bg-[#3A332F] text-white hover:bg-[#C14B3A]'}`}>FORJAR PACTO</button>
+
+                      <div className="max-w-2xl mx-auto bg-white p-10 rounded-[50px] border-4 border-[#3A332F] shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={100} /></div>
+                        <h3 className="text-2xl font-ghibli-title text-[#3A332F] uppercase mb-8 border-b-2 border-[#FDF5E6] pb-4">Tus Privilegios Activos</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                          {currentPlan?.benefits.map((benefit, i) => (
+                            <div key={i} className="flex items-center gap-4 group">
+                              <div className="w-10 h-10 rounded-full bg-[#FDF5E6] flex items-center justify-center text-[#C14B3A] group-hover:scale-110 transition-transform">
+                                <CheckCircle2 size={20} />
+                              </div>
+                              <span className="font-bold text-[#3A332F] text-sm md:text-base">{benefit}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-4">
+                        <p className="text-[#3A332F]/60 text-xs font-bold uppercase tracking-widest mb-6">Tu membresía se renueva automáticamente</p>
+                        <button onClick={() => setIsSubscriptionModalOpen(false)} className="bg-[#3A332F] text-white font-ghibli-title py-4 px-12 rounded-full text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest">VOLVER AL BOSQUE</button>
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                /* Vista de Selección de Planes (Original) */
+                <div className="text-center space-y-12">
+                  <div className="space-y-4">
+                    <h2 className="text-5xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">Gremio <span className="text-[#C14B3A]">Tanuki</span></h2>
+                    <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Forja tu destino con el Clan más exclusivo de coleccionistas</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+                    {[
+                      { name: 'Semilla', price: '40000', period: 'Mensual', color: '#4A6741', id: 'bronze', benefits: ['Insignia del Clan', 'Chat Exclusivo', 'Soporte Prioritario', 'Preventas 24h'] },
+                      { name: 'Brote', price: '100000', period: 'Trimestral', color: '#5D4037', id: 'silver', benefits: ['Todo lo Mensual', '5% OFF Base', 'Acceso al Taller Mágico', 'Sticker Pack Digital'] },
+                      { name: 'Rama', price: '180000', period: 'Semestral', color: '#C14B3A', id: 'gold', benefits: ['Todo lo Trimestral', 'Regalo de Cumpleaños', 'Sorteos Exclusivos', 'Unboxing VIP'] },
+                      { name: 'Espíritu', price: '320000', period: 'Anual', color: '#D4AF37', id: 'founder', featured: true, benefits: ['ENVÍOS GRATIS SIEMPRE', 'Todo lo Semestral', 'Carnet Físico Clan', 'Rango Leyenda VIP'] }
+                    ].map((plan) => (
+                      <div key={plan.id} className={`relative bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border-4 border-[#3A332F] space-y-6 md:space-y-8 flex flex-col transition-all hover:-translate-y-4 shadow-xl ${plan.featured ? 'ring-4 ring-[#C14B3A]/20 scale-100 md:scale-105 z-10' : ''}`}>
+                        {plan.featured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#C14B3A] text-white px-6 py-1 rounded-full text-[10px] font-ghibli-title uppercase tracking-widest shadow-lg">Más Popular</div>}
+                        <div className="space-y-2 text-center">
+                          <div className="w-16 h-16 bg-[#FDF5E6] rounded-2xl mx-auto flex items-center justify-center border-2 border-[#3A332F] shadow-sm"><Crown style={{ color: plan.color }} size={28} /></div>
+                          <h3 className="font-ghibli-title text-2xl uppercase text-[#3A332F] pt-2">{plan.name}</h3>
+                          <p className="text-[10px] font-black uppercase text-[#8C8279] tracking-widest">{plan.period}</p>
+                        </div>
+                        <div className="text-center"><p className="text-3xl md:text-4xl font-ghibli-title text-[#C14B3A] tracking-tighter"><span className="text-lg mr-1">$</span>{formatCurrency(Number(plan.price))}</p></div>
+                        <ul className="flex-grow space-y-3">
+                          {plan.benefits.map((benefit, i) => (
+                            <li key={i} className="flex items-center gap-3 text-left">
+                              <CheckCircle2 size={16} className={plan.featured ? "text-[#C14B3A]" : "text-[#81C784]"} />
+                              <span className={`text-[11px] font-bold ${benefit.includes('GRATIS') ? 'text-[#C14B3A] font-black underline decoration-2' : 'text-[#3A332F]'}`}>{benefit}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <button onClick={() => {
+                          const subProduct: Product = {
+                            id: `sub-${plan.id}`,
+                            name: `Membresía ${plan.name} (${plan.period})`,
+                            category: 'Limited',
+                            price: parseFloat(plan.price),
+                            description: `Acceso y privilegios del Clan Tanuki - Nivel ${plan.name}`,
+                            image: 'https://cdn-icons-png.flaticon.com/512/2589/2589175.png',
+                            stock: 999,
+                            rating: 5,
+                            benefits: plan.benefits
+                          };
+                          setCart(prev => [...prev.filter(item => !item.id.startsWith('sub-')), { ...subProduct, quantity: 1 }]);
+                          setIsSubscriptionModalOpen(false);
+                          setIsCheckoutOpen(true);
+                        }} className={`w-full py-4 rounded-full font-ghibli-title text-sm transition-all shadow-md active:scale-95 ${plan.featured ? 'bg-[#C14B3A] text-white hover:bg-[#3A332F]' : 'bg-[#3A332F] text-white hover:bg-[#C14B3A]'}`}>FORJAR PACTO</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      }
+
+      {
+        isRouletteOpen && (
+          <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
+            <div className="bg-[#FDF5E6] w-full max-w-[340px] md:max-w-xl rounded-[30px] md:rounded-[50px] p-5 md:p-10 relative animate-pop text-center flex flex-col justify-between border-4 md:border-4 border-[#3A332F] shadow-[0_0_50px_rgba(0,0,0,0.5)] my-auto">
+              <button onClick={() => setIsRouletteOpen(false)} className="absolute top-3 right-3 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-1.5 md:p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X size={20} className="md:w-8 md:h-8" /></button>
+
+              <div className="space-y-1 md:space-y-4 mb-2 md:mb-0 shrink-0">
+                <h2 className="text-xl md:text-5xl font-ghibli-title text-[#3A332F] uppercase leading-tight">Sorteo del <span className="text-[#C14B3A]">Bosque</span></h2>
+                <p className="text-[#8C8279] font-black uppercase tracking-[0.2em] text-[8px] md:text-xs">Invocando la sabiduría del Gremio Tanuki</p>
+              </div>
+
+              <div className="relative mx-auto w-60 h-60 md:w-96 md:h-96 flex items-center justify-center my-2 md:my-6 shrink-0">
+                <div className="absolute -inset-3 md:-inset-6 rounded-full border-4 border-[#D4AF37]/20 border-dotted animate-spin-slow"></div>
+                <div className="absolute -inset-1 md:-inset-2 rounded-full border-2 border-[#3A332F]/10"></div>
+                <div className="absolute inset-0 rounded-full border-[10px] md:border-[20px] border-[#3A332F] shadow-[inset_0_0_30px_rgba(0,0,0,0.6),0_20px_40px_rgba(0,0,0,0.2)] z-10"></div>
+
+                {/* The Wheel */}
+                <div className="relative w-full h-full rounded-full overflow-hidden transition-transform duration-[4000ms] cubic-bezier(0.1, 0, 0.1, 1) bg-[#3A332F]" style={{ transform: `rotate(${rotation}deg)` }}>
+                  {segments.map((s, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-full h-full flex items-center justify-center origin-center"
+                      style={{
+                        transform: `rotate(${i * 60}deg)`,
+                        clipPath: 'polygon(50% 50%, 21.2% 0%, 78.8% 0%)',
+                        backgroundColor: s.color
+                      }}
+                    >
+                      <div className="w-full h-full flex flex-col items-center pt-8 md:pt-14 font-ghibli-title pointer-events-none" style={{ color: s.text }}>
+                        <span className="text-[9px] md:text-sm uppercase tracking-tighter leading-none mb-1 text-center font-ghibli-title px-4">{s.label}</span>
+                        <Sparkles size={12} className="opacity-40 animate-pulse mt-1 md:mt-2" />
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {isRouletteOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/95 flex items-center justify-center p-4 backdrop-blur-md overflow-y-auto">
-          <div className="bg-[#FDF5E6] w-full max-w-[340px] md:max-w-xl rounded-[30px] md:rounded-[50px] p-5 md:p-10 relative animate-pop text-center flex flex-col justify-between border-4 md:border-4 border-[#3A332F] shadow-[0_0_50px_rgba(0,0,0,0.5)] my-auto">
-            <button onClick={() => setIsRouletteOpen(false)} className="absolute top-3 right-3 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-1.5 md:p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X size={20} className="md:w-8 md:h-8" /></button>
+                <div className="absolute w-10 h-10 md:w-16 md:h-16 bg-[#FDF5E6] rounded-full z-20 border-4 border-[#3A332F] flex items-center justify-center shadow-2xl overflow-hidden">
+                  <div className="w-full h-full bg-[#3A332F]/5 flex items-center justify-center"><Zap size={16} className="text-[#D4AF37] animate-pulse md:w-5 md:h-5" /></div>
+                </div>
 
-            <div className="space-y-1 md:space-y-4 mb-2 md:mb-0 shrink-0">
-              <h2 className="text-xl md:text-5xl font-ghibli-title text-[#3A332F] uppercase leading-tight">Sorteo del <span className="text-[#C14B3A]">Bosque</span></h2>
-              <p className="text-[#8C8279] font-black uppercase tracking-[0.2em] text-[8px] md:text-xs">Invocando la sabiduría del Gremio Tanuki</p>
-            </div>
-
-            <div className="relative mx-auto w-60 h-60 md:w-96 md:h-96 flex items-center justify-center my-2 md:my-6 shrink-0">
-              <div className="absolute -inset-3 md:-inset-6 rounded-full border-4 border-[#D4AF37]/20 border-dotted animate-spin-slow"></div>
-              <div className="absolute -inset-1 md:-inset-2 rounded-full border-2 border-[#3A332F]/10"></div>
-              <div className="absolute inset-0 rounded-full border-[10px] md:border-[20px] border-[#3A332F] shadow-[inset_0_0_30px_rgba(0,0,0,0.6),0_20px_40px_rgba(0,0,0,0.2)] z-10"></div>
-
-              {/* The Wheel */}
-              <div className="relative w-full h-full rounded-full overflow-hidden transition-transform duration-[4000ms] cubic-bezier(0.1, 0, 0.1, 1) bg-[#3A332F]" style={{ transform: `rotate(${rotation}deg)` }}>
-                {segments.map((s, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-full h-full flex items-center justify-center origin-center"
-                    style={{
-                      transform: `rotate(${i * 60}deg)`,
-                      clipPath: 'polygon(50% 50%, 21.2% 0%, 78.8% 0%)',
-                      backgroundColor: s.color
-                    }}
-                  >
-                    <div className="w-full h-full flex flex-col items-center pt-8 md:pt-14 font-ghibli-title pointer-events-none" style={{ color: s.text }}>
-                      <span className="text-[9px] md:text-sm uppercase tracking-tighter leading-none mb-1 text-center font-ghibli-title px-4">{s.label}</span>
-                      <Sparkles size={12} className="opacity-40 animate-pulse mt-1 md:mt-2" />
-                    </div>
+                {/* Pointer (Centered at Top) */}
+                <div className="absolute -top-6 md:-top-10 left-1/2 -translate-x-1/2 z-[30] flex flex-col items-center">
+                  <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center border-4 border-[#C14B3A] shadow-[0_5px_15px_rgba(193,75,58,0.4)] animate-bounce-subtle">
+                    <Crown className="text-[#D4AF37] w-4 h-4 md:w-5 md:h-5" />
                   </div>
-                ))}
+                  <div className="w-4 h-6 md:w-6 md:h-8 bg-[#C14B3A] clip-path-triangle rotate-180 -mt-1 md:-mt-2 shadow-sm"></div>
+                </div>
               </div>
 
-              <div className="absolute w-10 h-10 md:w-16 md:h-16 bg-[#FDF5E6] rounded-full z-20 border-4 border-[#3A332F] flex items-center justify-center shadow-2xl overflow-hidden">
-                <div className="w-full h-full bg-[#3A332F]/5 flex items-center justify-center"><Zap size={16} className="text-[#D4AF37] animate-pulse md:w-5 md:h-5" /></div>
-              </div>
-
-              {/* Pointer (Centered at Top) */}
-              <div className="absolute -top-6 md:-top-10 left-1/2 -translate-x-1/2 z-[30] flex flex-col items-center">
-                <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center border-4 border-[#C14B3A] shadow-[0_5px_15px_rgba(193,75,58,0.4)] animate-bounce-subtle">
-                  <Crown className="text-[#D4AF37] w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <div className="w-4 h-6 md:w-6 md:h-8 bg-[#C14B3A] clip-path-triangle rotate-180 -mt-1 md:-mt-2 shadow-sm"></div>
-              </div>
-            </div>
-
-            <div className="min-h-[100px] md:min-h-[140px] flex flex-col items-center justify-center shrink-0">
-              {isSpinning ? (
-                <div className="space-y-2 md:space-y-4 text-center">
-                  <p className="font-ghibli-title text-[#C14B3A] text-lg md:text-2xl tracking-widest animate-pulse">EL DESTINO GIRA...</p>
-                  <div className="flex gap-2 md:gap-3 justify-center"><div className="w-2 h-2 md:w-3 md:h-3 bg-[#D4AF37] rounded-full animate-bounce"></div><div className="w-2 h-2 md:w-3 md:h-3 bg-[#D4AF37] rounded-full animate-bounce [animation-delay:0.2s]"></div><div className="w-2 h-2 md:w-3 md:h-3 bg-[#D4AF37] rounded-full animate-bounce [animation-delay:0.4s]"></div></div>
-                </div>
-              ) : hasSpunFirst ? (
-                <div className="animate-pop w-full">
-                  {appliedDiscount > 0 ? (
-                    <div className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[40px] border-2 md:border-4 border-[#D4AF37] shadow-2xl space-y-1 md:space-y-3 relative overflow-hidden group"><div className="absolute inset-0 bg-[#D4AF37]/5 pointer-events-none"></div><p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.4em] text-[#8C8279]">Gracia del Espíritu</p><h3 className="text-2xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight">¡<span className="text-[#C14B3A]">{appliedDiscount}% OFF</span>!</h3><p className="font-bold text-[#8C8279] text-[10px] md:text-sm mt-1">Guardado para tu próxima compra.</p></div>
-                  ) : (
-                    <div className="bg-[#3A332F]/5 p-4 md:p-8 rounded-[20px] md:rounded-[40px] border-2 md:border-4 border-[#3A332F]/10 space-y-2 md:space-y-3"><h3 className="text-xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase">INTENTO FALLIDO</h3><p className="font-bold text-[#8C8279] text-[9px] md:text-[10px] uppercase tracking-widest">Los vientos no soplaron a tu favor.</p></div>
-                  )}
-                </div>
-              ) : (
-                <button onClick={spinWheel} className="group relative px-10 py-3 md:px-28 md:py-8 rounded-full bg-[#3A332F] text-white font-ghibli-title text-lg md:text-2xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:bg-[#C14B3A] transition-all hover:scale-105 active:scale-95 overflow-hidden border-2 border-white/20"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine"></div><span className="relative z-10 flex items-center gap-2 md:gap-4">INVOCAR SUERTE <ArrowRight size={18} className="md:w-6 md:h-6" /></span></button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isCartOpen && (
-        <div className="fixed inset-0 z-[2000] bg-[#3A332F]/80 backdrop-blur-sm flex justify-end" onClick={() => setIsCartOpen(false)}>
-          <div className="w-[85vw] max-w-[360px] md:w-[500px] h-full bg-white shadow-2xl animate-slide-in flex flex-col border-l-4 md:border-l-8 border-[#D4AF37] rounded-l-[30px] md:rounded-l-none overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 md:p-8 border-b-4 border-[#FDF5E6] flex items-center justify-between">
-              <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase">Mi Carrito</h2>
-              <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-[#FDF5E6] rounded-full transition-all"><X size={24} className="md:w-7 md:h-7" /></button>
-            </div>
-            <div className="flex-grow overflow-y-auto p-4 md:p-8 space-y-4 md:space-y-6">
-              {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-40"><ShoppingBag size={80} strokeWidth={1} /><p className="font-ghibli-title text-xl">Tu saco está vacío</p></div>
-              ) : (
-                cart.map(item => (
-                  <div key={item.id} className="flex gap-4 md:gap-6 p-4 bg-[#FDF5E6]/30 rounded-[20px] md:rounded-[30px] border-2 border-transparent hover:border-[#C14B3A]/20 transition-all">
-                    <img src={item.image} className="w-16 h-16 md:w-24 md:h-24 object-cover rounded-[15px] md:rounded-[20px] shadow-md" alt={item.name} />
-                    <div className="flex-grow space-y-2">
-                      <h4 className="font-ghibli-title text-[#3A332F] text-sm md:text-base leading-tight">{item.name}</h4>
-                      <div className="flex items-center justify-between">
-                        <span className="font-black text-[#C14B3A] text-xs md:text-base"><span className="text-[#C14B3A]">$</span>{formatCurrency(item.price)}</span>
-                        <div className="flex items-center gap-2 md:gap-4 bg-white px-2 md:px-4 py-1 md:py-2 rounded-full border-2 border-[#E6D5B8]">
-                          {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1)}><Minus size={12} className="md:w-4 md:h-4" /></button>}
-                          <span className="font-black text-xs md:text-sm">{item.quantity}</span>
-                          {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, 1)}><Plus size={12} className="md:w-4 md:h-4" /></button>}
-                        </div>
-                        <button onClick={() => removeFromCart(item.id)} className="text-[#3A332F]/20 hover:text-red-500 transition-colors"><Trash2 size={16} className="md:w-5 md:h-5" /></button>
-                      </div>
-                    </div>
+              <div className="min-h-[100px] md:min-h-[140px] flex flex-col items-center justify-center shrink-0">
+                {isSpinning ? (
+                  <div className="space-y-2 md:space-y-4 text-center">
+                    <p className="font-ghibli-title text-[#C14B3A] text-lg md:text-2xl tracking-widest animate-pulse">EL DESTINO GIRA...</p>
+                    <div className="flex gap-2 md:gap-3 justify-center"><div className="w-2 h-2 md:w-3 md:h-3 bg-[#D4AF37] rounded-full animate-bounce"></div><div className="w-2 h-2 md:w-3 md:h-3 bg-[#D4AF37] rounded-full animate-bounce [animation-delay:0.2s]"></div><div className="w-2 h-2 md:w-3 md:h-3 bg-[#D4AF37] rounded-full animate-bounce [animation-delay:0.4s]"></div></div>
                   </div>
-                ))
-              )}
-            </div>
-            {cart.length > 0 && (
-              <div className="p-6 md:p-8 bg-[#FDF5E6] space-y-4 md:space-y-6">
-                {appliedDiscount > 0 ? (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm md:text-base font-bold text-[#8C8279]">
-                      <span>Subtotal</span>
-                      <span className="line-through">${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span>
-                    </div>
-                    <div className="flex justify-between text-sm md:text-base font-black text-[#C14B3A] animate-pulse">
-                      <span>🎉 Descuento ({appliedDiscount}%)</span>
-                      <span>-${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0) * (appliedDiscount / 100))}</span>
-                    </div>
-                    <div className="flex justify-between text-xl md:text-2xl font-ghibli-title pt-2 border-t border-[#3A332F]/10">
-                      <span>TOTAL</span>
-                      <span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0) * (1 - appliedDiscount / 100))}</span>
-                    </div>
+                ) : hasSpunFirst ? (
+                  <div className="animate-pop w-full">
+                    {appliedDiscount > 0 ? (
+                      <div className="bg-white p-4 md:p-8 rounded-[20px] md:rounded-[40px] border-2 md:border-4 border-[#D4AF37] shadow-2xl space-y-1 md:space-y-3 relative overflow-hidden group"><div className="absolute inset-0 bg-[#D4AF37]/5 pointer-events-none"></div><p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.4em] text-[#8C8279]">Gracia del Espíritu</p><h3 className="text-2xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight">¡<span className="text-[#C14B3A]">{appliedDiscount}% OFF</span>!</h3><p className="font-bold text-[#8C8279] text-[10px] md:text-sm mt-1">Guardado para tu próxima compra.</p></div>
+                    ) : (
+                      <div className="bg-[#3A332F]/5 p-4 md:p-8 rounded-[20px] md:rounded-[40px] border-2 md:border-4 border-[#3A332F]/10 space-y-2 md:space-y-3"><h3 className="text-xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase">INTENTO FALLIDO</h3><p className="font-bold text-[#8C8279] text-[9px] md:text-[10px] uppercase tracking-widest">Los vientos no soplaron a tu favor.</p></div>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex justify-between text-xl md:text-2xl font-ghibli-title"><span>TOTAL</span><div className="text-right"><span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span></div></div>
+                  <button onClick={spinWheel} className="group relative px-10 py-3 md:px-28 md:py-8 rounded-full bg-[#3A332F] text-white font-ghibli-title text-lg md:text-2xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:bg-[#C14B3A] transition-all hover:scale-105 active:scale-95 overflow-hidden border-2 border-white/20"><div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine"></div><span className="relative z-10 flex items-center gap-2 md:gap-4">INVOCAR SUERTE <ArrowRight size={18} className="md:w-6 md:h-6" /></span></button>
                 )}
-                <button onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }} className="w-full bg-[#3A332F] text-white font-ghibli-title py-4 md:py-6 rounded-full text-base md:text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest">FINALIZAR PEDIDO</button>
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
+      {
+        isCartOpen && (
+          <div className="fixed inset-0 z-[2000] bg-[#3A332F]/80 backdrop-blur-sm flex justify-end" onClick={() => setIsCartOpen(false)}>
+            <div className="w-[85vw] max-w-[360px] md:w-[500px] h-full bg-white shadow-2xl animate-slide-in flex flex-col border-l-4 md:border-l-8 border-[#D4AF37] rounded-l-[30px] md:rounded-l-none overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 md:p-8 border-b-4 border-[#FDF5E6] flex items-center justify-between">
+                <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase">Mi Carrito</h2>
+                <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-[#FDF5E6] rounded-full transition-all"><X size={24} className="md:w-7 md:h-7" /></button>
+              </div>
+              <div className="flex-grow overflow-y-auto p-4 md:p-8 space-y-4 md:space-y-6">
+                {cart.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-40"><ShoppingBag size={80} strokeWidth={1} /><p className="font-ghibli-title text-xl">Tu saco está vacío</p></div>
+                ) : (
+                  cart.map(item => (
+                    <div key={item.id} className="flex gap-4 md:gap-6 p-4 bg-[#FDF5E6]/30 rounded-[20px] md:rounded-[30px] border-2 border-transparent hover:border-[#C14B3A]/20 transition-all">
+                      <img src={item.image} className="w-16 h-16 md:w-24 md:h-24 object-cover rounded-[15px] md:rounded-[20px] shadow-md" alt={item.name} />
+                      <div className="flex-grow space-y-2">
+                        <h4 className="font-ghibli-title text-[#3A332F] text-sm md:text-base leading-tight">{item.name}</h4>
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-[#C14B3A] text-xs md:text-base"><span className="text-[#C14B3A]">$</span>{formatCurrency(item.price)}</span>
+                          <div className="flex items-center gap-2 md:gap-4 bg-white px-2 md:px-4 py-1 md:py-2 rounded-full border-2 border-[#E6D5B8]">
+                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1)}><Minus size={12} className="md:w-4 md:h-4" /></button>}
+                            <span className="font-black text-xs md:text-sm">{item.quantity}</span>
+                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, 1)}><Plus size={12} className="md:w-4 md:h-4" /></button>}
+                          </div>
+                          <button onClick={() => removeFromCart(item.id)} className="text-[#3A332F]/20 hover:text-red-500 transition-colors"><Trash2 size={16} className="md:w-5 md:h-5" /></button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {cart.length > 0 && (
+                <div className="p-6 md:p-8 bg-[#FDF5E6] space-y-4 md:space-y-6">
+                  {appliedDiscount > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm md:text-base font-bold text-[#8C8279]">
+                        <span>Subtotal</span>
+                        <span className="line-through">${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span>
+                      </div>
+                      <div className="flex justify-between text-sm md:text-base font-black text-[#C14B3A] animate-pulse">
+                        <span>🎉 Descuento ({appliedDiscount}%)</span>
+                        <span>-${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0) * (appliedDiscount / 100))}</span>
+                      </div>
+                      <div className="flex justify-between text-xl md:text-2xl font-ghibli-title pt-2 border-t border-[#3A332F]/10">
+                        <span>TOTAL</span>
+                        <span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0) * (1 - appliedDiscount / 100))}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-xl md:text-2xl font-ghibli-title"><span>TOTAL</span><div className="text-right"><span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span></div></div>
+                  )}
+                  <button onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }} className="w-full bg-[#3A332F] text-white font-ghibli-title py-4 md:py-6 rounded-full text-base md:text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest">FINALIZAR PEDIDO</button>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      }
 
       <CheckoutModal
         isOpen={isCheckoutOpen}
@@ -1762,277 +1666,280 @@ const App: React.FC = () => {
         }}
       />
 
-      {selectedProduct && (
-        <div
-          className="fixed inset-0 z-[9999] bg-black/60 md:bg-[#3A332F]/90 backdrop-blur-sm md:backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer overflow-hidden"
-          onClick={() => { setSelectedProduct(null); setShowMobileReviews(false); }}
-        >
-          {/* Mobile "Window" Modal */}
+      {
+        selectedProduct && (
           <div
-            className="bg-white w-[90vw] h-[85vh] md:h-[85vh] md:w-full md:max-w-5xl rounded-[30px] md:rounded-[60px] block md:flex md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-y-auto md:overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[9999] bg-black/60 md:bg-[#3A332F]/90 backdrop-blur-sm md:backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer overflow-hidden"
+            onClick={() => { setSelectedProduct(null); setShowMobileReviews(false); }}
           >
-            {/* Close Button */}
-            <button
-              onClick={() => { setSelectedProduct(null); setShowMobileReviews(false); }}
-              className="absolute top-3 right-3 md:top-6 md:right-6 z-50 p-2 bg-white/80 hover:bg-white text-[#3A332F] rounded-full shadow-lg transition-all border border-[#3A332F]/10"
+            {/* Mobile "Window" Modal */}
+            <div
+              className="bg-white w-[90vw] h-[85vh] md:h-[85vh] md:w-full md:max-w-5xl rounded-[30px] md:rounded-[60px] block md:flex md:flex-row border-4 md:border-8 border-[#D4AF37] shadow-2xl animate-pop cursor-default relative overflow-y-auto md:overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              <X size={20} className="md:w-8 md:h-8" />
-            </button>
+              {/* Close Button */}
+              <button
+                onClick={() => { setSelectedProduct(null); setShowMobileReviews(false); }}
+                className="absolute top-3 right-3 md:top-6 md:right-6 z-50 p-2 bg-white/80 hover:bg-white text-[#3A332F] rounded-full shadow-lg transition-all border border-[#3A332F]/10"
+              >
+                <X size={20} className="md:w-8 md:h-8" />
+              </button>
 
-            {/* Mobile: View State Toggle (Product <-> Reviews) */}
-            <div className="md:hidden absolute top-3 left-3 z-50">
-              {!showMobileReviews ? (
-                <button onClick={() => setShowMobileReviews(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur shadow-md rounded-full text-xs font-bold text-[#3A332F] border border-[#E6D5B8]">
-                  <MessageSquare size={14} className="text-[#C14B3A]" />
-                  <span>Reseñas</span>
-                </button>
-              ) : (
-                <button onClick={() => setShowMobileReviews(false)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C14B3A] shadow-md rounded-full text-xs font-bold text-white">
-                  <ArrowLeft size={14} />
-                  <span>Producto</span>
-                </button>
-              )}
-            </div>
-
-            {/* MAIN CONTENT (Desktop: Always Visible | Mobile: Visible if !showMobileReviews) */}
-            <div className={`w-full h-full transition-all duration-300 md:opacity-100 md:pointer-events-auto ${showMobileReviews ? 'hidden md:flex md:flex-row' : 'flex flex-col md:flex-row'}`}>
-
-              {/* Image Section */}
-              <div className="h-[220px] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
-                <img
-                  src={selectedProduct.image}
-                  className="w-full h-full object-cover object-center md:rounded-l-[50px] md:cursor-zoom-in"
-                  alt={selectedProduct.name}
-                  onClick={() => setFullScreenImage(selectedProduct.image)}
-                />
-                {/* Desktop Zoom Button */}
-                <button
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md p-4 rounded-full text-white border border-white/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-xl pointer-events-none md:pointer-events-auto hidden md:block"
-                  aria-label="Zoom Image"
-                >
-                  <ZoomIn size={32} />
-                </button>
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/40 text-white text-[9px] px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none md:hidden flex items-center gap-1 z-10 font-bold border border-white/10">
-                  <Sparkles size={8} /> Zoom
-                </div>
-
-                {/* Mobile: Rating Overlay (Bottom Left) */}
-                <div className="absolute bottom-3 left-3 bg-black/40 text-[#D4AF37] px-2 py-1 rounded-full backdrop-blur-sm md:hidden flex items-center gap-1 z-10 border border-white/10">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={10} fill={i < Math.floor(selectedProduct.rating) ? "currentColor" : "none"} />
-                    ))}
-                  </div>
-                  <span className="text-[9px] font-bold text-white ml-1">({selectedProduct.reviews?.length || 0})</span>
-                </div>
-              </div>
-
-              {/* Details Section */}
-              <div className="flex-1 flex flex-col p-5 md:p-12 md:max-h-full md:overflow-hidden bg-white relative">
-
-                {/* Header Section */}
-                <div className="space-y-2 md:space-y-4 text-center md:text-left flex-shrink-0">
-                  <span className="hidden md:inline-block bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-bold md:font-ghibli-title md:text-white md:bg-[#C14B3A] px-3 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-wider">
-                    {selectedProduct.category}
-                  </span>
-                  <h2 className="text-xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight uppercase line-clamp-2 md:line-clamp-none">
-                    {selectedProduct.name}
-                  </h2>
-
-                  {/* Desktop Reviews Summary: Adjusted to match mobile style */}
-                  <div className="hidden md:flex items-center gap-2 justify-center md:justify-start">
-                    <div className="flex items-center gap-1 bg-[#FDF5E6] px-3 py-1.5 rounded-full border border-[#F0E6D2]">
-                      <Star size={16} className="text-[#C14B3A] fill-[#C14B3A]" />
-                      <span className="text-sm font-bold text-[#3A332F]">{Number(selectedProduct.rating).toFixed(1)}</span>
-                    </div>
-                    <span className="text-xs font-ghibli-title uppercase text-[#8C8279] tracking-wider px-2 border-l border-[#8C8279]/30">
-                      {collections.find(c => c.id === selectedProduct.collectionId)?.title || "Colección Especial"}
-                    </span>
-                    <span className="text-[10px] font-bold text-[#8C8279] underline ml-2 cursor-pointer hover:text-[#C14B3A] transition-colors">
-                      {selectedProduct.reviews?.length || 0} Opiniones
-                    </span>
-                  </div>
-
-                  {/* Desktop Review Buton */}
-                  <div className="hidden md:block mt-2">
-                    <button
-                      onClick={() => {
-                        window.history.pushState({ modal: true, reviews: true }, '');
-                        setShowMobileReviews(true);
-                        setIsWritingReview(false); // Open in "View" mode first
-                      }}
-                      className="text-[10px] uppercase font-bold text-[#C14B3A] border border-[#C14B3A] px-3 py-1 rounded-full hover:bg-[#C14B3A] hover:text-white transition-colors flex items-center gap-1 w-fit"
-                    >
-                      <MessageSquare size={12} /> Ver Opiniones
-                    </button>
-                  </div>
-                </div>
-
-                {/* Mobile & Desktop: Full Description with internal scroll if needed */}
-                <div className="mt-4 pr-2 custom-scrollbar min-h-0 flex-1 overflow-y-auto">
-                  <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">
-                    {selectedProduct.description}
-                  </p>
-                </div>
-
-                <div className="flex flex-col justify-end gap-4 mt-2 md:mt-8 flex-shrink-0">
-                  {/* Price */}
-                  <div className="text-center md:text-left border-t border-[#F0E6D2] pt-3 md:pt-6 md:border-none">
-                    <span className="font-ghibli-title text-3xl md:text-5xl text-[#3A332F]">
-                      <span className="text-[#C14B3A] text-lg md:text-2xl mr-1">$</span>{formatCurrency(selectedProduct.price)}
-                    </span>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-3 md:gap-6">
-                    {/* Qty */}
-                    <div className="flex items-center justify-between bg-[#FDF5E6] px-3 py-2 md:px-8 md:py-5 rounded-full border-2 border-[#E6D5B8] w-28 md:w-48 shrink-0">
-                      <button onClick={() => setDetailQuantity(q => Math.max(1, q - 1))} className="p-1"><Minus size={14} className="md:w-5 md:h-5" /></button>
-                      <span className="font-ghibli-title text-base md:text-2xl">{detailQuantity}</span>
-                      <button onClick={() => setDetailQuantity(q => q + 1)} className="p-1"><Plus size={14} className="md:w-5 md:h-5" /></button>
-                    </div>
-
-                    {/* Add to Cart - Desktop: Icon Only requested */}
-                    <button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-3 md:py-6 rounded-full text-xs md:text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-2 md:gap-4 active:scale-95 group">
-                      <ShoppingCart size={24} className="group-hover:scale-110 transition-transform" />
-                      {/* Text hidden on both mobile (previously) and now desktop as per request "reemplazado por el ícono" */}
-                    </button>
-
-                    <button
-                      onClick={() => { setProductToShare(selectedProduct); setIsShareModalOpen(true); }}
-                      className="p-3 md:p-6 bg-white border-2 border-[#3A332F] rounded-full hover:bg-[#FDF5E6] transition-all text-[#3A332F]"
-                      title="Compartir"
-                    >
-                      <Share2 size={24} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Desktop: Ensure this footer is always visible */}
-                <div className="flex-shrink-0 pt-4"></div>
-
-              </div>
-            </div>
-
-            {/* REVIEWS CONTENT (Mobile & Desktop Overlay) */}
-            <div className={`flex-col h-full bg-white px-4 pb-4 pt-12 ${showMobileReviews ? 'flex md:absolute md:inset-0 md:z-20 md:p-12' : 'hidden'} min-h-[60vh]`}>
-              <div className="mt-2 flex-grow overflow-y-auto space-y-4 pb-8">
-                <h3 className="font-ghibli-title text-xl text-[#3A332F] uppercase text-center mb-4">Opiniones del Gremio</h3>
-
-                {selectedProduct.reviews && selectedProduct.reviews.length > 0 ? (
-                  selectedProduct.reviews.map((r, i) => (
-                    <div key={i} className="bg-[#FDF5E6]/40 p-4 rounded-[20px] space-y-2 border border-[#F0E6D2]">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-bold text-[#3A332F] text-sm">{r.userName}
-                          </h4>
-                          <div className="flex text-[#D4AF37]">{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < r.rating ? "currentColor" : "none"} />)}</div>
-                          {/* RAW DEBUGGING: Show exactly what is stored */}
-                          {/* <pre className="text-[8px] text-blue-600 bg-gray-100 p-1 mt-1 rounded max-w-[200px] overflow-hidden">{JSON.stringify(r.images)}</pre> */}
-                        </div>
-                        <span className="text-[9px] text-[#8C8279] font-bold">
-                          {new Date(r.date).toLocaleDateString()}
-                          {user.email === 'kaieke37@gmail.com' && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDeleteReview(r.id); }}
-                              className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
-                              title="Borrar Reseña (Admin)"
-                            >
-                              <Trash2 size={10} />
-                            </button>
-                          )}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-[#3A332F]/80 leading-tight">{r.comment}</p>
-                    </div>
-                  ))
+              {/* Mobile: View State Toggle (Product <-> Reviews) */}
+              <div className="md:hidden absolute top-3 left-3 z-50">
+                {!showMobileReviews ? (
+                  <button onClick={() => setShowMobileReviews(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur shadow-md rounded-full text-xs font-bold text-[#3A332F] border border-[#E6D5B8]">
+                    <MessageSquare size={14} className="text-[#C14B3A]" />
+                    <span>Reseñas</span>
+                  </button>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-center py-10 opacity-60 space-y-3">
-                    <div className="w-16 h-16 bg-[#FDF5E6] rounded-full flex items-center justify-center mb-2">
-                      <MessageSquare size={32} className="text-[#C14B3A]" />
-                    </div>
-                    <h4 className="font-ghibli-title text-lg text-[#3A332F]">Sin opiniones aún</h4>
-                    <p className="text-xs text-[#8C8279] max-w-[200px]">Este tesoro espera su primera leyenda. ¡Sé el primero en contarla!</p>
-                  </div>
-                )}
-              </div>
-              <div className="mt-auto pt-4 border-t border-[#F0E6D2]">
-                {isWritingReview ? (
-                  <div className="space-y-3 animate-slide-in">
-                    <div className="flex justify-center gap-2 mb-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button key={star} type="button" onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform active:scale-95 hover:scale-110">
-                          <Star size={24} fill={star <= reviewRating ? "#D4AF37" : "none"} className={star <= reviewRating ? "text-[#D4AF37]" : "text-[#D4AF37]/40"} />
-                        </button>
-                      ))}
-                    </div>
-                    <textarea
-                      value={reviewComment}
-                      onChange={(e) => setReviewComment(e.target.value)}
-                      placeholder="Cuéntanos tu historia..."
-                      className="w-full p-3 bg-[#FDF5E6] border-2 border-[#D4AF37]/30 rounded-2xl outline-none text-[#3A332F] text-xs font-medium resize-none h-20"
-                    />
-
-                    {/* Photo Upload Removed */}
-                    <div className="flex gap-2 mt-4">
-                      <button type="button" onClick={() => setIsWritingReview(false)} className="flex-1 py-2 bg-gray-200 text-[#3A332F] font-bold rounded-full text-[10px] uppercase tracking-widest hover:bg-gray-300 transition-colors">Cancelar</button>
-                      <button type="button" onClick={handleReviewSubmit} className="flex-1 py-2 bg-[#C14B3A] text-white font-bold rounded-full text-[10px] uppercase tracking-widest shadow-lg hover:bg-[#8B362A] transition-colors">Enviar</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!user.isRegistered) {
-                        setShowMobileReviews(false);
-                        setSelectedProduct(null);
-                        setIsAuthModalOpen(true);
-                        window.history.pushState({ modal: true }, '');
-                        return;
-                      };
-                      setIsWritingReview(true);
-                    }}
-                    className="w-full py-3 bg-[#FDF5E6] text-[#C14B3A] font-bold rounded-full text-xs uppercase tracking-widest border border-[#C14B3A]/20 hover:bg-[#C14B3A] hover:text-white transition-all"
-                  >
-                    Escribir Reseña
+                  <button onClick={() => setShowMobileReviews(false)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C14B3A] shadow-md rounded-full text-xs font-bold text-white">
+                    <ArrowLeft size={14} />
+                    <span>Producto</span>
                   </button>
                 )}
               </div>
-            </div>
 
-            {/* Desktop Reviews: Re-inject original logic if needed, or keeping it hidden for now as per mobile focus. 
+              {/* MAIN CONTENT (Desktop: Always Visible | Mobile: Visible if !showMobileReviews) */}
+              <div className={`w-full h-full transition-all duration-300 md:opacity-100 md:pointer-events-auto ${showMobileReviews ? 'hidden md:flex md:flex-row' : 'flex flex-col md:flex-row'}`}>
+
+                {/* Image Section */}
+                <div className="h-[220px] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
+                  <img
+                    src={selectedProduct.image}
+                    className="w-full h-full object-cover object-center md:rounded-l-[50px] md:cursor-zoom-in"
+                    alt={selectedProduct.name}
+                    onClick={() => setFullScreenImage(selectedProduct.image)}
+                  />
+                  {/* Desktop Zoom Button */}
+                  <button
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md p-4 rounded-full text-white border border-white/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-xl pointer-events-none md:pointer-events-auto hidden md:block"
+                    aria-label="Zoom Image"
+                  >
+                    <ZoomIn size={32} />
+                  </button>
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/40 text-white text-[9px] px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none md:hidden flex items-center gap-1 z-10 font-bold border border-white/10">
+                    <Sparkles size={8} /> Zoom
+                  </div>
+
+                  {/* Mobile: Rating Overlay (Bottom Left) */}
+                  <div className="absolute bottom-3 left-3 bg-black/40 text-[#D4AF37] px-2 py-1 rounded-full backdrop-blur-sm md:hidden flex items-center gap-1 z-10 border border-white/10">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={10} fill={i < Math.floor(selectedProduct.rating) ? "currentColor" : "none"} />
+                      ))}
+                    </div>
+                    <span className="text-[9px] font-bold text-white ml-1">({selectedProduct.reviews?.length || 0})</span>
+                  </div>
+                </div>
+
+                {/* Details Section */}
+                <div className="flex-1 flex flex-col p-5 md:p-12 md:max-h-full md:overflow-hidden bg-white relative">
+
+                  {/* Header Section */}
+                  <div className="space-y-2 md:space-y-4 text-center md:text-left flex-shrink-0">
+                    <span className="hidden md:inline-block bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-bold md:font-ghibli-title md:text-white md:bg-[#C14B3A] px-3 py-1 md:px-6 md:py-2 rounded-full uppercase tracking-wider">
+                      {selectedProduct.category}
+                    </span>
+                    <h2 className="text-xl md:text-5xl font-ghibli-title text-[#3A332F] leading-tight uppercase line-clamp-2 md:line-clamp-none">
+                      {selectedProduct.name}
+                    </h2>
+
+                    {/* Desktop Reviews Summary: Adjusted to match mobile style */}
+                    <div className="hidden md:flex items-center gap-2 justify-center md:justify-start">
+                      <div className="flex items-center gap-1 bg-[#FDF5E6] px-3 py-1.5 rounded-full border border-[#F0E6D2]">
+                        <Star size={16} className="text-[#C14B3A] fill-[#C14B3A]" />
+                        <span className="text-sm font-bold text-[#3A332F]">{Number(selectedProduct.rating).toFixed(1)}</span>
+                      </div>
+                      <span className="text-xs font-ghibli-title uppercase text-[#8C8279] tracking-wider px-2 border-l border-[#8C8279]/30">
+                        {collections.find(c => c.id === selectedProduct.collectionId)?.title || "Colección Especial"}
+                      </span>
+                      <span className="text-[10px] font-bold text-[#8C8279] underline ml-2 cursor-pointer hover:text-[#C14B3A] transition-colors">
+                        {selectedProduct.reviews?.length || 0} Opiniones
+                      </span>
+                    </div>
+
+                    {/* Desktop Review Buton */}
+                    <div className="hidden md:block mt-2">
+                      <button
+                        onClick={() => {
+                          window.history.pushState({ modal: true, reviews: true }, '');
+                          setShowMobileReviews(true);
+                          setIsWritingReview(false); // Open in "View" mode first
+                        }}
+                        className="text-[10px] uppercase font-bold text-[#C14B3A] border border-[#C14B3A] px-3 py-1 rounded-full hover:bg-[#C14B3A] hover:text-white transition-colors flex items-center gap-1 w-fit"
+                      >
+                        <MessageSquare size={12} /> Ver Opiniones
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mobile & Desktop: Full Description with internal scroll if needed */}
+                  <div className="mt-4 pr-2 custom-scrollbar min-h-0 flex-1 overflow-y-auto">
+                    <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">
+                      {selectedProduct.description}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col justify-end gap-4 mt-2 md:mt-8 flex-shrink-0">
+                    {/* Price */}
+                    <div className="text-center md:text-left border-t border-[#F0E6D2] pt-3 md:pt-6 md:border-none">
+                      <span className="font-ghibli-title text-3xl md:text-5xl text-[#3A332F]">
+                        <span className="text-[#C14B3A] text-lg md:text-2xl mr-1">$</span>{formatCurrency(selectedProduct.price)}
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 md:gap-6">
+                      {/* Qty */}
+                      <div className="flex items-center justify-between bg-[#FDF5E6] px-3 py-2 md:px-8 md:py-5 rounded-full border-2 border-[#E6D5B8] w-28 md:w-48 shrink-0">
+                        <button onClick={() => setDetailQuantity(q => Math.max(1, q - 1))} className="p-1"><Minus size={14} className="md:w-5 md:h-5" /></button>
+                        <span className="font-ghibli-title text-base md:text-2xl">{detailQuantity}</span>
+                        <button onClick={() => setDetailQuantity(q => q + 1)} className="p-1"><Plus size={14} className="md:w-5 md:h-5" /></button>
+                      </div>
+
+                      {/* Add to Cart - Desktop: Icon Only requested */}
+                      <button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-3 md:py-6 rounded-full text-xs md:text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-2 md:gap-4 active:scale-95 group">
+                        <ShoppingCart size={24} className="group-hover:scale-110 transition-transform" />
+                        {/* Text hidden on both mobile (previously) and now desktop as per request "reemplazado por el ícono" */}
+                      </button>
+
+                      <button
+                        onClick={() => { setProductToShare(selectedProduct); setIsShareModalOpen(true); }}
+                        className="p-3 md:p-6 bg-white border-2 border-[#3A332F] rounded-full hover:bg-[#FDF5E6] transition-all text-[#3A332F]"
+                        title="Compartir"
+                      >
+                        <Share2 size={24} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Desktop: Ensure this footer is always visible */}
+                  <div className="flex-shrink-0 pt-4"></div>
+
+                </div>
+              </div>
+
+              {/* REVIEWS CONTENT (Mobile & Desktop Overlay) */}
+              <div className={`flex-col h-full bg-white px-4 pb-4 pt-12 ${showMobileReviews ? 'flex md:absolute md:inset-0 md:z-20 md:p-12' : 'hidden'} min-h-[60vh]`}>
+                <div className="mt-2 flex-grow overflow-y-auto space-y-4 pb-8">
+                  <h3 className="font-ghibli-title text-xl text-[#3A332F] uppercase text-center mb-4">Opiniones del Gremio</h3>
+
+                  {selectedProduct.reviews && selectedProduct.reviews.length > 0 ? (
+                    selectedProduct.reviews.map((r, i) => (
+                      <div key={i} className="bg-[#FDF5E6]/40 p-4 rounded-[20px] space-y-2 border border-[#F0E6D2]">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-bold text-[#3A332F] text-sm">{r.userName}
+                            </h4>
+                            <div className="flex text-[#D4AF37]">{[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < r.rating ? "currentColor" : "none"} />)}</div>
+                            {/* RAW DEBUGGING: Show exactly what is stored */}
+                            {/* <pre className="text-[8px] text-blue-600 bg-gray-100 p-1 mt-1 rounded max-w-[200px] overflow-hidden">{JSON.stringify(r.images)}</pre> */}
+                          </div>
+                          <span className="text-[9px] text-[#8C8279] font-bold">
+                            {new Date(r.date).toLocaleDateString()}
+                            {user.email === 'kaieke37@gmail.com' && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteReview(r.id); }}
+                                className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
+                                title="Borrar Reseña (Admin)"
+                              >
+                                <Trash2 size={10} />
+                              </button>
+                            )}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-[#3A332F]/80 leading-tight">{r.comment}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-center py-10 opacity-60 space-y-3">
+                      <div className="w-16 h-16 bg-[#FDF5E6] rounded-full flex items-center justify-center mb-2">
+                        <MessageSquare size={32} className="text-[#C14B3A]" />
+                      </div>
+                      <h4 className="font-ghibli-title text-lg text-[#3A332F]">Sin opiniones aún</h4>
+                      <p className="text-xs text-[#8C8279] max-w-[200px]">Este tesoro espera su primera leyenda. ¡Sé el primero en contarla!</p>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-auto pt-4 border-t border-[#F0E6D2]">
+                  {isWritingReview ? (
+                    <div className="space-y-3 animate-slide-in">
+                      <div className="flex justify-center gap-2 mb-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button key={star} type="button" onClick={() => setReviewRating(star)} className="focus:outline-none transition-transform active:scale-95 hover:scale-110">
+                            <Star size={24} fill={star <= reviewRating ? "#D4AF37" : "none"} className={star <= reviewRating ? "text-[#D4AF37]" : "text-[#D4AF37]/40"} />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        placeholder="Cuéntanos tu historia..."
+                        className="w-full p-3 bg-[#FDF5E6] border-2 border-[#D4AF37]/30 rounded-2xl outline-none text-[#3A332F] text-xs font-medium resize-none h-20"
+                      />
+
+                      {/* Photo Upload Removed */}
+                      <div className="flex gap-2 mt-4">
+                        <button type="button" onClick={() => setIsWritingReview(false)} className="flex-1 py-2 bg-gray-200 text-[#3A332F] font-bold rounded-full text-[10px] uppercase tracking-widest hover:bg-gray-300 transition-colors">Cancelar</button>
+                        <button type="button" onClick={handleReviewSubmit} className="flex-1 py-2 bg-[#C14B3A] text-white font-bold rounded-full text-[10px] uppercase tracking-widest shadow-lg hover:bg-[#8B362A] transition-colors">Enviar</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!user.isRegistered) {
+                          setShowMobileReviews(false);
+                          setSelectedProduct(null);
+                          setIsAuthModalOpen(true);
+                          window.history.pushState({ modal: true }, '');
+                          return;
+                        };
+                        setIsWritingReview(true);
+                      }}
+                      className="w-full py-3 bg-[#FDF5E6] text-[#C14B3A] font-bold rounded-full text-xs uppercase tracking-widest border border-[#C14B3A]/20 hover:bg-[#C14B3A] hover:text-white transition-all"
+                    >
+                      Escribir Reseña
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Desktop Reviews: Re-inject original logic if needed, or keeping it hidden for now as per mobile focus. 
                 I'll allow desktop to just show the main content. The user said "Also for desktop... wait no, user said 'Recuerda que es sólo en la versión móvil'".
                 So I should maintain desktop as best as I can. 
                 The previous desktop layout had Image | Info (with reviews inside Info or separate).
                 I'll leave it simple for now to avoid breaking desktop logic too much, sticking to what I verified.
             */}
 
+            </div>
           </div>
-        </div>
-      )
+        )
       }
 
-      {fullScreenImage && (
-        <div
-          className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out backdrop-blur-xl animate-fade-in"
-          onClick={() => setFullScreenImage(null)}
-        >
-          <button
+      {
+        fullScreenImage && (
+          <div
+            className="fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out backdrop-blur-xl animate-fade-in"
             onClick={() => setFullScreenImage(null)}
-            className="absolute top-4 right-4 md:top-8 md:right-8 text-white/50 hover:text-white transition-colors p-2"
           >
-            <X size={32} />
-          </button>
+            <button
+              onClick={() => setFullScreenImage(null)}
+              className="absolute top-4 right-4 md:top-8 md:right-8 text-white/50 hover:text-white transition-colors p-2"
+            >
+              <X size={32} />
+            </button>
 
-          <img
-            src={fullScreenImage}
-            className="max-w-full max-h-full object-contain rounded-lg md:rounded-2xl shadow-2xl scale-100 animate-pop"
-            alt="Zoom"
-          />
-        </div>
-      )}
+            <img
+              src={fullScreenImage}
+              className="max-w-full max-h-full object-contain rounded-lg md:rounded-2xl shadow-2xl scale-100 animate-pop"
+              alt="Zoom"
+            />
+          </div>
+        )
+      }
 
       <footer className="bg-[#1A1614] text-[#FDF5E6] pt-12 pb-24 md:pt-32 md:pb-12 rounded-t-[40px] md:rounded-t-[100px] mt-12 md:mt-24 relative z-[50] border-t-8 border-[#D4AF37] shadow-2xl">
         <div className="max-w-7xl mx-auto px-6 space-y-12 md:space-y-24">
@@ -2116,12 +2023,14 @@ const App: React.FC = () => {
       </footer>
 
 
-      {isShareModalOpen && productToShare && (
-        <ShareModal
-          product={productToShare}
-          onClose={() => setIsShareModalOpen(false)}
-        />
-      )}
+      {
+        isShareModalOpen && productToShare && (
+          <ShareModal
+            product={productToShare}
+            onClose={() => setIsShareModalOpen(false)}
+          />
+        )
+      }
 
       <style>{`
         @keyframes slide-up { from { transform: translateY(80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
