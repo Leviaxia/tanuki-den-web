@@ -141,8 +141,16 @@ const App: React.FC = () => {
               access_token: session.access_token,
               refresh_token: session.refresh_token,
             });
-            if (error) console.error("Error restoring session:", error);
-            else console.log("Session restored for RLS.");
+            if (error) {
+              console.error("Error restoring session:", error);
+              // Clear invalid session data to prevent RLS errors
+              localStorage.removeItem('tanuki-auth-token');
+              sessionStorage.removeItem('tanuki_user');
+              // Force reload to reset state cleanly
+              window.location.reload();
+            } else {
+              console.log("Session restored for RLS.");
+            }
           }
         } catch (e) { console.error("Error parsing session for restore", e); }
       }

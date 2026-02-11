@@ -132,6 +132,16 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
             // Save Order to Supabase (if user logged in or guest tracking enabled)
             if (user.id !== 'guest') {
+                // VALIDATE SESSION BEFORE INSERTING to avoid RLS errors
+                const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+
+                if (authError || !authUser || authUser.id !== user.id) {
+                    console.error("Session mismatch during checkout", authError);
+                    alert("Tu sesión ha expirado. Por favor inicia sesión nuevamente para completar el pedido.");
+                    setIsProcessing(false);
+                    return;
+                }
+
                 const { data: orderData, error: orderError } = await supabase.from('orders').insert({
                     user_id: user.id,
                     status: 'pending',
