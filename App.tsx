@@ -8,13 +8,14 @@ import {
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
-import { Product, CartItem, UserMessage, Review, User as UserType, Collection } from './types';
-import AuthModal from './components/AuthModal';
-import CheckoutModal from './components/CheckoutModal';
-import ShareModal from './components/ShareModal';
 import ProfileModal from './components/ProfileModal';
 import SharedWishlistModal from './components/SharedWishlistModal';
-import { PRODUCTS as INITIAL_PRODUCTS, heroText } from './constants';
+import MissionsModal from './components/MissionsModal';
+import AuthModal from './components/AuthModal'; // [RESTORED]
+import CheckoutModal from './components/CheckoutModal'; // [RESTORED]
+import ShareModal from './components/ShareModal'; // [RESTORED]
+import { PRODUCTS as INITIAL_PRODUCTS, heroText, MISSIONS } from './constants';
+import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission } from './types';
 
 import { supabase } from './src/lib/supabase';
 import { formatCurrency } from './src/lib/utils';
@@ -187,11 +188,15 @@ const App: React.FC = () => {
   const [isSharedWishlistOpen, setIsSharedWishlistOpen] = useState(false);
   const [sharedWishlistTargetId, setSharedWishlistTargetId] = useState<string | null>(null);
 
-
-
-
-
   const [activeCategory, setActiveCategory] = useState<string>('All');
+
+  // MISSIONS STATE
+  const [isMissionsModalOpen, setIsMissionsModalOpen] = useState(false);
+  const [userCoins, setUserCoins] = useState(0);
+  const [userMissions, setUserMissions] = useState<Record<string, UserMission>>({});
+  const [viewedProductsSession] = useState<Set<string>>(new Set()); // Track unique views this session
+
+  // Category Scroll
 
   // Category Scroll
   const categoryScrollRef = useRef<HTMLDivElement>(null);
@@ -661,7 +666,182 @@ const App: React.FC = () => {
     fetchProducts();
   }, []);
 
-  // Payment Success Handling
+  // --- MISSIONS SYSTEM LOGIC ---
+
+  // 1. Initialize & Fetch Missions Data
+  useEffect(() => {
+    if (!user.isRegistered || user.id === 'guest') return;
+
+    const fetchMissionsData = async () => {
+      try {
+        // Fetch Profile for Coins & Streak
+        const { data: profile } = await supabase.from('profiles').select('coins, login_streak, last_login').eq('id', user.id).single();
+        if (profile) {
+          setUserCoins(profile.coins || 0);
+
+          // CHECK LOGIN STREAK
+          const lastLogin = profile.last_login ? new Date(profile.last_login) : null;
+          const now = new Date();
+          const oneDay = 24 * 60 * 60 * 1000;
+
+          let newStreak = profile.login_streak || 0;
+          let shouldUpdate = false;
+
+          if (!lastLogin) {
+            newStreak = 1;
+            shouldUpdate = true;
+          } else {
+            const diff = now.getTime() - lastLogin.getTime();
+            if (diff > oneDay && diff < (2 * oneDay)) {
+              // Consecutive day
+              newStreak += 1;
+              shouldUpdate = true;
+            } else if (diff >= (2 * oneDay)) {
+              // Broken streak
+              newStreak = 1;
+              shouldUpdate = true;
+            } else if (now.getDate() !== lastLogin.getDate()) {
+              // Same day check (basic) - actually the above logic covers 24h windows.
+              // If simply different calendar day but within 48h...
+              // Let's stick to the time diff for simplicity or just run it once per session if not upgraded today.
+              // For now, assume it updates if > 24h from last login.
+              // Simplified: if last login was yesterday (calendar date), increment.
+              const isToday = now.toDateString() === lastLogin.toDateString();
+              if (!isToday && diff < (2 * oneDay)) {
+                newStreak += 1;
+                shouldUpdate = true;
+              } else if (diff > (2 * oneDay)) {
+                newStreak = 1;
+                shouldUpdate = true;
+              }
+            }
+          }
+
+          if (shouldUpdate) {
+            await supabase.from('profiles').update({
+              login_streak: newStreak,
+              last_login: now.toISOString()
+            }).eq('id', user.id);
+
+            // Update specific mission 'active_member'
+            updateMissionProgress('active_member', newStreak, true);
+          } else {
+            // Just sync visual state of mission if no update needed
+            updateMissionProgress('active_member', newStreak, true, false);
+          }
+        }
+
+        // Fetch User Missions Progress
+        const { data: missionsData } = await supabase.from('user_missions').select('*').eq('user_id', user.id);
+        const missionsMap: Record<string, UserMission> = {};
+        missionsData?.forEach((m: any) => {
+          missionsMap[m.mission_id] = m;
+        });
+        setUserMissions(missionsMap);
+
+        // CHECK REGISTRATION MISSION
+        if (user.isRegistered) {
+          updateMissionProgress('first_step', 1, true);
+        }
+
+      } catch (error) {
+        console.error("Error fetching missions:", error);
+      }
+    };
+
+    fetchMissionsData();
+  }, [user.id, user.isRegistered]);
+
+  // 2. Core Progress Updater
+  const updateMissionProgress = async (missionId: string, value: number, isAbsolute: boolean = false, syncDb: boolean = true) => {
+    if (!user.isRegistered || user.id === 'guest') return;
+
+    setUserMissions(prev => {
+      const current = prev[missionId] || { mission_id: missionId, progress: 0, completed: false, claimed: false };
+      const missionDef = MISSIONS.find(m => m.id === missionId);
+      if (!missionDef) return prev;
+
+      if (current.completed) return prev; // Already done
+
+      const newProgress = isAbsolute ? value : current.progress + value;
+      const isCompleted = newProgress >= missionDef.target;
+
+      const nextMissionState = { ...current, progress: newProgress, completed: isCompleted };
+
+      // Sync to DB
+      if (syncDb) {
+        const dbPayload = {
+          user_id: user.id,
+          mission_id: missionId,
+          progress: newProgress,
+          completed: isCompleted,
+          updated_at: new Date().toISOString()
+        };
+
+        // Upsert
+        supabase.from('user_missions').upsert(dbPayload, { onConflict: 'user_id, mission_id' })
+          .then(({ error }) => { if (error) console.error("Mission sync error", error); });
+
+        if (isCompleted && !current.completed) {
+          alert(`✨ ¡Misión Completada! ✨\nHas completado: ${missionDef.title}`);
+          // Optional: Play sound or show toast
+        }
+      }
+
+      return { ...prev, [missionId]: nextMissionState };
+    });
+  };
+
+  const claimReward = async (missionId: string) => {
+    const mission = userMissions[missionId];
+    const missionDef = MISSIONS.find(m => m.id === missionId);
+    if (!mission || !missionDef || !mission.completed || mission.claimed) return;
+
+    try {
+      // 1. Update Profile Coins
+      const { error: coinsError } = await supabase.rpc('increment_coins', { x: missionDef.reward, user_id: user.id });
+      // Note: Needs RPC or two-step get/update. 
+      // Fallback to simple update for now:
+      const newCoins = userCoins + missionDef.reward;
+      await supabase.from('profiles').update({ coins: newCoins }).eq('id', user.id);
+      setUserCoins(newCoins);
+
+      // 2. Mark Claimed
+      await supabase.from('user_missions').update({ claimed: true }).eq('user_id', user.id).eq('mission_id', missionId);
+
+      setUserMissions(prev => ({
+        ...prev,
+        [missionId]: { ...mission, claimed: true }
+      }));
+
+      alert(`💰 ¡Recompensa Reclamada! Has recibido ${missionDef.reward} Monedas Tanuki.`);
+
+    } catch (error) {
+      console.error("Error claiming reward:", error);
+      alert("Error al reclamar recompensa. Inténtalo de nuevo.");
+    }
+  };
+
+  // 3. Track Product Views
+  useEffect(() => {
+    if (selectedProduct && user.isRegistered) {
+      if (!viewedProductsSession.has(selectedProduct.id)) {
+        viewedProductsSession.add(selectedProduct.id);
+        updateMissionProgress('collector_fire', 1, false);
+      }
+    }
+  }, [selectedProduct]);
+
+  // 4. Track Favorites & Cart (Cazador de Tesoros)
+  useEffect(() => {
+    if (user.isRegistered) {
+      const totalItems = favorites.length + cart.length;
+      // Optimization: dont spam update if unchanged
+      // But logic requires checking against current progress. 
+      // Simplest is to just 'set' absolute progress to current total.
+      updateMissionProgress('treasure_hunter', totalItems, true);
+    }
+  }, [favorites.length, cart.length]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
@@ -673,6 +853,9 @@ const App: React.FC = () => {
         setAppliedDiscount(0);
         setHasSpunFirst(false); // Enable spin again for next purchase
       }
+
+      // MISSION: Primer Tesoro
+      updateMissionProgress('first_treasure', 1, true);
 
       alert('¡Pago completado con éxito! Gracias por tu compra.\n\n✨ ¡Tu energía se ha recargado! Puedes volver a girar la ruleta en tu próxima visita.');
       // remove params from url
@@ -1391,6 +1574,7 @@ const App: React.FC = () => {
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenSubscription={handleSubscriptionClick}
+        onOpenMissions={() => setIsMissionsModalOpen(true)}
         isMenuOpen={isMobileMenuOpen}
         setIsMenuOpen={setIsMobileMenuOpen}
       />
@@ -1475,6 +1659,15 @@ const App: React.FC = () => {
           handleSubscriptionClick();
         }}
         onAddToCart={handleWishlistAddToCart}
+      />
+
+      <MissionsModal
+        isOpen={isMissionsModalOpen}
+        onClose={() => setIsMissionsModalOpen(false)}
+        userCoins={userCoins}
+        missions={MISSIONS}
+        userMissions={userMissions}
+        onClaimAttributes={claimReward}
       />
 
       <SharedWishlistModal

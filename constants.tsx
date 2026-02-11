@@ -72,10 +72,53 @@ export const PRODUCTS: Product[] = [
 
 export const heroText = {
   title: "Tesoros",
-  accent: "Mágicos",
-  sub: "Descubre figuras exclusivas y tesoros artesanales inspirados en tus mundos favoritos."
+  subtitle: "Con Alma.",
+  description: "Más que figuras, custodiamos historias. Piezas seleccionadas para coleccionistas que valoran la autenticidad y el detalle.",
+  secondary: "Boutique de Arte Anime"
 };
 
+export const MISSIONS = [
+  {
+    id: 'first_step',
+    title: 'Primer Paso',
+    description: 'Crea tu cuenta en el Tanuki Den.',
+    target: 1,
+    reward: 100,
+    icon: 'UserCheck'
+  },
+  {
+    id: 'active_member',
+    title: 'Miembro Activo',
+    description: 'Inicia sesión 3 días consecutivos.',
+    target: 3,
+    reward: 200,
+    icon: 'Flame'
+  },
+  {
+    id: 'collector_fire',
+    title: 'Fuego Coleccionista',
+    description: 'Explora 10 tesoros diferentes.',
+    target: 10,
+    reward: 50,
+    icon: 'Map'
+  },
+  {
+    id: 'treasure_hunter',
+    title: 'Cazador de Tesoros',
+    description: 'Añade 5 ítems a favoritos o al carrito.',
+    target: 5,
+    reward: 150,
+    icon: 'ShoppingBag'
+  },
+  {
+    id: 'first_treasure',
+    title: 'Primer Tesoro',
+    description: 'Realiza tu primera compra.',
+    target: 1,
+    reward: 500,
+    icon: 'Star'
+  }
+];
 export const collectionsContent = [
   {
     id: 1,

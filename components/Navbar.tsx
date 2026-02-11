@@ -13,6 +13,7 @@ interface NavbarProps {
   onOpenProfile: () => void;
   onOpenAuth: () => void;
   onOpenSubscription: () => void;
+  onOpenMissions: () => void; // [NEW]
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
 }
@@ -26,6 +27,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onOpenProfile,
   onOpenAuth,
   onOpenSubscription,
+  onOpenMissions, // [NEW]
   isMenuOpen,
   setIsMenuOpen
 }) => {
@@ -104,6 +106,14 @@ const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               <button
+                onClick={onOpenMissions}
+                className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-full font-ghibli-title text-[10px] tracking-widest transition-all shadow-lg active:scale-95 border-2 bg-white text-[#3A332F] border-[#3A332F]/10 hover:bg-[#C14B3A] hover:text-white hover:border-[#C14B3A]"
+              >
+                <Sparkles size={14} />
+                <span>MISIONES</span>
+              </button>
+
+              <button
                 onClick={onOpenCart}
                 className="relative p-3 bg-[#FDF5E6] rounded-full text-[#3A332F] hover:bg-[#C14B3A] hover:text-white transition-all border-2 border-[#E6D5B8]"
               >
@@ -166,6 +176,14 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               <Crown size={20} className={user.membership ? "" : "animate-bounce"} />
               <span className="relative z-10">{user.membership ? 'MI ESTATUS' : 'UNIRSE AL CLAN'}</span>
+            </button>
+
+            <button
+              onClick={() => { onOpenMissions(); setIsMenuOpen(false); }}
+              className="py-4 px-8 rounded-full font-ghibli-title text-base flex items-center justify-center gap-3 shadow-lg relative overflow-hidden group active:scale-95 transition-all duration-300 w-full max-w-xs bg-white text-[#3A332F] border-2 border-[#3A332F]/10"
+            >
+              <Sparkles size={20} />
+              <span className="relative z-10">MISIONES DEL CLAN</span>
             </button>
           </div>
 

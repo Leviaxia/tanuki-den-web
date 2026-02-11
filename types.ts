@@ -55,3 +55,19 @@ export interface UserMessage {
   role: 'user' | 'assistant';
   content: string;
 }
+
+export interface Mission {
+  id: string;
+  title: string;
+  description: string;
+  target: number; // e.g. 10 views
+  reward: number; // coins
+  icon: string; // lucide icon name or image path
+}
+
+export interface UserMission {
+  mission_id: string;
+  progress: number;
+  completed: boolean;
+  claimed: boolean;
+}
