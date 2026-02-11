@@ -1,4 +1,6 @@
--- 1. Create Rewards Table (Catalog)
+/* 
+  1. Create Rewards Table (Catalog)
+*/
 create table if not exists public.rewards (
     id text primary key,
     title text not null,
@@ -11,7 +13,9 @@ create table if not exists public.rewards (
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 2. Create User Rewards Table (Inventory/History)
+/* 
+  2. Create User Rewards Table (Inventory/History)
+*/
 create table if not exists public.user_rewards (
     id uuid default gen_random_uuid() primary key,
     user_id uuid references public.profiles(id) on delete cascade not null,
@@ -22,11 +26,15 @@ create table if not exists public.user_rewards (
     expires_at timestamp with time zone -- 12 months policy
 );
 
--- 3. Enable RLS (Must be done AFTER table creation)
+/* 
+  3. Enable RLS (Must be done AFTER table creation)
+*/
 alter table public.rewards enable row level security;
 alter table public.user_rewards enable row level security;
 
--- 4. RLS Policies
+/* 
+  4. RLS Policies
+*/
 -- Rewards: Public read, Admin write
 drop policy if exists "Enable read access for all users" on public.rewards;
 create policy "Enable read access for all users" on public.rewards for select using (true);
@@ -41,7 +49,9 @@ create policy "Enable insert access for own rewards" on public.user_rewards for 
 drop policy if exists "Enable update access for own rewards" on public.user_rewards;
 create policy "Enable update access for own rewards" on public.user_rewards for update using (auth.uid() = user_id);
 
--- 5. Initial Data Seed (As per User Requirements)
+/* 
+  5. Initial Data Seed (As per User Requirements)
+*/
 insert into public.rewards (id, title, description, cost, tier, type, value, stock) values
 -- Tier 1: Engagement
 ('bg_tanuki', 'Fondo de Perfil Tanuki', 'Fondo exclusivo para tu perfil.', 100, 1, 'digital', '{"asset": "bg_tanuki_v1"}', null),
@@ -56,15 +66,13 @@ insert into public.rewards (id, title, description, cost, tier, type, value, sto
 ('shipping_free', 'Envío Gratis (Min $200k)', 'El Clan cubre tu envío completamente.', 1200, 3, 'coupon', '{"discount_type": "shipping_free", "min_purchase": 200000, "code_prefix": "FREESHIP"}', null),
 ('print_10off', '10% OFF Impresión 3D', 'Tope máximo de $25.000 de descuento.', 1500, 3, 'coupon', '{"discount_percent": 10, "max_discount": 25000, "category": "3d_print", "code_prefix": "3D10"}', null)
 
--- Removed Tier 4 for now (Early Access, Mystery Figure)
--- ('early_access', 'Acceso Anticipado 24h', ...)
--- ('figure_limited', 'Figura Sorpresa Ed. Limitada', ...)
-
 on conflict (id) do update set 
     title = excluded.title,
     description = excluded.description,
     cost = excluded.cost,
     value = excluded.value;
 
--- 6. Cleanup Removed Rewards (Optional, for updates)
+/* 
+  6. Cleanup Removed Rewards (Optional, for updates)
+*/
 delete from public.rewards where id in ('early_access', 'figure_limited');
