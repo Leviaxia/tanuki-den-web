@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Camera, Edit3, Mail, MapPin, Phone, Package, Heart, User as UserIcon, LogOut, ChevronRight, ExternalLink } from 'lucide-react';
+import { X, Camera, Edit3, Mail, MapPin, Phone, Package, Heart, User as UserIcon, LogOut, ChevronRight, ExternalLink, Share2 } from 'lucide-react';
 import { User, Product } from '../types';
 import { supabase } from '../src/lib/supabase';
 import ProductCard from './ProductCard'; // Assuming you have this or need to move logic
@@ -15,6 +15,7 @@ interface ProfileModalProps {
     favorites: string[];
     toggleFavorite: (id: string) => void;
     onOpenSubscription: () => void; // To forward the "Estatus del Clan" click
+    onAddToCart: (products: Product[]) => void;
 }
 
 // Helper for currency if not available
@@ -26,11 +27,14 @@ const formatMoney = (amount: number) => {
 };
 
 const ProfileModal: React.FC<ProfileModalProps> = ({
-    isOpen, onClose, user, setUser, onLogout, products, favorites, toggleFavorite, onOpenSubscription
+    isOpen, onClose, user, setUser, onLogout, products, favorites, toggleFavorite, onOpenSubscription, onAddToCart
 }) => {
     const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist'>('profile');
     const [orders, setOrders] = useState<any[]>([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
+
+    // Wishlist Selection State
+    const [selectedWishlistItems, setSelectedWishlistItems] = useState<Set<string>>(new Set());
 
     // Colors based on membership
     const getAccentColor = () => {
@@ -296,7 +300,22 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
                     {activeTab === 'wishlist' && (
                         <div className="space-y-6 animate-slide-in h-full flex flex-col">
-                            <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F]">Lista de Deseos</h2>
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F]">Lista de Deseos</h2>
+                                {favorites.length > 0 && (
+                                    <button
+                                        onClick={() => {
+                                            const url = `${window.location.origin}?shared_wishlist=${user.id}`;
+                                            navigator.clipboard.writeText(url);
+                                            alert('¡Enlace copiado! Comparte tu lista con tus amigos.');
+                                        }}
+                                        className="flex items-center gap-2 text-[#C14B3A] font-bold text-sm bg-[#C14B3A]/10 px-4 py-2 rounded-full hover:bg-[#C14B3A] hover:text-white transition-all"
+                                    >
+                                        <Share2 size={16} />
+                                        Compartir Lista
+                                    </button>
+                                )}
+                            </div>
 
                             {favorites.length === 0 ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-[#3A332F]/40 space-y-4">
@@ -304,32 +323,107 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                     <p className="font-ghibli-title text-lg">Tu lista está vacía</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pb-4 scrollbar-hide">
-                                    {products.filter(p => favorites.includes(p.id)).map(product => {
-                                        // Simplified Card for Wishlist
-                                        return (
-                                            <div key={product.id} className="bg-white p-4 rounded-[20px] shadow-sm border border-[#3A332F]/5 flex gap-4 relative group hover:shadow-md transition-shadow">
-                                                <img src={product.image} className="w-20 h-20 rounded-xl object-cover" alt={product.name} />
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-bold text-[#3A332F] text-sm truncate mb-1">{product.name}</h4>
-                                                    <p className="text-[#C14B3A] font-black text-sm">${formatMoney(product.price)}</p>
+                                <>
+                                    <div className="flex justify-between items-center px-1">
+                                        <button
+                                            onClick={() => {
+                                                if (selectedWishlistItems.size === products.filter(p => favorites.includes(p.id)).length) {
+                                                    setSelectedWishlistItems(new Set());
+                                                } else {
+                                                    setSelectedWishlistItems(new Set(products.filter(p => favorites.includes(p.id)).map(p => p.id)));
+                                                }
+                                            }}
+                                            className="text-sm font-bold text-[#3A332F] hover:text-[#C14B3A] underline decoration-dotted"
+                                        >
+                                            {selectedWishlistItems.size === products.filter(p => favorites.includes(p.id)).length ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                                        </button>
+                                        <span className="text-sm text-[#3A332F]/60">
+                                            {selectedWishlistItems.size} seleccionados
+                                        </span>
+                                    </div>
 
-                                                    <div className="mt-2 flex gap-2">
-                                                        <button
-                                                            onClick={() => toggleFavorite(product.id)}
-                                                            className="p-1.5 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors"
-                                                        >
-                                                            <Heart size={14} fill="currentColor" />
-                                                        </button>
-                                                        {/* <button className="p-1.5 bg-[#3A332F] text-white rounded-full hover:bg-[#C14B3A] transition-colors ml-auto">
-                                                    <Package size={14} />
-                                                </button> */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pb-4 scrollbar-hide flex-1">
+                                        {products.filter(p => favorites.includes(p.id)).map(product => {
+                                            const isSelected = selectedWishlistItems.has(product.id);
+                                            return (
+                                                <div
+                                                    key={product.id}
+                                                    onClick={() => {
+                                                        const newSet = new Set(selectedWishlistItems);
+                                                        if (newSet.has(product.id)) newSet.delete(product.id);
+                                                        else newSet.add(product.id);
+                                                        setSelectedWishlistItems(newSet);
+                                                    }}
+                                                    className={`
+                                                        bg-white p-4 rounded-[20px] shadow-sm border transition-all cursor-pointer flex gap-4 relative group hover:shadow-md
+                                                        ${isSelected ? 'border-[#C14B3A] bg-red-50/10' : 'border-[#3A332F]/5'}
+                                                    `}
+                                                >
+                                                    {/* Checkbox Indicator */}
+                                                    <div className={`
+                                                        absolute top-3 right-3 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
+                                                        ${isSelected ? 'bg-[#C14B3A] border-[#C14B3A]' : 'border-[#3A332F]/20 bg-white'}
+                                                    `}>
+                                                        {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
+                                                    </div>
+
+                                                    <img src={product.image} className="w-20 h-20 rounded-xl object-cover" alt={product.name} />
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                        <h4 className="font-bold text-[#3A332F] text-sm truncate mb-1">{product.name}</h4>
+                                                        <p className="text-[#C14B3A] font-black text-sm">${formatMoney(product.price)}</p>
+
+                                                        <div className="mt-2 flex gap-2">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleFavorite(product.id);
+                                                                }}
+                                                                className="p-1.5 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors z-20 relative"
+                                                            >
+                                                                <Heart size={14} fill="currentColor" />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Footer for Wishlist Actions */}
+                                    <div className="pt-4 border-t border-[#3A332F]/10 flex flex-col sm:flex-row gap-4 justify-between items-center bg-[#FDF5E6] sticky bottom-0">
+                                        <div className="text-center sm:text-left">
+                                            <p className="text-xs text-[#3A332F]/60 font-bold uppercase tracking-wider">Total Est.</p>
+                                            <p className="text-xl font-black text-[#C14B3A]">
+                                                ${formatMoney(
+                                                    products
+                                                        .filter(p => favorites.includes(p.id) && selectedWishlistItems.has(p.id))
+                                                        .reduce((sum, p) => sum + p.price, 0)
+                                                )}
+                                            </p>
+                                        </div>
+                                        <button
+                                            disabled={selectedWishlistItems.size === 0}
+                                            onClick={() => {
+                                                if (selectedWishlistItems.size === 0) return;
+                                                const itemsToAdd = products.filter(p => favorites.includes(p.id) && selectedWishlistItems.has(p.id));
+                                                onAddToCart(itemsToAdd);
+                                                // Deselect after adding? Maybe optional.
+                                                setSelectedWishlistItems(new Set());
+                                                alert(`¡${itemsToAdd.length} productos agregados al carrito mágico!`);
+                                            }}
+                                            className={`
+                                                flex items-center gap-2 px-6 py-3 rounded-full font-ghibli-title uppercase tracking-widest text-xs transition-all w-full sm:w-auto justify-center
+                                                ${selectedWishlistItems.size > 0
+                                                    ? 'bg-[#3A332F] text-white hover:bg-[#C14B3A] shadow-lg'
+                                                    : 'bg-[#3A332F]/10 text-[#3A332F]/40 cursor-not-allowed'
+                                                }
+                                            `}
+                                        >
+                                            <Package size={16} />
+                                            <span>Mover al Carrito ({selectedWishlistItems.size})</span>
+                                        </button>
+                                    </div>
+                                </>
                             )}
                         </div>
                     )}

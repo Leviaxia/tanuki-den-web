@@ -13,6 +13,7 @@ import AuthModal from './components/AuthModal';
 import CheckoutModal from './components/CheckoutModal';
 import ShareModal from './components/ShareModal';
 import ProfileModal from './components/ProfileModal';
+import SharedWishlistModal from './components/SharedWishlistModal';
 import { PRODUCTS as INITIAL_PRODUCTS, heroText } from './constants';
 
 import { supabase } from './src/lib/supabase';
@@ -183,6 +184,9 @@ const App: React.FC = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [productToShare, setProductToShare] = useState<Product | null>(null);
 
+  const [isSharedWishlistOpen, setIsSharedWishlistOpen] = useState(false);
+  const [sharedWishlistTargetId, setSharedWishlistTargetId] = useState<string | null>(null);
+
 
 
 
@@ -297,6 +301,35 @@ const App: React.FC = () => {
   useEffect(() => {
     fetchReviews();
   }, []);
+
+  // Check for Shared Wishlist in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedId = params.get('shared_wishlist');
+    if (sharedId) {
+      setSharedWishlistTargetId(sharedId);
+      setIsSharedWishlistOpen(true);
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  const handleWishlistAddToCart = (productsToAdd: Product[]) => {
+    setCart(prev => {
+      let newCart = [...prev];
+      productsToAdd.forEach(p => {
+        const existing = newCart.find(item => item.id === p.id);
+        if (existing) {
+          newCart = newCart.map(item => item.id === p.id ? { ...item, quantity: item.quantity + 1 } : item);
+        } else {
+          newCart.push({ ...p, quantity: 1 });
+        }
+      });
+      return newCart;
+    });
+    setIsCartOpen(true);
+    window.history.pushState({ modal: true }, '');
+  };
 
   // HISTORY MANAGEMENT: Handle Back Button for Modals & Navigation
   useEffect(() => {
@@ -1441,6 +1474,15 @@ const App: React.FC = () => {
           setIsProfileModalOpen(false);
           handleSubscriptionClick();
         }}
+        onAddToCart={handleWishlistAddToCart}
+      />
+
+      <SharedWishlistModal
+        isOpen={isSharedWishlistOpen}
+        onClose={() => setIsSharedWishlistOpen(false)}
+        targetUserId={sharedWishlistTargetId || ''}
+        products={products}
+        onAddToCart={handleWishlistAddToCart}
       />
 
       {
