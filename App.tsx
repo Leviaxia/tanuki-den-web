@@ -936,7 +936,7 @@ const App: React.FC = () => {
       user_id: user.id,
       reward_id: reward.id,
       status: 'active',
-      redeemed_at: null, // Not redeemed yet, just purchased/acquired
+      // redeemed_at defaults to now() in DB
       expires_at: expiresAt.toISOString()
     }).select().single();
 
