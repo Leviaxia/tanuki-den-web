@@ -39,7 +39,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const [showFullQr, setShowFullQr] = useState(false);
 
     // Calculation Logic
-    const baseShipping = 15000;
+    // const baseShipping = 15000; // Removed per user request
     const rewardInfo = coupon ? rewards.find(r => r.id === coupon.reward_id) : null;
     const couponValue = rewardInfo ? (rewardInfo.value as any) : {};
 
@@ -62,21 +62,15 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const subtotalAfterCoupon = Math.max(0, subtotalAfterRoulette - couponDiscountAmount);
 
     // 3. calculate shipping
-    let shippingCost = baseShipping;
+    // User requested no fixed shipping cost, and remove 50% off. Only Free Shipping works.
+    let isFreeShipping = false;
     if (couponValue.discount_type === 'shipping_free') {
         if (!couponValue.min_purchase || total >= couponValue.min_purchase) {
-            shippingCost = 0;
-        }
-    } else if (couponValue.discount_type === 'shipping_percent') {
-        if (!couponValue.min_purchase || total >= couponValue.min_purchase) {
-            shippingCost = baseShipping * (1 - (couponValue.value / 100));
+            isFreeShipping = true;
         }
     }
 
-    // If total > 300k, free shipping anyway? (Standard rule - Optional)
-    // if (total > 300000) shippingCost = 0; 
-
-    const finalTotal = subtotalAfterCoupon + shippingCost;
+    const finalTotal = subtotalAfterCoupon; // Shipping is separate/calculated later
 
     useEffect(() => {
         if (isOpen) {
@@ -317,7 +311,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                                             <div className="flex justify-between w-full text-sm text-[#8C8279]">
                                                 <span>Envío</span>
-                                                {shippingCost === 0 ? <span className="text-[#C14B3A] font-bold">GRATIS</span> : <span>${formatCurrency(shippingCost)}</span>}
+                                                {isFreeShipping ? (
+                                                    <span className="text-[#C14B3A] font-bold">GRATIS</span>
+                                                ) : (
+                                                    <span className="text-[#8C8279] text-xs font-bold uppercase">Contra Entrega</span>
+                                                )}
                                             </div>
 
                                             <div className="w-full h-px bg-[#3A332F]/10 my-2"></div>
@@ -435,7 +433,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                     )}
                                     <div className="w-full flex justify-between text-xs text-[#8C8279] mb-2">
                                         <span>Envío:</span>
-                                        {shippingCost === 0 ? <span className="text-[#C14B3A] font-bold">GRATIS</span> : <span>${formatCurrency(shippingCost)}</span>}
+                                        {isFreeShipping ? <span className="text-[#C14B3A] font-bold">GRATIS</span> : <span>Contra Entrega</span>}
                                     </div>
                                     <div className="w-full h-px bg-[#3A332F]/10 mb-2"></div>
                                     <div className="w-full flex justify-between font-ghibli-title text-lg text-[#3A332F]">
@@ -445,7 +443,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center">
-                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8C8279] mb-1">Envío: {shippingCost === 0 ? 'GRATIS' : `$${formatCurrency(shippingCost)}`}</p>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8C8279] mb-1">Envío: {isFreeShipping ? 'GRATIS' : 'Contra Entrega'}</p>
                                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8C8279]">Total: <span className="text-[#C14B3A] text-sm md:text-base">${formatCurrency(finalTotal)}</span></p>
                                 </div>
                             )}

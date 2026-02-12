@@ -38,7 +38,6 @@ create policy "Enable update access for own rewards" on public.user_rewards for 
 insert into public.rewards (id, title, description, cost, tier, type, value, stock) values
 -- Tier 1: Engagement
 ('coupon_5k', 'Cupón $5.000 (Min $120k)', 'Descuento en compras superiores a $120.000cop.', 250, 1, 'coupon', '{"discount": 5000, "min_purchase": 120000, "code_prefix": "TNK5"}', null),
-('shipping_50', 'Envío al 50% (Min $150k)', 'La mitad del envío va por nuestra cuenta.', 600, 2, 'coupon', '{"discount_type": "shipping_percent", "value": 50, "min_purchase": 150000, "code_prefix": "SHIP50"}', null),
 ('coupon_15k', 'Cupón $15.000 (Min $180k)', 'Gran descuento para grandes tesoros.', 800, 2, 'coupon', '{"discount": 15000, "min_purchase": 180000, "code_prefix": "TNK15"}', null),
 ('shipping_free', 'Envío Gratis (Min $200k)', 'El Clan cubre tu envío completamente.', 1200, 3, 'coupon', '{"discount_type": "shipping_free", "min_purchase": 200000, "code_prefix": "FREESHIP"}', null),
 ('print_10off', '10% OFF Impresión 3D', 'Tope máximo de $25.000 de descuento.', 1500, 3, 'coupon', '{"discount_percent": 10, "max_discount": 25000, "category": "3d_print", "code_prefix": "3D10"}', null)
