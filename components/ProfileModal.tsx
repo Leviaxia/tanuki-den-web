@@ -27,6 +27,9 @@ interface ProfileModalProps {
     rewards: Reward[];
     userRewards: UserReward[];
     onPurchaseReward: (reward: Reward) => void;
+    // Coupon Props
+    selectedCoupon: UserReward | null;
+    onSelectCoupon: (coupon: UserReward | null) => void;
 }
 
 // Helper for currency if not available
@@ -40,9 +43,9 @@ const formatMoney = (amount: number) => {
 const ProfileModal: React.FC<ProfileModalProps> = ({
     isOpen, onClose, user, setUser, onLogout, products, favorites, toggleFavorite, onOpenSubscription, onAddToCart,
     initialTab = 'profile', missions, userMissions, userCoins, onClaimReward, hasUnclaimedMissions = false,
-    rewards, userRewards, onPurchaseReward
+    rewards, userRewards, onPurchaseReward, selectedCoupon, onSelectCoupon
 }) => {
-    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'missions'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'missions' | 'coupons'>('profile');
     const [missionSubTab, setMissionSubTab] = useState<'challenges' | 'store'>('challenges');
     const [orders, setOrders] = useState<any[]>([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
@@ -178,7 +181,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                         { id: 'profile', label: 'Mi Perfil', icon: UserIcon },
                         { id: 'orders', label: 'Mis Pedidos', icon: Package },
                         { id: 'wishlist', label: 'Lista de Deseos', icon: Heart },
-                        { id: 'missions', label: 'Misiones', icon: Sparkles, hasNotification: hasUnclaimedMissions }, // [MODIFIED]
+                        { id: 'missions', label: 'Misiones', icon: Sparkles, hasNotification: hasUnclaimedMissions },
+                        { id: 'coupons', label: 'Cupones', icon: Ticket }, // [NEW]
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -672,13 +676,98 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                         </div>
                     )}
 
+                    {activeTab === 'coupons' && (
+                        <div className="space-y-6 animate-slide-in h-full flex flex-col">
+                            <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F] mb-2">Mis Cupones</h2>
+                            <p className="text-[#8C8279] text-sm">Activa un cupón para tu próxima compra. Solo puedes usar uno a la vez.</p>
+
+                            <div className="grid gap-4 overflow-y-auto pb-4 pt-2">
+                                {userRewards.filter(ur => {
+                                    const reward = rewards.find(r => r.id === ur.reward_id);
+                                    return reward && reward.type === 'coupon' && ur.status === 'active';
+                                }).length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center text-[#3A332F]/40 space-y-4 py-12">
+                                        <Ticket size={64} strokeWidth={1} />
+                                        <p className="font-ghibli-title text-lg">No tienes cupones disponibles</p>
+                                        <button
+                                            onClick={() => setActiveTab('missions')}
+                                            className="text-[#C14B3A] underline font-bold"
+                                        >
+                                            Ir a Misiones para ganar recompensas
+                                        </button>
+                                    </div>
+                                ) : (
+                                    userRewards.filter(ur => {
+                                        const reward = rewards.find(r => r.id === ur.reward_id);
+                                        return reward && reward.type === 'coupon' && ur.status === 'active';
+                                    }).map(userReward => {
+                                        const reward = rewards.find(r => r.id === userReward.reward_id);
+                                        if (!reward) return null;
+                                        const isSelected = selectedCoupon?.id === userReward.id;
+
+                                        return (
+                                            <div
+                                                key={userReward.id}
+                                                className={`
+                                                    relative bg-white p-5 rounded-[20px] shadow-sm border-2 transition-all group overflow-hidden
+                                                    ${isSelected ? 'border-[#C14B3A] ring-4 ring-[#C14B3A]/10' : 'border-[#3A332F]/10 hover:border-[#3A332F]/30'}
+                                                `}
+                                            >
+                                                {/* Left Perforation */}
+                                                <div className="absolute top-1/2 -left-3 w-6 h-6 bg-[#FDF5E6] rounded-full"></div>
+                                                <div className="absolute top-1/2 -right-3 w-6 h-6 bg-[#FDF5E6] rounded-full"></div>
+
+                                                <div className="flex justify-between items-center gap-4 pl-4 pr-2">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${isSelected ? 'bg-[#C14B3A] text-white' : 'bg-[#3A332F]/10 text-[#3A332F]/60'}`}>
+                                                                {isSelected ? 'ACTIVO' : 'CUPÓN'}
+                                                            </span>
+                                                            {userReward.expires_at && (
+                                                                <span className="text-[10px] text-red-500 font-bold">
+                                                                    Expira: {new Date(userReward.expires_at).toLocaleDateString()}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <h3 className="font-ghibli-title text-lg md:text-xl text-[#3A332F] leading-tight">{reward.title}</h3>
+                                                        <p className="text-[#8C8279] text-xs md:text-sm mt-1">{reward.description}</p>
+
+                                                        {reward.value && (reward.value as any).min_purchase && (
+                                                            <p className="text-[10px] text-[#3A332F]/40 mt-2 font-bold uppercase tracking-wider">
+                                                                Compra min: ${formatMoney((reward.value as any).min_purchase)}
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => onSelectCoupon(userReward)}
+                                                        className={`
+                                                            px-5 py-2 rounded-full font-ghibli-title text-xs uppercase tracking-widest transition-all shadow-md shrink-0
+                                                            ${isSelected
+                                                                ? 'bg-[#3A332F] text-white hover:bg-[#C14B3A]'
+                                                                : 'bg-[#D4AF37] text-white hover:scale-105 active:scale-95'
+                                                            }
+                                                        `}
+                                                    >
+                                                        {isSelected ? 'Desactivar' : 'Activar'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Mobile Bottom Navigation Bar */}
                     <div className="md:hidden absolute bottom-0 left-0 right-0 bg-white border-t border-[#3A332F]/10 p-2 flex justify-around items-center z-30 pb- safe-area-bottom">
                         {[
                             { id: 'profile', label: 'Perfil', icon: UserIcon },
                             { id: 'orders', label: 'Pedidos', icon: Package },
                             { id: 'wishlist', label: 'Deseos', icon: Heart },
-                            { id: 'missions', label: 'Misiones', icon: Sparkles }, // [NEW]
+                            { id: 'missions', label: 'Misiones', icon: Sparkles },
+                            { id: 'coupons', label: 'Cupones', icon: Ticket }, // [NEW]
                         ].map(tab => (
                             <button
                                 key={tab.id}

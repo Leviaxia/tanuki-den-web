@@ -222,9 +222,33 @@ const App: React.FC = () => {
   // REWARDS STATE
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [userRewards, setUserRewards] = useState<UserReward[]>([]);
+  const [selectedCoupon, setSelectedCoupon] = useState<UserReward | null>(() => {
+    try {
+      const saved = localStorage.getItem(`tanuki_selected_coupon_${user.id}`);
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
 
   // Calculate if there are any completed but unclaimed missions
   const hasUnclaimedMissions = Object.values(userMissions).some(m => m.completed && !m.claimed);
+
+  // Persist selected coupon
+  useEffect(() => {
+    if (selectedCoupon) {
+      localStorage.setItem(`tanuki_selected_coupon_${user.id}`, JSON.stringify(selectedCoupon));
+    } else {
+      localStorage.removeItem(`tanuki_selected_coupon_${user.id}`);
+    }
+  }, [selectedCoupon, user.id]);
+
+  const handleSelectCoupon = (coupon: UserReward | null) => {
+    // If selecting the same one, toggle off
+    if (selectedCoupon && coupon && selectedCoupon.id === coupon.id) {
+      setSelectedCoupon(null);
+    } else {
+      setSelectedCoupon(coupon);
+    }
+  };
 
   // Category Scroll
 
@@ -1820,6 +1844,8 @@ const App: React.FC = () => {
         rewards={rewards}
         userRewards={userRewards}
         onPurchaseReward={handlePurchaseReward}
+        selectedCoupon={selectedCoupon}
+        onSelectCoupon={handleSelectCoupon}
       />
 
       <SharedWishlistModal
@@ -2075,6 +2101,8 @@ const App: React.FC = () => {
         onRemove={removeFromCart}
         user={user}
         discount={appliedDiscount}
+        coupon={selectedCoupon}
+        rewards={rewards}
         onSuccess={() => {
           const subItem = cart.find(item => item.id.startsWith('sub-'));
           if (subItem) {

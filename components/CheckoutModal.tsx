@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { sendOrderEmail } from '../src/services/email';
-import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, Upload, Image as ImageIcon } from 'lucide-react';
-import { CartItem } from '../types';
+import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, Upload, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { CartItem, UserReward, Reward } from '../types';
 import { formatCurrency } from '../src/lib/utils';
 import { supabase } from '../src/lib/supabase';
 import { departments, colombiaData } from '@/src/data/colombia';
@@ -16,10 +16,12 @@ interface CheckoutModalProps {
     onSuccess: () => void;
     user: any;
     discount?: number;
+    coupon: UserReward | null;
+    rewards: Reward[];
 }
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({
-    isOpen, onClose, cart, total, onUpdateQuantity, onRemove, onSuccess, user, discount = 0
+    isOpen, onClose, cart, total, onUpdateQuantity, onRemove, onSuccess, user, discount = 0, coupon, rewards
 }) => {
     const [step, setStep] = useState<'summary' | 'shipping' | 'payment'>('summary');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -36,7 +38,45 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const [senderPhone, setSenderPhone] = useState('');
     const [showFullQr, setShowFullQr] = useState(false);
 
-    const finalTotal = discount > 0 ? total - (total * (discount / 100)) : total;
+    // Calculation Logic
+    const baseShipping = 15000;
+    const rewardInfo = coupon ? rewards.find(r => r.id === coupon.reward_id) : null;
+    const couponValue = rewardInfo ? (rewardInfo.value as any) : {};
+
+    // 1. apply roulette discount to products
+    const subtotalAfterRoulette = total - (total * (discount / 100));
+
+    // 2. apply coupon discount (product based)
+    let couponDiscountAmount = 0;
+    if (couponValue.discount) { // Flat discount
+        couponDiscountAmount = couponValue.discount;
+    } else if (couponValue.discount_percent) { // Percent discount
+        couponDiscountAmount = subtotalAfterRoulette * (couponValue.discount_percent / 100);
+    }
+
+    // Check min purchase for coupon
+    if (couponValue.min_purchase && total < couponValue.min_purchase) {
+        couponDiscountAmount = 0; // Requirement not met
+    }
+
+    const subtotalAfterCoupon = Math.max(0, subtotalAfterRoulette - couponDiscountAmount);
+
+    // 3. calculate shipping
+    let shippingCost = baseShipping;
+    if (couponValue.discount_type === 'shipping_free') {
+        if (!couponValue.min_purchase || total >= couponValue.min_purchase) {
+            shippingCost = 0;
+        }
+    } else if (couponValue.discount_type === 'shipping_percent') {
+        if (!couponValue.min_purchase || total >= couponValue.min_purchase) {
+            shippingCost = baseShipping * (1 - (couponValue.value / 100));
+        }
+    }
+
+    // If total > 300k, free shipping anyway? (Standard rule - Optional)
+    // if (total > 300000) shippingCost = 0; 
+
+    const finalTotal = subtotalAfterCoupon + shippingCost;
 
     useEffect(() => {
         if (isOpen) {
@@ -168,6 +208,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                     const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
                     if (itemsError) console.error("Error saving items:", itemsError);
+
+                    // Mark Coupon as Used
+                    if (coupon) {
+                        const { error: couponError } = await supabase.from('user_rewards')
+                            .update({
+                                status: 'used',
+                                used_at: new Date().toISOString()
+                            })
+                            .eq('id', coupon.id);
+
+                        if (couponError) console.error("Error updating coupon:", couponError);
+
+                        // Clear selected coupon
+                        localStorage.removeItem(`tanuki_selected_coupon_${user.id}`);
+                    }
                 }
             }
 
@@ -240,13 +295,33 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                         ))}
                                     </div>
                                     <div className="pt-4 border-t-2 border-[#3A332F]/5">
-                                        <div className="flex flex-col items-end mb-6">
+                                        <div className="flex flex-col items-end w-full space-y-2">
+                                            <div className="flex justify-between w-full text-sm text-[#8C8279]">
+                                                <span>Subtotal</span>
+                                                <span>${formatCurrency(total)}</span>
+                                            </div>
+
                                             {discount > 0 && (
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-xs font-bold text-[#8C8279] line-through">${formatCurrency(total)}</span>
-                                                    <span className="bg-[#C14B3A]/10 text-[#C14B3A] text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">-{discount}% OFF</span>
+                                                <div className="flex justify-between w-full text-sm text-[#C14B3A]">
+                                                    <span className="flex items-center gap-1"><Sparkles size={12} /> Descuento Ruleta (-{discount}%)</span>
+                                                    <span>-${formatCurrency(total * (discount / 100))}</span>
                                                 </div>
                                             )}
+
+                                            {couponDiscountAmount > 0 && (
+                                                <div className="flex justify-between w-full text-sm text-[#C14B3A]">
+                                                    <span className="flex items-center gap-1"><Plus size={12} /> Cupón: {rewardInfo?.title}</span>
+                                                    <span>-${formatCurrency(couponDiscountAmount)}</span>
+                                                </div>
+                                            )}
+
+                                            <div className="flex justify-between w-full text-sm text-[#8C8279]">
+                                                <span>Envío</span>
+                                                {shippingCost === 0 ? <span className="text-[#C14B3A] font-bold">GRATIS</span> : <span>${formatCurrency(shippingCost)}</span>}
+                                            </div>
+
+                                            <div className="w-full h-px bg-[#3A332F]/10 my-2"></div>
+
                                             <div className="flex justify-between items-center w-full">
                                                 <span className="font-ghibli-title text-xl text-[#3A332F]">Total</span>
                                                 <span className="font-ghibli-title text-2xl text-[#C14B3A]"><span className="text-[#C14B3A] text-lg">$</span>{formatCurrency(finalTotal)}</span>
@@ -340,14 +415,39 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <div className="p-4 md:p-8 w-full animate-slide-in flex flex-col items-center justify-center h-full">
                         <div className="text-center mb-4 md:mb-6 shrink-0">
                             <h2 className="font-ghibli-title text-xl md:text-3xl text-[#3A332F] mb-1">Finalizar <span className="text-[#C14B3A]">Pago</span></h2>
-                            {discount > 0 ? (
-                                <div className="flex flex-col items-center">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C8279] line-through">Subtotal: ${formatCurrency(total)}</p>
-                                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C14B3A] animate-pulse">🎉 Descuento: -{discount}%</p>
-                                    <p className="text-sm font-black uppercase tracking-[0.2em] text-[#3A332F] mt-1">Total: <span className="text-[#C14B3A] text-lg md:text-xl">${formatCurrency(finalTotal)}</span></p>
+                            {discount > 0 || couponDiscountAmount > 0 ? (
+                                <div className="flex flex-col items-center w-full max-w-xs mx-auto bg-[#FDF5E6] p-4 rounded-xl mb-4">
+                                    <div className="w-full flex justify-between text-xs text-[#8C8279] mb-1">
+                                        <span>Subtotal:</span>
+                                        <span>${formatCurrency(total)}</span>
+                                    </div>
+                                    {discount > 0 && (
+                                        <div className="w-full flex justify-between text-xs text-[#C14B3A] font-bold mb-1">
+                                            <span>Ruleta (-{discount}%):</span>
+                                            <span>-${formatCurrency(total * (discount / 100))}</span>
+                                        </div>
+                                    )}
+                                    {couponDiscountAmount > 0 && (
+                                        <div className="w-full flex justify-between text-xs text-[#C14B3A] font-bold mb-1">
+                                            <span>Cupón:</span>
+                                            <span>-${formatCurrency(couponDiscountAmount)}</span>
+                                        </div>
+                                    )}
+                                    <div className="w-full flex justify-between text-xs text-[#8C8279] mb-2">
+                                        <span>Envío:</span>
+                                        {shippingCost === 0 ? <span className="text-[#C14B3A] font-bold">GRATIS</span> : <span>${formatCurrency(shippingCost)}</span>}
+                                    </div>
+                                    <div className="w-full h-px bg-[#3A332F]/10 mb-2"></div>
+                                    <div className="w-full flex justify-between font-ghibli-title text-lg text-[#3A332F]">
+                                        <span>Total:</span>
+                                        <span className="text-[#C14B3A]">${formatCurrency(finalTotal)}</span>
+                                    </div>
                                 </div>
                             ) : (
-                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8C8279]">Total: <span className="text-[#C14B3A] text-sm md:text-base">${formatCurrency(total)}</span></p>
+                                <div className="flex flex-col items-center">
+                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8C8279] mb-1">Envío: {shippingCost === 0 ? 'GRATIS' : `$${formatCurrency(shippingCost)}`}</p>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8C8279]">Total: <span className="text-[#C14B3A] text-sm md:text-base">${formatCurrency(finalTotal)}</span></p>
+                                </div>
                             )}
                         </div>
 
