@@ -58,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center gap-4 md:gap-5 cursor-pointer group relative z-[1001]" onClick={() => handleNavClick('inicio')}>
               <div className="relative w-14 h-14 md:w-16 md:h-16 flex items-center justify-center shrink-0">
                 <div className="w-full h-full bg-[#C14B3A] rounded-full flex items-center justify-center border-2 border-white shadow-md overflow-hidden">
-                  <img src="/assets/TANUKI DEN - Logo.png" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform" alt="Tanuki Den Logo" />
+                  <img src="/assets/tanuki-logo.png" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform" alt="Tanuki Den Logo" />
                 </div>
               </div>
               <div className="flex flex-col">
