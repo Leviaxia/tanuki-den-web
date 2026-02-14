@@ -739,6 +739,14 @@ const App: React.FC = () => {
 
     const fetchMissionsData = async () => {
       try {
+        // 0. Fetch User Missions Progress FIRST (Critical to avoid overwriting claimed status)
+        const { data: missionsData } = await supabase.from('user_missions').select('*').eq('user_id', user.id);
+        const missionsMap: Record<string, UserMission> = {};
+        missionsData?.forEach((m: any) => {
+          missionsMap[m.mission_id] = m;
+        });
+        setUserMissions(missionsMap);
+
         // Fetch Profile for Coins & Streak
         const { data: profile } = await supabase.from('profiles').select('coins, login_streak, last_login, login_days_total').eq('id', user.id).single();
         if (profile) {
@@ -765,12 +773,6 @@ const App: React.FC = () => {
               shouldUpdate = true;
 
               const diff = now.getTime() - lastLogin.getTime();
-              // Allow up to 48h (2 days) to maintain streak if checking strictly time
-              // But strictly calendar days: yesterday vs today.
-              // If lastLogin was yesterday, diff is roughly 24h.
-              // If lastLogin was 2 days ago, streak breaks.
-
-              // Simple check: if diff > 2 days, break.
               if (diff < (2 * oneDay)) {
                 newStreak += 1;
               } else {
@@ -797,14 +799,6 @@ const App: React.FC = () => {
             updateMissionProgress('constant_spirit', newTotalDays, true, false);
           }
         }
-
-        // Fetch User Missions Progress
-        const { data: missionsData } = await supabase.from('user_missions').select('*').eq('user_id', user.id);
-        const missionsMap: Record<string, UserMission> = {};
-        missionsData?.forEach((m: any) => {
-          missionsMap[m.mission_id] = m;
-        });
-        setUserMissions(missionsMap);
 
         // Fetch Rewards Catalog & Inventory
         const { data: rewardsData } = await supabase.from('rewards').select('*').order('cost', { ascending: true });
