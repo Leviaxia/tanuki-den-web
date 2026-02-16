@@ -263,25 +263,55 @@ export const ANIME_PLAYLIST = [
   {
     title: 'Gurenge',
     anime: 'Demon Slayer',
-    url: 'https://archive.org/download/tv-anime-kimetsu-no-yaiba-opening-theme-gurenge-lisa/TV%20Anime%20%22Kimetsu%20no%20Yaiba%22%20Opening%20Theme%20-%20Gurenge%20%20LiSA.mp3', // Public Archive.org link
+    url: '/assets/Demon Slayer OP Gurenge by LiSA HD.mp3',
     cover: 'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?q=80&w=200&auto=format&fit=crop'
   },
   {
     title: 'Blue Bird',
     anime: 'Naruto Shippuden',
-    url: 'https://archive.org/download/blue-bird-naruto-shippuden-op-3/Blue%20Bird%20-%20Naruto%20Shippuden%20Op%203.mp3',
+    url: '/assets/いきものがかり 『ブルーバード』Music Video.mp3', // Note: Using the provided Japanese filename
     cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop'
   },
   {
     title: 'Cha-La Head-Cha',
     anime: 'Dragon Ball Z',
-    url: 'https://archive.org/download/cha-la-head-cha-official-theme-song-dragon-ball-z_202102/Cha-La%20Head-Cha%20%28Official%20Theme%20Song%29%20-%20Dragon%20Ball%20Z.mp3',
+    url: '/assets/Dragon Ball Z - Chala Head Chala (opening Latino) Full HD 1080p - (320 Kbps).mp3',
     cover: 'https://images.unsplash.com/photo-1531525645387-7f14be1bdbbd?q=80&w=200&auto=format&fit=crop'
   },
   {
-    title: 'A Cruel Angel\'s Thesis',
-    anime: 'Evangelion',
-    url: 'https://archive.org/download/neon-genesis-evangelion-opening-full-japanese/Neon%20Genesis%20Evangelion%20Opening%20Full%20Japanese.mp3',
+    title: 'Mi Corazón Encantado',
+    anime: 'Dragon Ball GT',
+    url: '/assets/Dragon Ball GT Opening Latino Full HD 1080p Creditless Mi Corazón Encantado.mp3',
+    cover: 'https://images.unsplash.com/photo-1531525645387-7f14be1bdbbd?q=80&w=200&auto=format&fit=crop'
+  },
+  {
+    title: 'Fantástica Aventura',
+    anime: 'Dragon Ball',
+    url: '/assets/Dragon Ball Opening Latino HD 720p.mp3',
+    cover: 'https://images.unsplash.com/photo-1531525645387-7f14be1bdbbd?q=80&w=200&auto=format&fit=crop'
+  },
+  {
+    title: 'Silhouette',
+    anime: 'Naruto Shippuden',
+    url: '/assets/KANA-BOON - Silhouette.mp3',
     cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop'
+  },
+  {
+    title: 'Sign',
+    anime: 'Naruto Shippuden',
+    url: '/assets/Naruto Shippuden Opening 6 _ Sign by FLOW - (320 Kbps).mp3',
+    cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop'
+  },
+  {
+    title: 'We Are!',
+    anime: 'One Piece',
+    url: '/assets/One Piece Opening 01 Lyrics Kanji_Romaji_EN_ID [Hiroshi Kitadani ~ We Are! (ウィーアー!)][Full Song] - (320 Kbps).mp3',
+    cover: 'https://images.unsplash.com/photo-1563725661-8aa778385a4a?q=80&w=200&auto=format&fit=crop'
+  },
+  {
+    title: 'Bling-Bang-Bang-Born',
+    anime: 'Mashle',
+    url: '/assets/TVアニメ「マッシュル-MASHLE-」第2期ノンクレジットOPムービー｜Creepy Nuts「Bling-Bang-Bang-Born」 BBBBダンス.mp3',
+    cover: 'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?q=80&w=200&auto=format&fit=crop'
   }
 ];

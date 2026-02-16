@@ -1580,7 +1580,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-14">
-              {collectionsContent.map((item) => (
+              {collections.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => handleCollectionClick(item.id)}
