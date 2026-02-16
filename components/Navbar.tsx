@@ -96,7 +96,7 @@ const Navbar: React.FC<NavbarProps> = ({
     if (!audio) return;
     if (isPlaying) audio.play().catch(() => setIsPlaying(false));
     else audio.pause();
-  }, [isPlaying]);
+  }, [isPlaying, currentTrackIndex]);
 
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
