@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Volume2, VolumeX, SkipForward, Square } from 'lucide-react';
+import { Volume2, VolumeX, SkipForward } from 'lucide-react';
 import { ANIME_PLAYLIST } from '../constants';
 
 interface AnimePlayerProps {
@@ -13,8 +14,9 @@ const AnimePlayer: React.FC<AnimePlayerProps> = ({ className = '' }) => {
     );
 
     const [isPlaying, setIsPlaying] = useState(false);
-    const [showControls, setShowControls] = useState(false); // [NEW] Toggle for control buttons
+    const [showControls, setShowControls] = useState(false); // Toggle for control buttons
     const [volume, setVolume] = useState(0.4);
+    const [isMuted, setIsMuted] = useState(false); // [NEW] Mute state
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const currentTrack = ANIME_PLAYLIST[currentTrackIndex];
@@ -22,8 +24,9 @@ const AnimePlayer: React.FC<AnimePlayerProps> = ({ className = '' }) => {
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.volume = volume;
+            audioRef.current.muted = isMuted; // Sync mute
         }
-    }, [volume]);
+    }, [volume, isMuted]);
 
     // Auto-play on mount
     useEffect(() => {
@@ -57,10 +60,9 @@ const AnimePlayer: React.FC<AnimePlayerProps> = ({ className = '' }) => {
 
     const toggleControls = () => setShowControls(!showControls);
 
-    const stopMusic = (e: React.MouseEvent) => {
+    const toggleMute = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIsPlaying(false);
-        setShowControls(false); // Hide controls after stopping
+        setIsMuted(!isMuted);
     };
 
     const nextTrack = (e?: React.MouseEvent) => {
@@ -87,13 +89,13 @@ const AnimePlayer: React.FC<AnimePlayerProps> = ({ className = '' }) => {
             {/* Control Buttons (Reveal on Click) */}
             <div className={`flex items-center gap-2 transition-all duration-300 absolute right-full mr-3 ${showControls ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 translate-x-4 pointer-events-none'}`}>
 
-                {/* Stop Button */}
+                {/* Mute/Unmute Button (Replaces Stop) */}
                 <button
-                    onClick={stopMusic}
+                    onClick={toggleMute}
                     className="w-8 h-8 rounded-full bg-[#3A332F] text-white border-2 border-[#D4AF37] flex items-center justify-center hover:bg-black transition-colors shadow-md"
-                    title="Apagar"
+                    title={isMuted ? "Activar Sonido" : "Silenciar"}
                 >
-                    <Square size={12} fill="currentColor" />
+                    {isMuted ? <Volume2 size={14} /> : <VolumeX size={14} />}
                 </button>
 
                 {/* Next Button */}
@@ -111,15 +113,15 @@ const AnimePlayer: React.FC<AnimePlayerProps> = ({ className = '' }) => {
             <button
                 onClick={toggleControls}
                 className={`w-10 h-10 md:w-12 md:h-12 rounded-full shadow-lg border-2 flex items-center justify-center transition-all duration-300 transform hover:scale-105 active:scale-95 z-10
-          ${isPlaying
+          ${isPlaying && !isMuted
                         ? 'bg-[#D4AF37] border-[#3A332F] text-[#3A332F] animate-pulse-slow'
                         : 'bg-[#3A332F] border-[#D4AF37] text-[#D4AF37]'}`}
-                title={isPlaying ? currentTrack.title : "Encender Bocina"}
+                title={isPlaying ? currentTrack.title : "Bocina Tanuki"}
             >
-                {isPlaying ? (
-                    <Volume2 size={20} className="md:w-6 md:h-6" />
-                ) : (
+                {isMuted ? (
                     <VolumeX size={20} className="md:w-6 md:h-6" />
+                ) : (
+                    <Volume2 size={20} className="md:w-6 md:h-6" />
                 )}
             </button>
         </div>
