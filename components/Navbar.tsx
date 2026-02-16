@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Menu, X, User as UserIcon, Crown, Sparkles, Instagram, Facebook, Twitter, Youtube, Music2 } from 'lucide-react';
+import AnimePlayer from './AnimePlayer';
 import { User } from '../types';
 
 
@@ -67,6 +68,9 @@ const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
+            {/* Mobile Anime Player (Below Logo Line) */}
+            <AnimePlayer className="lg:hidden absolute top-[110px] left-6" />
+
             <div className="hidden lg:flex items-center space-x-2 xl:space-x-4">
               {navItems.map((item) => (
                 <button
@@ -93,6 +97,9 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
+              {/* Desktop Anime Player */}
+              <AnimePlayer className="hidden lg:block mr-2" />
+
               <button
                 onClick={onOpenSubscription}
                 className={`hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full font-ghibli-title text-[10px] tracking-widest transition-all shadow-lg active:scale-95 border-2 relative overflow-hidden group z-10 ${user.membership

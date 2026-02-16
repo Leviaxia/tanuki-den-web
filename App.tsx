@@ -13,7 +13,6 @@ import SharedWishlistModal from './components/SharedWishlistModal';
 import AuthModal from './components/AuthModal';
 import CheckoutModal from './components/CheckoutModal';
 import ShareModal from './components/ShareModal';
-import AnimePlayer from './components/AnimePlayer';
 
 import { PRODUCTS, heroText, MISSIONS, collectionsContent } from './constants';
 import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission, Reward, UserReward } from './types';
@@ -1814,8 +1813,6 @@ const App: React.FC = () => {
 
 
       <main className="flex-grow relative z-10">{renderContent()}</main>
-      {/* Anime Music Player (Global) */}
-      <AnimePlayer />
 
       {/* Auth Modal */}
       <AuthModal
