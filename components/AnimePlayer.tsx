@@ -25,7 +25,9 @@ const AnimePlayer: React.FC<AnimePlayerProps> = ({
     const toggleControls = () => setShowControls(!showControls);
 
     return (
-        <div className={`z-[90] font-ghibli-title ${className} relative flex items-center`}>
+        // Removed 'relative' from here. It must be passed in className if needed (e.g. for static/flex parents).
+        // Absolute elements (like the mobile one) don't need 'relative' to be a container for children.
+        <div className={`z-[90] font-ghibli-title ${className} flex items-center`}>
             {/* Control Buttons (Reveal on Click) */}
             <div className={`flex items-center gap-2 transition-all duration-300 absolute right-full mr-3 ${showControls ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 translate-x-4 pointer-events-none'}`}>
 

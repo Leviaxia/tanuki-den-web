@@ -64,6 +64,32 @@ const Navbar: React.FC<NavbarProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
+  // Interaction Fallback for Autoplay (Browsers block audio without interaction)
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      const audio = audioRef.current;
+      if (audio && audio.paused) {
+        audio.play()
+          .then(() => setIsPlaying(true))
+          .catch(e => console.error("Interaction play failed:", e));
+      }
+      // Remove listener after first attempt
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    };
+
+    window.addEventListener('click', handleFirstInteraction);
+    window.addEventListener('keydown', handleFirstInteraction);
+    window.addEventListener('touchstart', handleFirstInteraction);
+
+    return () => {
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    };
+  }, []);
+
   // Sync Play state
   useEffect(() => {
     const audio = audioRef.current;
@@ -77,8 +103,8 @@ const Navbar: React.FC<NavbarProps> = ({
     setIsMuted(!isMuted);
   };
 
-  const nextTrack = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+  const nextTrack = (e?: any) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     let nextIndex;
     do { nextIndex = Math.floor(Math.random() * ANIME_PLAYLIST.length); }
     while (nextIndex === currentTrackIndex && ANIME_PLAYLIST.length > 1);
@@ -158,9 +184,9 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
-              {/* Desktop Anime Player */}
+              {/* Desktop AnimePlayer */}
               <AnimePlayer
-                className="hidden lg:block mr-2"
+                className="hidden lg:block mr-2 relative"
                 isPlaying={isPlaying}
                 isMuted={isMuted}
                 currentTitle={currentTrack.title}
