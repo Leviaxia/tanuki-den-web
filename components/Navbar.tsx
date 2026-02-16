@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ShoppingBag, Menu, X, User as UserIcon, Crown, Sparkles, Instagram, Facebook, Twitter, Youtube, Music2 } from 'lucide-react';
 import AnimePlayer from './AnimePlayer';
 import { User } from '../types';
-
-
+import { ANIME_PLAYLIST } from '../constants'; // [NEW]
 
 interface NavbarProps {
   cartCount: number;
@@ -16,7 +15,7 @@ interface NavbarProps {
   onOpenSubscription: () => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
-  hasUnclaimedMissions?: boolean; // [NEW]
+  hasUnclaimedMissions?: boolean;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -30,8 +29,63 @@ const Navbar: React.FC<NavbarProps> = ({
   onOpenSubscription,
   isMenuOpen,
   setIsMenuOpen,
-  hasUnclaimedMissions = false // [NEW]
+  hasUnclaimedMissions = false
 }) => {
+  // --- AUDIO LOGIC (LIFTED) ---
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(() =>
+    Math.floor(Math.random() * ANIME_PLAYLIST.length)
+  );
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.4);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const currentTrack = ANIME_PLAYLIST[currentTrackIndex];
+
+  // Sync volume/mute
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.muted = isMuted;
+    }
+  }, [volume, isMuted]);
+
+  // Auto-play on mount
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const timer = setTimeout(() => {
+      audio.play()
+        .then(() => setIsPlaying(true))
+        .catch((e) => {
+          console.error("Autoplay prevent:", e);
+          setIsPlaying(false);
+        });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Sync Play state
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) audio.play().catch(() => setIsPlaying(false));
+    else audio.pause();
+  }, [isPlaying]);
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMuted(!isMuted);
+  };
+
+  const nextTrack = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    let nextIndex;
+    do { nextIndex = Math.floor(Math.random() * ANIME_PLAYLIST.length); }
+    while (nextIndex === currentTrackIndex && ANIME_PLAYLIST.length > 1);
+    setCurrentTrackIndex(nextIndex);
+    setIsPlaying(true);
+  };
+  // -----------------------------
   const navItems = [
     { id: 'inicio', label: 'Inicio' },
     { id: 'figuras', label: 'Catálogo' },
@@ -69,7 +123,14 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Mobile Anime Player (Below Logo Line) */}
-            <AnimePlayer className="lg:hidden absolute top-[110px] left-6" />
+            <AnimePlayer
+              className="lg:hidden absolute top-[110px] left-6"
+              isPlaying={isPlaying}
+              isMuted={isMuted}
+              currentTitle={currentTrack.title}
+              onToggleMute={toggleMute}
+              onNext={nextTrack}
+            />
 
             <div className="hidden lg:flex items-center space-x-2 xl:space-x-4">
               {navItems.map((item) => (
@@ -98,7 +159,14 @@ const Navbar: React.FC<NavbarProps> = ({
 
             <div className="flex items-center gap-2 md:gap-4">
               {/* Desktop Anime Player */}
-              <AnimePlayer className="hidden lg:block mr-2" />
+              <AnimePlayer
+                className="hidden lg:block mr-2"
+                isPlaying={isPlaying}
+                isMuted={isMuted}
+                currentTitle={currentTrack.title}
+                onToggleMute={toggleMute}
+                onNext={nextTrack}
+              />
 
               <button
                 onClick={onOpenSubscription}
@@ -231,6 +299,14 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
+      {/* Hidden Audio Element (Single Source) */}
+      <audio
+        ref={audioRef}
+        src={currentTrack.url}
+        onEnded={nextTrack}
+        onError={(e) => console.error("Audio error:", e)}
+        className="hidden"
+      />
     </>
   );
 };
