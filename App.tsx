@@ -744,7 +744,11 @@ const App: React.FC = () => {
     const fetchMissionsData = async () => {
       try {
         // 0. Fetch User Missions Progress FIRST (Critical to avoid overwriting claimed status)
-        const { data: missionsData } = await supabase.from('user_missions').select('*').eq('user_id', user.id);
+        const { data: missionsData, error: missionError } = await supabase.from('user_missions').select('*').eq('user_id', user.id);
+
+        if (missionError) console.error("Error fetching missions:", missionError);
+        console.log("DEBUG: Fetched Missions:", missionsData);
+
         const missionsMap: Record<string, UserMission> = {};
         missionsData?.forEach((m: any) => {
           missionsMap[m.mission_id] = m;
@@ -842,16 +846,21 @@ const App: React.FC = () => {
 
       // Sync to DB
       if (syncDb) {
-        const dbPayload = {
+        const dbPayload: any = {
           user_id: user.id,
           mission_id: missionId,
           progress: newProgress,
           completed: isCompleted,
-          claimed: current.claimed, // EXPLICITLY preserve claimed status
+          // claimed: current.claimed, // REMOVED: Do not send 'claimed' to avoid overwriting DB with false if local is stale
           updated_at: new Date().toISOString()
         };
 
+        // Only include claimed if we are explicitly claiming (logic handled in claimReward, not here usually)
+        // But wait, this function is for progress updates. claimed should NOT be changed here.
+        // So omitting it is correct for upsert (it will keep existing value).
+
         // Upsert
+        console.log(`DEBUG: Updating Mission ${missionId}`, dbPayload);
         supabase.from('user_missions').upsert(dbPayload, { onConflict: 'user_id, mission_id' })
           .then(({ error }) => { if (error) console.error("Mission sync error", error); });
       }
@@ -887,6 +896,8 @@ const App: React.FC = () => {
 
       const { error: claimError } = await supabase.from('user_missions').upsert(payload, { onConflict: 'user_id, mission_id' });
       if (claimError) throw claimError;
+
+      console.log(`DEBUG: Claimed Reward for ${missionId}`);
 
       setUserMissions(prev => ({
         ...prev,
