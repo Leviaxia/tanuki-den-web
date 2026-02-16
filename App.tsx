@@ -128,6 +128,7 @@ const App: React.FC = () => {
   });
 
   // 2. Initialize User-Scoped States
+  const [isSessionReady, setIsSessionReady] = useState(false); // [NEW] Gate for RLS dependent fetches
 
   // FIX: Restore Supabase Session on Mount to ensure RLS works
   useEffect(() => {
@@ -152,8 +153,11 @@ const App: React.FC = () => {
               console.log("Session restored for RLS.");
             }
           }
-        } catch (e) { console.error("Error parsing session for restore", e); }
+        } catch (e) {
+          console.error("Error parsing session for restore", e);
+        }
       }
+      setIsSessionReady(true); // [NEW] Signal that session (or lack thereof) is ready
     };
     restoreSession();
   }, []);
@@ -735,7 +739,7 @@ const App: React.FC = () => {
 
   // 1. Initialize & Fetch Missions Data
   useEffect(() => {
-    if (!user.isRegistered || user.id === 'guest') return;
+    if (!user.isRegistered || user.id === 'guest' || !isSessionReady) return; // [NEW] Wait for session
 
     const fetchMissionsData = async () => {
       try {
@@ -818,7 +822,7 @@ const App: React.FC = () => {
     };
 
     fetchMissionsData();
-  }, [user.id, user.isRegistered]);
+  }, [user.id, user.isRegistered, isSessionReady]);
 
   // 2. Core Progress Updater
   const updateMissionProgress = async (missionId: string, value: number, isAbsolute: boolean = false, syncDb: boolean = true) => {
