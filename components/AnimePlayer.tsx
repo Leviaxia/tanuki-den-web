@@ -9,6 +9,7 @@ interface AnimePlayerProps {
     currentTitle: string;
     onToggleMute: (e: React.MouseEvent) => void;
     onNext: (e: React.MouseEvent) => void;
+    direction?: 'left' | 'right'; // [NEW] Control expansion direction
 }
 
 const AnimePlayer: React.FC<AnimePlayerProps> = ({
@@ -17,19 +18,25 @@ const AnimePlayer: React.FC<AnimePlayerProps> = ({
     isMuted,
     currentTitle,
     onToggleMute,
-    onNext
+    onNext,
+    direction = 'left' // Default to left (for desktop right-side placement)
 }) => {
     const [showControls, setShowControls] = useState(false);
 
     // Simple toggle for the local UI dropdown
     const toggleControls = () => setShowControls(!showControls);
 
+    // Determine classes based on direction
+    const containerClasses = direction === 'left'
+        ? `right-full mr-3 ${showControls ? 'translate-x-0' : 'translate-x-4'}`
+        : `left-full ml-3 ${showControls ? 'translate-x-0' : '-translate-x-4'}`;
+
     return (
         // Removed 'relative' from here. It must be passed in className if needed (e.g. for static/flex parents).
         // Absolute elements (like the mobile one) don't need 'relative' to be a container for children.
         <div className={`z-[90] font-ghibli-title ${className} flex items-center`}>
             {/* Control Buttons (Reveal on Click) */}
-            <div className={`flex items-center gap-2 transition-all duration-300 absolute right-full mr-3 ${showControls ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 translate-x-4 pointer-events-none'}`}>
+            <div className={`flex items-center gap-2 transition-all duration-300 absolute ${containerClasses} ${showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
 
                 {/* Mute/Unmute Button */}
                 <button
