@@ -10,10 +10,12 @@ import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
 import ProfileModal from './components/ProfileModal';
 import SharedWishlistModal from './components/SharedWishlistModal';
-import AuthModal from './components/AuthModal'; // [RESTORED]
-import CheckoutModal from './components/CheckoutModal'; // [RESTORED]
-import ShareModal from './components/ShareModal'; // [RESTORED]
-import { PRODUCTS as INITIAL_PRODUCTS, heroText, MISSIONS } from './constants';
+import AuthModal from './components/AuthModal';
+import CheckoutModal from './components/CheckoutModal';
+import ShareModal from './components/ShareModal';
+import AnimePlayer from './components/AnimePlayer';
+
+import { PRODUCTS, heroText, MISSIONS, collectionsContent } from './constants';
 import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission, Reward, UserReward } from './types';
 
 import { supabase } from './src/lib/supabase';
@@ -58,7 +60,7 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(() => {
     const savedReviews = localStorage.getItem('tanuki_all_reviews');
     const reviewsMap = savedReviews ? JSON.parse(savedReviews) : {};
-    return INITIAL_PRODUCTS.map(p => ({
+    return PRODUCTS.map(p => ({
       ...p,
       reviews: reviewsMap[p.id] || []
     }));
@@ -1577,8 +1579,8 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-14">
-              {collections.map((item) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-14">
+              {collectionsContent.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => handleCollectionClick(item.id)}
@@ -1812,9 +1814,10 @@ const App: React.FC = () => {
 
 
       <main className="flex-grow relative z-10">{renderContent()}</main>
+      {/* Anime Music Player (Global) */}
+      <AnimePlayer />
 
-
-
+      {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}

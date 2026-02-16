@@ -258,3 +258,30 @@ export const collectionsContent = [
     accent: '#4A6741'
   },
 ];
+
+export const ANIME_PLAYLIST = [
+  {
+    title: 'Gurenge',
+    anime: 'Demon Slayer',
+    url: 'https://archive.org/download/tv-anime-kimetsu-no-yaiba-opening-theme-gurenge-lisa/TV%20Anime%20%22Kimetsu%20no%20Yaiba%22%20Opening%20Theme%20-%20Gurenge%20%20LiSA.mp3', // Public Archive.org link
+    cover: 'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?q=80&w=200&auto=format&fit=crop'
+  },
+  {
+    title: 'Blue Bird',
+    anime: 'Naruto Shippuden',
+    url: 'https://archive.org/download/blue-bird-naruto-shippuden-op-3/Blue%20Bird%20-%20Naruto%20Shippuden%20Op%203.mp3',
+    cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop'
+  },
+  {
+    title: 'Cha-La Head-Cha',
+    anime: 'Dragon Ball Z',
+    url: 'https://archive.org/download/cha-la-head-cha-official-theme-song-dragon-ball-z_202102/Cha-La%20Head-Cha%20%28Official%20Theme%20Song%29%20-%20Dragon%20Ball%20Z.mp3',
+    cover: 'https://images.unsplash.com/photo-1531525645387-7f14be1bdbbd?q=80&w=200&auto=format&fit=crop'
+  },
+  {
+    title: 'A Cruel Angel\'s Thesis',
+    anime: 'Evangelion',
+    url: 'https://archive.org/download/neon-genesis-evangelion-opening-full-japanese/Neon%20Genesis%20Evangelion%20Opening%20Full%20Japanese.mp3',
+    cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop'
+  }
+];
