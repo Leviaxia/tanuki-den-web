@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../lib/supabase';
 import { Plus, Edit3, Trash2, Save, X, Image as ImageIcon, Loader2, Home, Box, Layers, Gem } from 'lucide-react';
-import { Product, Collection } from '../../types';
+import { Product, Collection, ProductVariant } from '../../types';
 import { formatCurrency } from '../lib/utils';
 
 export const AdminDashboard = () => {
@@ -108,7 +108,8 @@ export const AdminDashboard = () => {
                 image: product.image || 'https://via.placeholder.com/300',
                 stock: product.stock || 0,
                 // ADDED COLLECTION ID (Mapped to DB column snake_case)
-                collection_id: product.collectionId || null
+                collection_id: product.collectionId || null,
+                variants: product.variants || []
             };
 
             if (product.id) {
@@ -429,6 +430,41 @@ const ProductForm = ({ product, collections, onSave, onCancel }: { product: Part
         }
     };
 
+    const handleVariantImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, variantIndex: number) => {
+        try {
+            setUploading(true);
+            if (!e.target.files || e.target.files.length === 0) return;
+
+            const file = e.target.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `var-${Date.now()}.${fileExt}`;
+            const uploadUrl = `${supabaseUrl}/storage/v1/object/products/${fileName}`;
+
+            let token = '';
+            const key = `sb-${supabaseUrl?.split('//')[1]?.split('.')[0]}-auth-token`;
+            const stored = localStorage.getItem(key);
+            if (stored) token = JSON.parse(stored).access_token;
+            if (!token) throw new Error("No hay sesión válida.");
+
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'apikey': supabaseAnonKey || '' },
+                body: file
+            });
+
+            if (!response.ok) throw new Error("Fallo la subida");
+
+            const publicUrl = `${supabaseUrl}/storage/v1/object/public/products/${fileName}`;
+            const newVariants = [...(form.variants || [])];
+            newVariants[variantIndex].image = publicUrl;
+            setForm({ ...form, variants: newVariants });
+        } catch (error: any) {
+            alert(`Error subiendo imagen de variante: ${error.message}`);
+        } finally {
+            setUploading(false);
+        }
+    };
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             <input placeholder="Nombre" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold" />
@@ -473,6 +509,77 @@ const ProductForm = ({ product, collections, onSave, onCancel }: { product: Part
                     </div>
                 </div>
                 {form.image && <img src={form.image} className="w-20 h-20 rounded-lg mt-2 object-cover border-2 border-[#3A332F]/10" alt="Preview" />}
+            </div>
+
+            {/* Variantes */}
+            <div className="md:col-span-2 bg-[#FDF5E6]/50 p-4 rounded-xl border-2 border-[#3A332F]/10">
+                <div className="flex justify-between items-center mb-4">
+                    <label className="block text-sm font-bold text-[#3A332F]">Variantes (Colores, Estilos, etc.)</label>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const newVariant: ProductVariant = { id: Date.now().toString(), name: '', image: '' };
+                            setForm({ ...form, variants: [...(form.variants || []), newVariant] });
+                        }}
+                        className="bg-[#3A332F] text-white px-3 py-1.5 rounded-full font-bold text-xs hover:bg-[#C14B3A] transition-colors flex items-center gap-1"
+                    >
+                        <Plus size={14} /> Nueva Variante
+                    </button>
+                </div>
+
+                <div className="space-y-3">
+                    {(form.variants || []).map((variant, index) => (
+                        <div key={variant.id} className="flex flex-col md:flex-row gap-3 items-center bg-white p-3 rounded-lg border border-[#3A332F]/10 shadow-sm">
+                            <input
+                                placeholder="Nombre (Ej. Color Rojo, Extra Cara)"
+                                value={variant.name}
+                                onChange={e => {
+                                    const newVariants = [...(form.variants || [])];
+                                    newVariants[index].name = e.target.value;
+                                    setForm({ ...form, variants: newVariants });
+                                }}
+                                className="w-full md:w-1/3 p-2 bg-[#FDF5E6] rounded-lg border-none outline-none font-bold text-sm"
+                            />
+                            <div className="flex-grow w-full flex items-center gap-2">
+                                <input
+                                    placeholder="URL Imagen"
+                                    value={variant.image}
+                                    onChange={e => {
+                                        const newVariants = [...(form.variants || [])];
+                                        newVariants[index].image = e.target.value;
+                                        setForm({ ...form, variants: newVariants });
+                                    }}
+                                    className="flex-grow p-2 bg-[#FDF5E6] rounded-lg border-none outline-none text-sm"
+                                />
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleVariantImageUpload(e, index)}
+                                        disabled={uploading}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    />
+                                    <div className={`bg-[#3A332F] text-white p-2 rounded-lg hover:bg-[#C14B3A] transition-colors flex items-center justify-center ${uploading ? 'opacity-50' : ''}`}>
+                                        {uploading ? <Loader2 className="animate-spin" size={16} /> : <ImageIcon size={16} />}
+                                    </div>
+                                </div>
+                            </div>
+                            {variant.image && <img src={variant.image} className="w-10 h-10 rounded-lg object-cover border border-gray-200" alt="Var" />}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const newVariants = [...(form.variants || [])];
+                                    newVariants.splice(index, 1);
+                                    setForm({ ...form, variants: newVariants });
+                                }}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                        </div>
+                    ))}
+                    {!(form.variants?.length) && <p className="text-xs text-gray-400 text-center py-2 font-bold uppercase tracking-wider">Sin variantes adicionales</p>}
+                </div>
             </div>
 
             <textarea placeholder="Descripción" value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} className="p-3 bg-[#FDF5E6] rounded-xl border-none outline-none font-bold md:col-span-2" rows={3} />

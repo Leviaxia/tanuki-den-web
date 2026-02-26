@@ -41,6 +41,12 @@ export interface Collection {
   accent: string;
 }
 
+export interface ProductVariant {
+  id: string; // uuid or Date.now string
+  name: string;
+  image: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -53,6 +59,7 @@ export interface Product {
   reviews?: Review[];
   collectionId?: number;
   benefits?: string[];
+  variants?: ProductVariant[];
   created_at?: string;
 }
 
