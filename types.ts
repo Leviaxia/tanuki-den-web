@@ -65,6 +65,7 @@ export interface Product {
 
 export interface CartItem extends Product {
   quantity: number;
+  selectedVariant?: ProductVariant;
 }
 
 export interface UserMessage {

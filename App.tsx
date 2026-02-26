@@ -15,7 +15,7 @@ import CheckoutModal from './components/CheckoutModal';
 import ShareModal from './components/ShareModal';
 
 import { PRODUCTS, heroText, MISSIONS, collectionsContent } from './constants';
-import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission, Reward, UserReward } from './types';
+import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission, Reward, UserReward, ProductVariant } from './types';
 
 import { supabase } from './src/lib/supabase';
 import { formatCurrency } from './src/lib/utils';
@@ -198,6 +198,7 @@ const App: React.FC = () => {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [showMobileReviews, setShowMobileReviews] = useState(false);
   const [detailQuantity, setDetailQuantity] = useState(1);
 
@@ -416,7 +417,7 @@ const App: React.FC = () => {
     const handlePopState = (event: PopStateEvent) => {
       // 1. Modals (High Priority) - Close and Return
       if (fullScreenImage) { setFullScreenImage(null); return; }
-      if (selectedProduct) { setSelectedProduct(null); setShowMobileReviews(false); return; }
+      if (selectedProduct) { setSelectedProduct(null); setSelectedVariant(null); setShowMobileReviews(false); return; }
       if (isCheckoutOpen) { setIsCheckoutOpen(false); return; }
       if (isCartOpen) { setIsCartOpen(false); return; }
       if (isProfileModalOpen) { setIsProfileModalOpen(false); return; }
@@ -1101,23 +1102,49 @@ const App: React.FC = () => {
     }
   };
 
-  const addToCart = (product: Product, quantity: number = 1) => {
+  const addToCart = (product: Product, quantity: number = 1, variant: ProductVariant | null = null) => {
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
-      return [...prev, { ...product, quantity }];
+      const cartItemId = variant ? `${product.id}-${variant.id}` : product.id;
+      const existing = prev.find(item => {
+        if (variant) return item.id === product.id && item.selectedVariant?.id === variant.id;
+        return item.id === product.id && !item.selectedVariant;
+      });
+
+      if (existing) {
+        return prev.map(item => {
+          const isMatch = variant
+            ? item.id === product.id && item.selectedVariant?.id === variant.id
+            : item.id === product.id && !item.selectedVariant;
+          if (isMatch) return { ...item, quantity: item.quantity + quantity };
+          return item;
+        });
+      }
+      return [...prev, { ...product, quantity, selectedVariant: variant || undefined }];
     });
     window.history.pushState({ modal: true }, '');
     setIsCartOpen(true);
     setSelectedProduct(null);
+    setSelectedVariant(null);
   };
 
-  const updateQuantity = (productId: string, delta: number) => {
-    setCart(prev => prev.map(item => item.id === productId ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item));
+  const updateQuantity = (itemId: string, delta: number, variantId?: string) => {
+    setCart(prev => prev.map(item => {
+      const isMatch = variantId
+        ? item.id === itemId && item.selectedVariant?.id === variantId
+        : item.id === itemId && !item.selectedVariant;
+
+      if (isMatch) {
+        return { ...item, quantity: Math.max(1, item.quantity + delta) };
+      }
+      return item;
+    }));
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.id !== productId));
+  const removeFromCart = (itemId: string, variantId?: string) => {
+    setCart(prev => prev.filter(item => {
+      if (variantId) return !(item.id === itemId && item.selectedVariant?.id === variantId);
+      return !(item.id === itemId && !item.selectedVariant);
+    }));
   };
 
   const handleNavClick = (id: string) => {
@@ -2056,17 +2083,20 @@ const App: React.FC = () => {
                 ) : (
                   cart.map(item => (
                     <div key={item.id} className="flex gap-4 md:gap-6 p-4 bg-[#FDF5E6]/30 rounded-[20px] md:rounded-[30px] border-2 border-transparent hover:border-[#C14B3A]/20 transition-all">
-                      <img src={item.image} className="w-16 h-16 md:w-24 md:h-24 object-cover rounded-[15px] md:rounded-[20px] shadow-md" alt={item.name} />
+                      <img src={item.selectedVariant ? item.selectedVariant.image : item.image} className="w-16 h-16 md:w-24 md:h-24 object-cover rounded-[15px] md:rounded-[20px] shadow-md" alt={item.name} />
                       <div className="flex-grow space-y-2">
-                        <h4 className="font-ghibli-title text-[#3A332F] text-sm md:text-base leading-tight">{item.name}</h4>
+                        <h4 className="font-ghibli-title text-[#3A332F] text-sm md:text-base leading-tight">
+                          {item.name}
+                          {item.selectedVariant && <span className="block text-xs font-sans text-gray-500 font-bold tracking-wide mt-1">Variante: {item.selectedVariant.name}</span>}
+                        </h4>
                         <div className="flex items-center justify-between">
                           <span className="font-black text-[#C14B3A] text-xs md:text-base"><span className="text-[#C14B3A]">$</span>{formatCurrency(item.price)}</span>
                           <div className="flex items-center gap-2 md:gap-4 bg-white px-2 md:px-4 py-1 md:py-2 rounded-full border-2 border-[#E6D5B8]">
-                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1)}><Minus size={12} className="md:w-4 md:h-4" /></button>}
+                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1, item.selectedVariant?.id)}><Minus size={12} className="md:w-4 md:h-4" /></button>}
                             <span className="font-black text-xs md:text-sm">{item.quantity}</span>
-                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, 1)}><Plus size={12} className="md:w-4 md:h-4" /></button>}
+                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, 1, item.selectedVariant?.id)}><Plus size={12} className="md:w-4 md:h-4" /></button>}
                           </div>
-                          <button onClick={() => removeFromCart(item.id)} className="text-[#3A332F]/20 hover:text-red-500 transition-colors"><Trash2 size={16} className="md:w-5 md:h-5" /></button>
+                          <button onClick={() => removeFromCart(item.id, item.selectedVariant?.id)} className="text-[#3A332F]/20 hover:text-red-500 transition-colors"><Trash2 size={16} className="md:w-5 md:h-5" /></button>
                         </div>
                       </div>
                     </div>
@@ -2133,7 +2163,7 @@ const App: React.FC = () => {
         selectedProduct && (
           <div
             className="fixed inset-0 z-[9999] bg-black/60 md:bg-[#3A332F]/90 backdrop-blur-sm md:backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer overflow-hidden"
-            onClick={() => { setSelectedProduct(null); setShowMobileReviews(false); }}
+            onClick={() => { setSelectedProduct(null); setSelectedVariant(null); setShowMobileReviews(false); }}
           >
             {/* Mobile "Window" Modal */}
             <div
@@ -2169,10 +2199,10 @@ const App: React.FC = () => {
                 {/* Image Section */}
                 <div className="h-[220px] md:h-auto w-full md:w-1/2 bg-[#FDF5E6] relative group flex shrink-0 items-center justify-center overflow-hidden">
                   <img
-                    src={selectedProduct.image}
-                    className="w-full h-full object-cover object-center md:rounded-l-[50px] md:cursor-zoom-in"
+                    src={selectedVariant ? selectedVariant.image : selectedProduct.image}
+                    className="w-full h-full object-cover object-center md:rounded-l-[50px] md:cursor-zoom-in transition-all duration-300"
                     alt={selectedProduct.name}
-                    onClick={() => setFullScreenImage(selectedProduct.image)}
+                    onClick={() => setFullScreenImage(selectedVariant ? selectedVariant.image : selectedProduct.image)}
                   />
                   {/* Desktop Zoom Button */}
                   <button
@@ -2242,6 +2272,27 @@ const App: React.FC = () => {
                     <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">
                       {selectedProduct.description}
                     </p>
+
+                    {/* VARIANTS SELECTOR */}
+                    {selectedProduct.variants && selectedProduct.variants.length > 0 && (
+                      <div className="mt-6 space-y-3">
+                        <label className="text-xs md:text-sm font-ghibli-title uppercase text-[#C14B3A] tracking-widest flex items-center gap-2">
+                          <Layers size={14} /> Elige tu Variante
+                        </label>
+                        <div className="flex flex-wrap gap-2 md:gap-3">
+                          {selectedProduct.variants.map(variant => (
+                            <button
+                              key={variant.id}
+                              onClick={() => setSelectedVariant(variant)}
+                              className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl border-2 transition-all group ${selectedVariant?.id === variant.id ? 'border-[#C14B3A] bg-[#C14B3A]/5 shadow-md scale-105' : 'border-[#F0E6D2] hover:border-[#C14B3A]/50 bg-white hover:bg-[#FDF5E6]'}`}
+                            >
+                              {variant.image && <img src={variant.image} className="w-6 h-6 md:w-8 md:h-8 rounded-full border border-gray-200 object-cover" alt="Var" />}
+                              <span className={`text-xs md:text-sm font-bold ${selectedVariant?.id === variant.id ? 'text-[#C14B3A]' : 'text-[#3A332F] group-hover:text-[#C14B3A]'}`}>{variant.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col justify-end gap-4 mt-2 md:mt-8 flex-shrink-0">
@@ -2261,8 +2312,8 @@ const App: React.FC = () => {
                         <button onClick={() => setDetailQuantity(q => q + 1)} className="p-1"><Plus size={14} className="md:w-5 md:h-5" /></button>
                       </div>
 
-                      {/* Add to Cart - Desktop: Icon Only requested */}
-                      <button onClick={() => addToCart(selectedProduct, detailQuantity)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-3 md:py-6 rounded-full text-xs md:text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-2 md:gap-4 active:scale-95 group">
+                      {/* Add to Cart */}
+                      <button onClick={() => addToCart(selectedProduct, detailQuantity, selectedVariant)} className="flex-grow bg-[#3A332F] text-white font-ghibli-title py-3 md:py-6 rounded-full text-xs md:text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest flex items-center justify-center gap-2 md:gap-4 active:scale-95 group">
                         <ShoppingCart size={24} className="group-hover:scale-110 transition-transform" />
                         {/* Text hidden on both mobile (previously) and now desktop as per request "reemplazado por el ícono" */}
                       </button>
