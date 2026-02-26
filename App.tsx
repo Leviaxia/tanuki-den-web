@@ -2265,6 +2265,34 @@ const App: React.FC = () => {
                         <MessageSquare size={12} /> Ver Opiniones
                       </button>
                     </div>
+
+                    {/* VARIANTS SELECTOR */}
+                    {selectedProduct.variants && selectedProduct.variants.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        <label className="text-[10px] md:text-xs font-ghibli-title uppercase text-[#C14B3A] tracking-widest flex items-center gap-1.5">
+                          <Layers size={12} /> Elige tu Variante
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setSelectedVariant(null)}
+                            className={`flex items-center gap-1.5 px-2 py-1 md:px-3 md:py-1.5 rounded-lg md:rounded-xl border-2 transition-all group ${!selectedVariant ? 'border-[#C14B3A] bg-[#C14B3A]/5 shadow-sm scale-105' : 'border-[#F0E6D2] hover:border-[#C14B3A]/50 bg-white hover:bg-[#FDF5E6]'}`}
+                          >
+                            {selectedProduct.image && <img src={selectedProduct.image} className="w-5 h-5 md:w-6 md:h-6 rounded-full border border-gray-200 object-cover" alt="Original" />}
+                            <span className={`text-[10px] md:text-xs font-bold ${!selectedVariant ? 'text-[#C14B3A]' : 'text-[#3A332F] group-hover:text-[#C14B3A]'}`}>Original</span>
+                          </button>
+                          {selectedProduct.variants.map(variant => (
+                            <button
+                              key={variant.id}
+                              onClick={() => setSelectedVariant(variant)}
+                              className={`flex items-center gap-1.5 px-2 py-1 md:px-3 md:py-1.5 rounded-lg md:rounded-xl border-2 transition-all group ${selectedVariant?.id === variant.id ? 'border-[#C14B3A] bg-[#C14B3A]/5 shadow-sm scale-105' : 'border-[#F0E6D2] hover:border-[#C14B3A]/50 bg-white hover:bg-[#FDF5E6]'}`}
+                            >
+                              {variant.image && <img src={variant.image} className="w-5 h-5 md:w-6 md:h-6 rounded-full border border-gray-200 object-cover" alt="Var" />}
+                              <span className={`text-[10px] md:text-xs font-bold ${selectedVariant?.id === variant.id ? 'text-[#C14B3A]' : 'text-[#3A332F] group-hover:text-[#C14B3A]'}`}>{variant.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Mobile & Desktop: Full Description with internal scroll if needed */}
@@ -2272,27 +2300,6 @@ const App: React.FC = () => {
                     <p className="text-[#3A332F]/80 text-sm md:text-lg font-medium leading-relaxed whitespace-pre-wrap">
                       {selectedProduct.description}
                     </p>
-
-                    {/* VARIANTS SELECTOR */}
-                    {selectedProduct.variants && selectedProduct.variants.length > 0 && (
-                      <div className="mt-6 space-y-3">
-                        <label className="text-xs md:text-sm font-ghibli-title uppercase text-[#C14B3A] tracking-widest flex items-center gap-2">
-                          <Layers size={14} /> Elige tu Variante
-                        </label>
-                        <div className="flex flex-wrap gap-2 md:gap-3">
-                          {selectedProduct.variants.map(variant => (
-                            <button
-                              key={variant.id}
-                              onClick={() => setSelectedVariant(variant)}
-                              className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl border-2 transition-all group ${selectedVariant?.id === variant.id ? 'border-[#C14B3A] bg-[#C14B3A]/5 shadow-md scale-105' : 'border-[#F0E6D2] hover:border-[#C14B3A]/50 bg-white hover:bg-[#FDF5E6]'}`}
-                            >
-                              {variant.image && <img src={variant.image} className="w-6 h-6 md:w-8 md:h-8 rounded-full border border-gray-200 object-cover" alt="Var" />}
-                              <span className={`text-xs md:text-sm font-bold ${selectedVariant?.id === variant.id ? 'text-[#C14B3A]' : 'text-[#3A332F] group-hover:text-[#C14B3A]'}`}>{variant.name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex flex-col justify-end gap-4 mt-2 md:mt-8 flex-shrink-0">
