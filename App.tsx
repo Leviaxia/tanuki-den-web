@@ -2082,21 +2082,23 @@ const App: React.FC = () => {
                   <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-40"><ShoppingBag size={80} strokeWidth={1} /><p className="font-ghibli-title text-xl">Tu saco está vacío</p></div>
                 ) : (
                   cart.map(item => (
-                    <div key={item.id} className="flex gap-4 md:gap-6 p-4 bg-[#FDF5E6]/30 rounded-[20px] md:rounded-[30px] border-2 border-transparent hover:border-[#C14B3A]/20 transition-all">
-                      <img src={item.selectedVariant ? item.selectedVariant.image : item.image} className="w-16 h-16 md:w-24 md:h-24 object-cover rounded-[15px] md:rounded-[20px] shadow-md" alt={item.name} />
-                      <div className="flex-grow space-y-2">
-                        <h4 className="font-ghibli-title text-[#3A332F] text-sm md:text-base leading-tight">
-                          {item.name}
-                          {item.selectedVariant && <span className="block text-xs font-sans text-gray-500 font-bold tracking-wide mt-1">Variante: {item.selectedVariant.name}</span>}
-                        </h4>
-                        <div className="flex items-center justify-between">
-                          <span className="font-black text-[#C14B3A] text-xs md:text-base"><span className="text-[#C14B3A]">$</span>{formatCurrency(item.price)}</span>
-                          <div className="flex items-center gap-2 md:gap-4 bg-white px-2 md:px-4 py-1 md:py-2 rounded-full border-2 border-[#E6D5B8]">
-                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1, item.selectedVariant?.id)}><Minus size={12} className="md:w-4 md:h-4" /></button>}
-                            <span className="font-black text-xs md:text-sm">{item.quantity}</span>
-                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, 1, item.selectedVariant?.id)}><Plus size={12} className="md:w-4 md:h-4" /></button>}
+                    <div key={item.id} className="flex gap-3 md:gap-4 p-3 md:p-4 bg-[#FDF5E6]/30 rounded-[15px] md:rounded-[24px] border-2 border-transparent hover:border-[#C14B3A]/20 transition-all items-center">
+                      <img src={item.selectedVariant ? item.selectedVariant.image : item.image} className="w-14 h-14 md:w-20 md:h-20 object-cover rounded-[12px] md:rounded-[16px] shadow-sm shrink-0" alt={item.name} />
+                      <div className="flex-grow min-w-0 flex flex-col justify-center">
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className="font-ghibli-title text-[#3A332F] text-sm md:text-base leading-tight line-clamp-2">
+                            {item.name}
+                            {item.selectedVariant && <span className="block text-[10px] md:text-xs font-sans text-[#8C8279] font-bold tracking-wide mt-0.5">Variante: {item.selectedVariant.name}</span>}
+                          </h4>
+                          <button onClick={() => removeFromCart(item.id, item.selectedVariant?.id)} className="text-[#3A332F]/20 hover:text-red-500 transition-colors p-1 shrink-0 -mt-1 -mr-1"><X size={16} className="md:w-5 md:h-5" /></button>
+                        </div>
+                        <div className="flex items-center justify-between mt-2 md:mt-3">
+                          <span className="font-black text-[#C14B3A] text-sm md:text-base"><span className="text-[#C14B3A]">$</span>{formatCurrency(item.price)}</span>
+                          <div className="flex items-center gap-2 md:gap-3 bg-white px-2 py-0.5 md:px-3 md:py-1 rounded-full border border-[#E6D5B8] shrink-0">
+                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1, item.selectedVariant?.id)} className="p-1 hover:text-[#C14B3A] transition-colors"><Minus size={12} className="md:w-3 md:h-3" /></button>}
+                            <span className="font-black text-xs md:text-sm w-3 md:w-4 text-center">{item.quantity}</span>
+                            {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, 1, item.selectedVariant?.id)} className="p-1 hover:text-[#C14B3A] transition-colors"><Plus size={12} className="md:w-3 md:h-3" /></button>}
                           </div>
-                          <button onClick={() => removeFromCart(item.id, item.selectedVariant?.id)} className="text-[#3A332F]/20 hover:text-red-500 transition-colors"><Trash2 size={16} className="md:w-5 md:h-5" /></button>
                         </div>
                       </div>
                     </div>
