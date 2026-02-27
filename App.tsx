@@ -1772,7 +1772,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white selection:bg-[#C14B3A] selection:text-white flex flex-col pt-24 md:pt-32 relative overflow-x-hidden">
+    <div className="min-h-screen bg-white selection:bg-[#C14B3A] selection:text-white flex flex-col pt-[102px] md:pt-[118px] relative overflow-x-hidden">
       <Navbar
         cartCount={cart.reduce((a, c) => a + c.quantity, 0)}
         onOpenCart={() => setIsCartOpen(true)}
@@ -2092,11 +2092,11 @@ const App: React.FC = () => {
                           </h4>
                           <button onClick={() => removeFromCart(item.id, item.selectedVariant?.id)} className="text-[#3A332F]/20 hover:text-red-500 transition-colors p-1 shrink-0 -mt-1 -mr-1"><X size={16} className="md:w-5 md:h-5" /></button>
                         </div>
-                        <div className="flex items-center justify-between mt-2 md:mt-3">
+                        <div className="flex flex-col items-start gap-2 mt-2 md:mt-3 pl-1">
                           <span className="font-black text-[#C14B3A] text-sm md:text-base"><span className="text-[#C14B3A]">$</span>{formatCurrency(item.price)}</span>
-                          <div className="flex items-center gap-2 md:gap-3 bg-white px-2 py-0.5 md:px-3 md:py-1 rounded-full border border-[#E6D5B8] shrink-0">
+                          <div className="flex items-center gap-2 bg-white px-2 py-1 md:px-3 md:py-1.5 rounded-full border border-[#E6D5B8] shrink-0 self-start shadow-sm">
                             {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, -1, item.selectedVariant?.id)} className="p-1 hover:text-[#C14B3A] transition-colors"><Minus size={12} className="md:w-3 md:h-3" /></button>}
-                            <span className="font-black text-xs md:text-sm w-3 md:w-4 text-center">{item.quantity}</span>
+                            <span className="font-black text-xs md:text-sm w-4 md:w-5 text-center">{item.quantity}</span>
                             {!item.id.startsWith('sub-') && <button onClick={() => updateQuantity(item.id, 1, item.selectedVariant?.id)} className="p-1 hover:text-[#C14B3A] transition-colors"><Plus size={12} className="md:w-3 md:h-3" /></button>}
                           </div>
                         </div>
