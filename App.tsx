@@ -2014,7 +2014,7 @@ const App: React.FC = () => {
                     id: 'silver',
                     name: 'Brote',
                     icon: '/assets/brote.png',
-                    price: 84900,
+                    price: 119900,
                     period: 'Mensual',
                     color: '#5D8A3C',
                     discountPct: 7,
@@ -2022,7 +2022,7 @@ const App: React.FC = () => {
                     benefits: [
                       '7% de descuento permanente en toda la tienda',
                       'Acceso anticipado a preventas y lanzamientos',
-                      '🎁 1 artículo físico mensual garantizado',
+                      '1 artículo físico mensual garantizado',
                       'Posibilidad de variante rara dentro del artículo',
                       'Participación en sorteos exclusivos para miembros',
                       'Acceso preferencial a reposiciones',
@@ -2032,7 +2032,7 @@ const App: React.FC = () => {
                     id: 'gold',
                     name: 'Rama',
                     icon: '/assets/rama.png',
-                    price: 159900,
+                    price: 229900,
                     period: 'Mensual',
                     color: '#C14B3A',
                     discountPct: 10,
@@ -2040,10 +2040,10 @@ const App: React.FC = () => {
                     benefits: [
                       '10% de descuento permanente en la tienda',
                       'Acceso anticipado a todos los drops limitados',
-                      '🎁 1 figura principal mensual (valor ≥ precio del plan)',
-                      '🎁 1 artículo adicional coleccionable',
+                      '1 figura principal mensual (valor ≥ precio del plan)',
+                      '1 artículo adicional coleccionable',
                       'Participación en sorteos premium',
-                      '🎂 Obsequio especial en tu mes de cumpleaños',
+                      'Obsequio especial en tu mes de cumpleaños',
                       'Prioridad absoluta en productos de alta rotación',
                     ]
                   },
@@ -2051,7 +2051,7 @@ const App: React.FC = () => {
                     id: 'founder',
                     name: 'Espíritu',
                     icon: '/assets/espiritu.png',
-                    price: 309900,
+                    price: 399900,
                     period: 'Mensual',
                     color: '#D4AF37',
                     discountPct: 15,
@@ -2059,11 +2059,11 @@ const App: React.FC = () => {
                     benefits: [
                       '15% de descuento permanente en la tienda',
                       'Acceso total a todos los lanzamientos y piezas limitadas',
-                      '🎁 1 figura premium mensual (escala / edición especial)',
-                      '🎁 1 exclusivo no disponible para el público general',
-                      '🚚 ENVÍOS GRATIS en todos los pedidos',
-                      '🎟 Sorteos de alto nivel y drops ocultos',
-                      '🧾 Carnet físico de miembro del clan',
+                      '1 figura premium mensual (escala / edición especial)',
+                      '1 exclusivo no disponible para el público general',
+                      'ENVÍOS GRATIS en todos los pedidos',
+                      'Sorteos de alto nivel y drops ocultos',
+                      'Carnet físico de miembro del clan',
                     ]
                   }
                 ];
