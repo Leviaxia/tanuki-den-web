@@ -239,10 +239,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
           isAutoLogin: !!data.session
         });
         setStep('success');
-
       } else {
         throw new Error('No se recibió usuario del servidor.');
       }
+
+    } catch (err: any) {
+      console.error('Register Error:', err);
+      setError(err.message || 'Error al registrarse');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
