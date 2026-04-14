@@ -259,7 +259,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
 
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: 'https://www.tanukiden.co/',
       });
 
       if (resetError) throw resetError;
