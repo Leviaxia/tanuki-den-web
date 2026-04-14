@@ -2125,47 +2125,57 @@ const App: React.FC = () => {
                 if (user.membership) {
                   // --- SUBSCRIBED VIEW ---
                   const currentPlan = PLANS.find(p => p.id === user.membership);
-                  const isExpired = user.membershipExpiry ? new Date(user.membershipExpiry) < new Date() : false;
-
-                  return (
-                    <div className="text-center space-y-12 py-8">
-                      <div className="space-y-4">
-                        <div className="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center border-4 border-[#3A332F] shadow-lg animate-bounce-subtle mb-6 overflow-hidden">
-                          {currentPlan?.icon
-                            ? <img src={currentPlan.icon} alt={currentPlan.name} className="w-16 h-16 object-contain" />
-                            : <Crown style={{ color: currentPlan?.color || '#3A332F' }} size={40} />}
+                            return (
+                      <div className="text-center space-y-12 py-8">
+                        <div className="space-y-4">
+                          <div 
+                            className="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center shadow-lg animate-bounce-subtle mb-6 overflow-hidden border-4"
+                            style={{ borderColor: currentPlan?.color || '#3A332F' }}
+                          >
+                            {currentPlan?.icon
+                              ? <img src={currentPlan.icon} alt={currentPlan.name} className="w-full h-full object-cover" />
+                              : <Crown style={{ color: currentPlan?.color || '#3A332F' }} size={40} />}
+                          </div>
+                          <h2 className="text-4xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">
+                            Mi Pacto <span style={{ color: currentPlan?.color || '#C14B3A' }}>{currentPlan?.name}</span>
+                          </h2>
+                          {isExpired
+                            ? <p className="text-[#C14B3A] font-black uppercase tracking-[0.3em] text-xs">⚠ Tu membresía ha expirado — renueva para recuperar tu descuento</p>
+                            : <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Eres parte de la leyenda del bosque · {currentPlan?.discountPct}% OFF activo</p>
+                          }
                         </div>
-                        <h2 className="text-4xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">
-                          Mi Pacto <span style={{ color: currentPlan?.color || '#C14B3A' }}>{currentPlan?.name}</span>
-                        </h2>
-                        {isExpired
-                          ? <p className="text-[#C14B3A] font-black uppercase tracking-[0.3em] text-xs">⚠ Tu membresía ha expirado — renueva para recuperar tu descuento</p>
-                          : <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Eres parte de la leyenda del bosque · {currentPlan?.discountPct}% OFF activo</p>
-                        }
-                      </div>
 
-                      <div className="max-w-2xl mx-auto bg-white p-10 rounded-[50px] border-4 border-[#3A332F] shadow-xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={100} /></div>
-                        <h3 className="text-2xl font-ghibli-title text-[#3A332F] uppercase mb-8 border-b-2 border-[#FDF5E6] pb-4">Tus Privilegios Activos</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                          {currentPlan?.benefits.map((benefit, i) => (
-                            <div key={i} className="flex items-center gap-4 group">
-                              <div className="w-10 h-10 rounded-full bg-[#FDF5E6] flex items-center justify-center text-[#C14B3A] group-hover:scale-110 transition-transform shrink-0">
-                                <CheckCircle2 size={20} />
+                        <div 
+                           className="max-w-2xl mx-auto bg-white p-10 rounded-[50px] border-4 shadow-xl relative overflow-hidden"
+                           style={{ borderColor: currentPlan?.color || '#3A332F' }}
+                        >
+                          <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={100} /></div>
+                          <h3 className="text-2xl font-ghibli-title text-[#3A332F] uppercase mb-8 border-b-2 border-[#FDF5E6] pb-4">Tus Privilegios Activos</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                            {currentPlan?.benefits.map((benefit, i) => (
+                              <div key={i} className="flex items-center gap-4 group">
+                                <div className="w-10 h-10 rounded-full bg-[#FDF5E6] flex items-center justify-center text-[#C14B3A] group-hover:scale-110 transition-transform shrink-0">
+                                  <CheckCircle2 size={20} />
+                                </div>
+                                <span className={`font-bold text-sm md:text-base ${benefit.includes('GRATIS') ? 'text-[#C14B3A] font-black' : 'text-[#3A332F]'}`}>{benefit}</span>
                               </div>
-                              <span className={`font-bold text-sm md:text-base ${benefit.includes('GRATIS') ? 'text-[#C14B3A] font-black' : 'text-[#3A332F]'}`}>{benefit}</span>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="pt-4">
+                          <p className="text-[#3A332F]/60 text-xs font-bold uppercase tracking-widest mb-6">Tu membresía se renueva automáticamente cada mes</p>
+                          <button 
+                            onClick={() => setIsSubscriptionModalOpen(false)} 
+                            className="bg-[#3A332F] text-white font-ghibli-title py-4 px-12 rounded-full text-lg shadow-lg transition-all uppercase tracking-widest hover:scale-105 active:scale-95"
+                            style={{ backgroundColor: currentPlan?.color || '#3A332F' }}
+                          >
+                            VOLVER AL BOSQUE
+                          </button>
                         </div>
                       </div>
-
-                      <div className="pt-4">
-                        <p className="text-[#3A332F]/60 text-xs font-bold uppercase tracking-widest mb-6">Tu membresía se renueva automáticamente cada mes</p>
-                        <button onClick={() => setIsSubscriptionModalOpen(false)} className="bg-[#3A332F] text-white font-ghibli-title py-4 px-12 rounded-full text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest">VOLVER AL BOSQUE</button>
-                      </div>
-                    </div>
-                  );
-                }
+                    );
+                  }
 
                 // --- PLAN SELECTION VIEW ---
                 return (
@@ -2176,12 +2186,18 @@ const App: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                       {PLANS.map((plan) => (
-                        <div key={plan.id} className={`relative bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border-4 border-[#3A332F] space-y-5 flex flex-col transition-all hover:-translate-y-3 shadow-xl ${plan.featured ? 'ring-4 ring-[#C14B3A]/30 scale-100 md:scale-105 z-10' : ''}`}>
+                        <div key={plan.id} 
+                          className={`relative bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border-4 space-y-5 flex flex-col transition-all hover:-translate-y-3 shadow-xl ${plan.featured ? 'ring-4 ring-[#C14B3A]/30 scale-100 md:scale-105 z-10' : ''}`}
+                          style={{ borderColor: plan.color }}
+                        >
                           {plan.featured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#C14B3A] text-white px-6 py-1 rounded-full text-[10px] font-ghibli-title uppercase tracking-widest shadow-lg whitespace-nowrap">🔥 Más Popular</div>}
 
                           <div className="space-y-2 text-center">
-                            <div className="w-16 h-16 bg-[#FDF5E6] rounded-2xl mx-auto flex items-center justify-center border-2 border-[#3A332F] shadow-sm overflow-hidden">
-                              <img src={plan.icon} alt={plan.name} className="w-12 h-12 object-contain" onError={e => { (e.target as HTMLImageElement).style.display='none'; }} />
+                            <div 
+                              className="w-20 h-20 bg-[#FDF5E6] rounded-full mx-auto flex items-center justify-center border-2 shadow-sm overflow-hidden"
+                              style={{ borderColor: plan.color }}
+                            >
+                              <img src={plan.icon} alt={plan.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display='none'; }} />
                             </div>
                             <h3 className="font-ghibli-title text-2xl uppercase text-[#3A332F] pt-2">{plan.name}</h3>
                             <p className="text-[10px] font-black uppercase text-[#8C8279] tracking-widest">{plan.period}</p>

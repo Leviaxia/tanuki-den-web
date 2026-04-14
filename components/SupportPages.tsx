@@ -42,8 +42,8 @@ const SupportPages: React.FC<SupportPagesProps> = ({ activeSection, onBack }) =>
   const renderRastreo = () => (
     <div className="space-y-12 max-w-4xl mx-auto px-4">
       <div className="text-center space-y-6">
-        <div className="inline-flex p-4 bg-[#FDF5E6] rounded-full border-4 border-[#3A332F] shadow-[8px_8px_0px_0px_#C14B3A]">
-          <Package size={40} className="text-[#C14B3A]" />
+        <div className="w-24 h-24 bg-[#FDF5E6] rounded-full border-4 border-[#3A332F] shadow-[8px_8px_0px_0px_#C14B3A] overflow-hidden flex items-center justify-center mx-auto">
+          <Package size={48} className="text-[#C14B3A]" />
         </div>
         <h2 className="text-4xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">Seguir <span className="text-[#C14B3A]">Tesoro.</span></h2>
         <p className="text-[#3A332F]/70 font-bold uppercase tracking-widest text-xs md:text-sm">Rastrea el viaje de tu adquisición desde nuestro bosque</p>
@@ -113,8 +113,8 @@ const SupportPages: React.FC<SupportPagesProps> = ({ activeSection, onBack }) =>
   const renderFaq = () => (
     <div className="space-y-12 max-w-4xl mx-auto px-4">
       <div className="text-center space-y-6">
-        <div className="inline-flex p-4 bg-[#FDF5E6] rounded-full border-4 border-[#3A332F] shadow-[8px_8px_0px_0px_#D4AF37]">
-          <HelpCircle size={40} className="text-[#D4AF37]" />
+        <div className="w-24 h-24 bg-[#FDF5E6] rounded-full border-4 border-[#3A332F] shadow-[8px_8px_0px_0px_#D4AF37] overflow-hidden flex items-center justify-center mx-auto">
+          <img src="/assets/soporte.png" alt="Soporte" className="w-full h-full object-cover" />
         </div>
         <h2 className="text-4xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter text-center">Preguntas <span className="text-[#D4AF37]">Frecuentes.</span></h2>
         <p className="text-[#3A332F]/70 font-bold uppercase tracking-widest text-xs md:text-sm">Sabiduría del clan para despejar tus dudas</p>

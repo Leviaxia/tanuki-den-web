@@ -299,7 +299,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                     onChange={handlePhotoUpload}
                                 />
                                 <div
-                                    className="w-full h-full bg-[#3A332F] rounded-full border-4 overflow-hidden shadow-2xl relative z-0 group-hover:opacity-80 transition-opacity"
+                                    className="w-full h-full rounded-full border-4 overflow-hidden shadow-2xl relative z-0 group-hover:opacity-80 transition-opacity"
                                     style={{ borderColor: accentColor }}
                                     onClick={() => document.getElementById('photo-upload-tab')?.click()}
                                 >

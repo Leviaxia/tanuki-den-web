@@ -67,22 +67,22 @@ const BrandsSection: React.FC = () => {
             rel="noopener noreferrer"
             className="group relative cursor-pointer outline-none"
           >
-            <div className="absolute inset-0 bg-[#3A332F]/5 rounded-[30px] translate-x-3 translate-y-3 -z-10 group-hover:translate-x-4 group-hover:translate-y-4 transition-transform duration-300"></div>
-            <div className="bg-white rounded-[30px] p-6 border-4 border-[#3A332F] overflow-hidden flex flex-col h-full items-center justify-center shadow-lg transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl relative">
+            <div className="absolute inset-0 bg-[#3A332F]/5 rounded-full translate-x-3 translate-y-3 -z-10 group-hover:translate-x-4 group-hover:translate-y-4 transition-transform duration-300"></div>
+            <div className="bg-white rounded-full w-full aspect-square border-4 border-[#3A332F] overflow-hidden flex flex-col items-center justify-center shadow-lg transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl relative">
               
               <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-x-2 group-hover:translate-x-0">
                  <ExternalLink size={20} className="text-[#C14B3A]" strokeWidth={2.5}/>
               </div>
 
-              <div className="w-full flex items-center justify-center p-4">
+              <div className="w-full h-full flex items-center justify-center">
                 <img 
                   src={brand.logo} 
                   alt={`Logo de ${brand.name}`} 
-                  className="w-full max-h-32 object-contain filter transition-all duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover filter transition-all duration-500 group-hover:scale-105"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
-                    target.nextElementSibling?.classList.remove('hidden');
+                    target.parentElement?.nextElementSibling?.classList.remove('hidden');
                   }}
                 />
                 <h3 className="hidden font-ghibli-title text-2xl text-[#3A332F] uppercase text-center mt-2 group-hover:text-[#C14B3A] transition-colors">{brand.name}</h3>
