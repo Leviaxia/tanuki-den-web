@@ -892,29 +892,40 @@ const App: React.FC = () => {
     if (!mission || !missionDef || !mission.completed || mission.claimed) return;
 
     try {
-      // 1. Update Profile Coins
-      // Fallback to simple update for now:
-      const newCoins = userCoins + missionDef.reward;
+      // SECURITY: Re-verify claimed status from DB to prevent double-claiming (race condition / stale state)
+      const { data: freshMission, error: fetchError } = await supabase
+        .from('user_missions')
+        .select('claimed')
+        .eq('user_id', user.id)
+        .eq('mission_id', missionId)
+        .single();
 
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError; // PGRST116 = no rows = not yet created, OK
+      if (freshMission?.claimed === true) {
+        // DB says already claimed — sync local state and abort
+        setUserMissions(prev => ({ ...prev, [missionId]: { ...mission, claimed: true } }));
+        alert('Esta recompensa ya fue reclamada anteriormente.');
+        return;
+      }
+
+      // 1. Update Profile Coins
+      const newCoins = userCoins + missionDef.reward;
       const { error: coinsError } = await supabase.from('profiles').update({ coins: newCoins }).eq('id', user.id);
       if (coinsError) throw coinsError;
-
       setUserCoins(newCoins);
 
-      // 2. Mark Claimed - Use UPSERT to be safe and ensure persistence
+      // 2. Mark Claimed with UPSERT to ensure persistence
       const payload = {
         user_id: user.id,
         mission_id: missionId,
         progress: mission.progress,
         completed: true,
-        claimed: true, // EXPLICITLY SET TRUE
+        claimed: true,
         updated_at: new Date().toISOString()
       };
 
       const { error: claimError } = await supabase.from('user_missions').upsert(payload, { onConflict: 'user_id, mission_id' });
       if (claimError) throw claimError;
-
-      console.log(`DEBUG: Claimed Reward for ${missionId}`);
 
       setUserMissions(prev => ({
         ...prev,
@@ -924,21 +935,50 @@ const App: React.FC = () => {
       alert(`💰 ¡Recompensa Reclamada! Has recibido ${missionDef.reward} Monedas Tanuki.`);
 
     } catch (error) {
-      console.error("Error claiming reward:", error);
-      alert("Error al reclamar recompensa. Inténtalo de nuevo.");
-      // Rollback optimistic coins if needed, but for now simple alert
+      console.error('Error claiming reward:', error);
+      alert('Error al reclamar recompensa. Inténtalo de nuevo.');
     }
   };
 
   const handlePurchaseReward = async (reward: Reward) => {
     if (userCoins < reward.cost) {
-      alert("No tienes suficientes monedas.");
+      alert('No tienes suficientes monedas.');
       return;
     }
 
     if (reward.stock !== null && reward.stock <= 0) {
-      alert("¡Agotado!");
+      alert('¡Agotado!');
       return;
+    }
+
+    // SECURITY: Re-verify purchase limits from DB to prevent abuse
+    const { data: existingRewards, error: checkError } = await supabase
+      .from('user_rewards')
+      .select('id, redeemed_at')
+      .eq('user_id', user.id)
+      .eq('reward_id', reward.id);
+
+    if (checkError) {
+      console.error('Error checking existing rewards', checkError);
+      alert('Error al verificar elegibilidad. Inténtalo de nuevo.');
+      return;
+    }
+
+    // LIMIT: Tier 4 (legendary) rewards can only be purchased ONCE per account lifetime
+    if (reward.tier === 4 && existingRewards && existingRewards.length > 0) {
+      alert('Esta recompensa legendaria solo puede obtenerse una vez por cuenta.');
+      return;
+    }
+
+    // LIMIT: All other rewards are limited to ONCE PER CALENDAR MONTH
+    if (reward.tier !== 4 && existingRewards && existingRewards.length > 0) {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const purchasedThisMonth = existingRewards.some(r => new Date(r.redeemed_at) >= startOfMonth);
+      if (purchasedThisMonth) {
+        alert(`Ya obtuviste "${reward.title}" este mes. Podrás volver a canjearla el próximo mes.`);
+        return;
+      }
     }
 
     // Optimistic Update
@@ -948,13 +988,12 @@ const App: React.FC = () => {
     const { error: profileError } = await supabase.from('profiles').update({ coins: userCoins - reward.cost }).eq('id', user.id);
 
     if (profileError) {
-      console.error("Error updating coins", profileError);
+      console.error('Error updating coins', profileError);
       setUserCoins(prev => prev + reward.cost); // Rollback
       return;
     }
 
     // 2. Add to User Rewards
-    // Calculate expiry if needed (e.g. 1 year from now)
     const expiresAt = new Date();
     expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
@@ -962,14 +1001,13 @@ const App: React.FC = () => {
       user_id: user.id,
       reward_id: reward.id,
       status: 'active',
-      // redeemed_at defaults to now() in DB
       expires_at: expiresAt.toISOString()
     }).select().single();
 
     if (rewardError) {
-      console.error("Error adding reward", rewardError);
+      console.error('Error adding reward', rewardError);
       setUserCoins(prev => prev + reward.cost); // Rollback
-      alert("Error al procesar la recompensa.");
+      alert('Error al procesar la recompensa.');
     } else if (newReward) {
       setUserRewards(prev => [...prev, newReward]);
       alert(`¡Has adquirido ${reward.title}!`);
