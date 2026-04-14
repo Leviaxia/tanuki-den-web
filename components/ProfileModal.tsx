@@ -46,6 +46,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     initialTab = 'profile', missions, userMissions, userCoins, onClaimReward, hasUnclaimedMissions = false,
     rewards, userRewards, onPurchaseReward, selectedCoupon, onSelectCoupon
 }) => {
+    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'missions' | 'coupons'>('profile');
+    const [missionSubTab, setMissionSubTab] = useState<'challenges' | 'store'>('challenges');
     const [orders, setOrders] = useState<any[]>([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
