@@ -262,11 +262,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
         <button onClick={onClose} className="absolute top-6 right-6 hover:rotate-90 transition-transform"><X size={24} /></button>
 
         <div className="text-center space-y-2 mb-8">
-          <div className="w-16 h-16 bg-[#3A332F] rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-[#D4AF37] overflow-hidden">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-[#3A332F] overflow-hidden">
             {step === 'success' ? (
               <CheckCircle2 className="text-[#81C784]" size={32} />
             ) : (
-              <img src="/assets/sesion.png" className="w-full h-full object-contain" alt="Sesión" />
+              <img src="/assets/sesion.png" className="w-full h-full object-cover" alt="Sesión" />
             )}
           </div>
           <h2 className="text-3xl font-ghibli-title text-[#3A332F] uppercase">
