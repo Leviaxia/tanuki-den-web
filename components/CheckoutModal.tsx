@@ -249,8 +249,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             
             // Send receipt email to the customer
             const paymentLabel = method === 'nequi' ? 'Nequi' : method === 'card' ? 'Tarjeta' : 'Bancolombia';
-            const itemsForReceipt = cart.map(item => `${item.quantity}x ${item.name}  —  $${formatCurrency(item.price * item.quantity)}`).join('\n');
-            const shippingAddress = `${shipping.address}\n${shipping.city}, ${shipping.department}\nTel: ${shipping.phone}`;
+            const itemsForReceipt = cart.map(item => `${item.quantity}x ${item.name}  —  $${formatCurrency(item.price * item.quantity)}`).join('<br/>');
+            const shippingAddress = `${shipping.address}<br/>${shipping.city}, ${shipping.department}<br/>Tel: ${shipping.phone}`;
 
             try {
                 await sendReceiptEmail({

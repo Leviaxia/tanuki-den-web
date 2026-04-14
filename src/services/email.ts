@@ -39,6 +39,9 @@ export const sendOrderEmail = async (params: EmailParams) => {
             return;
         }
 
+        // Initialize SDK
+        emailjs.init(publicKey);
+
         const response = await emailjs.send(serviceId, adminTemplateId, params as any, publicKey);
         console.log('Admin email sent!', response.status, response.text);
         return response;
@@ -58,9 +61,21 @@ export const sendReceiptEmail = async (params: ReceiptEmailParams) => {
             return;
         }
 
-        const response = await emailjs.send(serviceId, receiptTemplateId, params as any, publicKey);
-        console.log('Receipt email sent to customer!', response.status, response.text);
-        return response;
+        // Initialize SDK to ensure the public key is set globally
+        emailjs.init(publicKey);
+
+        // Map internal params to common EmailJS variable names to ensure delivery
+        // Many templates use to_email/to_name by default.
+        const templateParams = {
+            ...params,
+            to_email: params.customer_email,
+            user_email: params.customer_email, // Another common default
+            to_name: params.customer_name,
+            customer_name: params.customer_name,
+            reply_to: params.customer_email
+        };
+
+        const response = await emailjs.send(serviceId, receiptTemplateId, templateParams, publicKey);
     } catch (error) {
         console.error('Failed to send receipt email:', error);
         // Don't throw — receipt failure should not block the order completion
