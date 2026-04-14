@@ -9,7 +9,7 @@ interface AnimePlayerProps {
     currentTitle: string;
     onToggleMute: (e: React.MouseEvent) => void;
     onNext: (e: React.MouseEvent) => void;
-    direction?: 'left' | 'right'; // [NEW] Control expansion direction
+    direction?: 'left' | 'right' | 'down'; // [NEW] Control expansion direction
 }
 
 const AnimePlayer: React.FC<AnimePlayerProps> = ({
@@ -29,7 +29,9 @@ const AnimePlayer: React.FC<AnimePlayerProps> = ({
     // Determine classes based on direction
     const containerClasses = direction === 'left'
         ? `right-full mr-3 ${showControls ? 'translate-x-0' : 'translate-x-4'}`
-        : `left-full ml-3 ${showControls ? 'translate-x-0' : '-translate-x-4'}`;
+        : direction === 'right' 
+        ? `left-full ml-3 ${showControls ? 'translate-x-0' : '-translate-x-4'}`
+        : `top-full right-0 mt-3 md:mt-4 ${showControls ? 'translate-y-0' : '-translate-y-4'}`; // direction === 'down'
 
     return (
         // Removed 'relative' from here. It must be passed in className if needed (e.g. for static/flex parents).

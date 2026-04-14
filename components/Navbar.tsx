@@ -169,7 +169,7 @@ const Navbar: React.FC<NavbarProps> = ({
               currentTitle={currentTrack.title}
               onToggleMute={toggleMute}
               onNext={nextTrack}
-              direction="right"
+              direction="down"
             />
 
             <div className="hidden lg:flex items-center space-x-2 xl:space-x-4">
@@ -206,6 +206,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 currentTitle={currentTrack.title}
                 onToggleMute={toggleMute}
                 onNext={nextTrack}
+                direction="down"
               />
 
               <button

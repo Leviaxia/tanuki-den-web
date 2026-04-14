@@ -38,13 +38,24 @@ const BrandsSection: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-6 pt-10 pb-32 md:pb-24 section-reveal">
       <div className="text-center mb-16 relative">
-        <h2 className="text-4xl md:text-5xl font-ghibli-title text-[#3A332F] py-2 relative z-10 uppercase tracking-wider title-shadow mx-auto max-w-4xl px-4 md:px-0 leading-tight md:leading-normal">
-          Nuestras Marcas Aliadas
+        <div className="inline-block bg-[#FDF5E6] text-[#3A332F] px-6 py-2 rounded-full font-black text-sm tracking-[0.2em] uppercase mb-6 shadow-sm border border-[#3A332F]/10">
+          Aliados Tanuki Den
+        </div>
+        
+        <h2 className="text-5xl md:text-6xl font-ghibli-title text-[#3A332F] py-2 relative z-10 uppercase tracking-wider title-shadow mx-auto max-w-4xl px-4 md:px-0 leading-tight md:leading-normal mb-8">
+          Nuestras <span className="text-[#C14B3A]">Marcas</span>
         </h2>
-        <div className="h-4 bg-[#F2C94C]/20 w-48 mx-auto -mt-4 rounded-xl relative z-0"></div>
-        <p className="font-ghibli-text text-lg text-[#3A332F]/70 mt-6 max-w-2xl mx-auto hidden md:block">
-          Conoce nuestra red de proyectos y tiendas asociadas.
-        </p>
+        
+        <div className="flex items-center justify-center gap-4">
+          <div className="h-[2px] w-12 bg-[#C14B3A]"></div>
+          <p className="text-[#3A332F] text-xs md:text-sm font-black uppercase tracking-[0.4em] hidden md:block text-center">
+            Conoce nuestra red de proyectos y tiendas asociadas
+          </p>
+          <p className="text-[#3A332F] text-xs md:text-sm font-black uppercase tracking-[0.1em] md:hidden text-center max-w-[200px]">
+            Conoce nuestra red de proyectos y marcas
+          </p>
+          <div className="h-[2px] w-12 bg-[#C14B3A]"></div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
