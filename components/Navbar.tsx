@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ShoppingBag, Menu, X, User as UserIcon, Crown, Sparkles, Instagram, Facebook, Twitter, Youtube, Music2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import AnimePlayer from './AnimePlayer';
 import { User } from '../types';
 import { ANIME_PLAYLIST } from '../constants'; // [NEW]
@@ -119,9 +120,19 @@ const Navbar: React.FC<NavbarProps> = ({
     { id: 'personalizacion', label: 'Taller' }
   ];
 
+  const navigate = useNavigate();
+
   const handleNavClick = (id: string) => {
     setActiveTab(id);
     setIsMenuOpen(false);
+    const routes: Record<string, string> = {
+      'inicio': '/',
+      'figuras': '/catalogo',
+      'colecciones': '/colecciones',
+      'personalizacion': '/taller'
+    };
+    navigate(routes[id] || '/');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getMembershipFrame = () => {

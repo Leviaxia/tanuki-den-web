@@ -18,8 +18,8 @@ import { PRODUCTS, heroText, MISSIONS, collectionsContent } from './constants';
 import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission, Reward, UserReward, ProductVariant } from './types';
 
 import { supabase } from './src/lib/supabase';
-import { formatCurrency } from './src/lib/utils';
-import { useLocation, Routes, Route } from 'react-router-dom';
+import { formatCurrency, toSlug } from './src/lib/utils';
+import { useLocation, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { CheckoutSuccess } from './src/pages/CheckoutSuccess';
 import { CheckoutCancel } from './src/pages/CheckoutCancel';
 import { AdminDashboard } from './src/pages/AdminDashboard';
@@ -40,7 +40,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 const App: React.FC = () => {
   console.log("TANUKI APP VERSION: 3.5 - PROD RESTORED + TEMPLATE FIX (BUILD " + new Date().toISOString() + ")");
 
-
+  const navigate = useNavigate();
 
   // DEBUG CHECK ENV VARS
   if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
@@ -407,63 +407,71 @@ const App: React.FC = () => {
     window.history.pushState({ modal: true }, '');
   };
 
-  // HISTORY MANAGEMENT: Handle Back Button for Modals & Navigation
+  // HISTORY MANAGEMENT: Sync URL with Navigation State & Modals
   useEffect(() => {
-    // Ensure initial state exists for proper "Back to Home" behavior
-    if (!window.history.state) {
-      window.history.replaceState({ tab: 'inicio' }, '', '?tab=inicio');
+    const path = location.pathname;
+    let newActiveTab = activeTab;
+    let newCollectionId = null;
+    let newSelectedProduct: typeof selectedProduct | undefined = undefined;
+
+    if (path === '/' || path === '/inicio') {
+      newActiveTab = 'inicio';
+      newSelectedProduct = null;
+    } else if (path === '/catalogo') {
+      newActiveTab = 'figuras';
+      newSelectedProduct = null;
+    } else if (path === '/taller') {
+      newActiveTab = 'personalizacion';
+      newSelectedProduct = null;
+    } else if (path === '/colecciones') {
+      newActiveTab = 'colecciones';
+      newSelectedProduct = null;
+    } else if (path.startsWith('/colecciones/')) {
+      newActiveTab = 'colecciones';
+      newSelectedProduct = null;
+      const slug = path.replace('/colecciones/', '');
+      const collection = collections.find(c => toSlug(c.title) === slug || c.id.toString() === slug) || collectionsContent.find(c => toSlug(c.title) === slug || c.id.toString() === slug);
+      if (collection) newCollectionId = collection.id;
+    } else if (path.startsWith('/producto/')) {
+      const slug = path.replace('/producto/', '');
+      const product = products.find(p => toSlug(p.name) === slug);
+      if (product) {
+        newActiveTab = activeTab === 'colecciones' ? 'colecciones' : 'figuras'; // Ensure background is correct
+        newSelectedProduct = product;
+      }
+    }
+
+    if (activeTab !== newActiveTab) setActiveTab(newActiveTab);
+    if (selectedCollectionId !== newCollectionId) setSelectedCollectionId(newCollectionId);
+    if (newSelectedProduct !== undefined && selectedProduct?.id !== newSelectedProduct?.id) {
+       setSelectedProduct(newSelectedProduct);
     }
 
     const handlePopState = (event: PopStateEvent) => {
-      // 1. Modals (High Priority) - Close and Return
+      // Modals (High Priority)
       if (fullScreenImage) { setFullScreenImage(null); return; }
-      if (selectedProduct) { setSelectedProduct(null); setSelectedVariant(null); setShowMobileReviews(false); return; }
+      if (selectedProduct) { 
+        // URL is updating automatically so Effect 1 will catch it, just clear child states
+        setSelectedVariant(null); setShowMobileReviews(false); 
+      }
       if (isCheckoutOpen) { setIsCheckoutOpen(false); return; }
       if (isCartOpen) { setIsCartOpen(false); return; }
-      if (isProfileModalOpen) { setIsProfileModalOpen(false); return; }
       if (isProfileModalOpen) { setIsProfileModalOpen(false); return; }
       if (isSubscriptionModalOpen) { setIsSubscriptionModalOpen(false); return; }
       if (isRouletteOpen) { setIsRouletteOpen(false); return; }
       if (isShareModalOpen) { setIsShareModalOpen(false); return; }
-
-      // 2. Navigation State
-      const state = event.state;
-      if (state) {
-        if (state.collection) {
-          setActiveTab('colecciones');
-          setSelectedCollectionId(state.collection);
-        } else if (state.tab) {
-          setActiveTab(state.tab);
-          setSelectedCollectionId(null);
-        }
-      } else {
-        // Fallback to Home if state is null (e.g. external link back)
-        setActiveTab('inicio');
-        setSelectedCollectionId(null);
-      }
     };
 
     window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [location.pathname, products, collections]); // URL is the only source of truth. Effect 2 removed.
 
-    // Modal Push State Logic (Only push if not already effectively there? No, always push for modal open)
-    // Note: This logic runs on every render when dependencies change.
-    // We strictly guard it by checking if we just OPENED one. 
-    // Implementing "Did Open" check inside effect is hard without ref. 
-    // BUT we rely on the fact that if (selectedProduct) is true, we push. 
-    // Wait! If I press back, selectedProduct becomes null. Effect runs. No push.
-    // If I open product, Effect runs. Push.
-    // What if I swap products? Start -> Product A (Push) -> Product B (Push). 
-    // Stack: Start, Product A, Product B. Back -> Product A.
-    // This is acceptable behavior.
-
-    if (fullScreenImage || selectedProduct || isCheckoutOpen || isCartOpen || isProfileModalOpen || isSubscriptionModalOpen || isRouletteOpen || isShareModalOpen) {
+  // Legacy Modal Push State for non-product modals to support back-button closing
+  useEffect(() => {
+    if (fullScreenImage || isCheckoutOpen || isCartOpen || isProfileModalOpen || isSubscriptionModalOpen || isRouletteOpen || isShareModalOpen) {
       window.history.pushState({ modal: true }, '');
     }
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [fullScreenImage, selectedProduct, isCheckoutOpen, isCartOpen, isProfileModalOpen, isSubscriptionModalOpen, isRouletteOpen]);
+  }, [fullScreenImage, isCheckoutOpen, isCartOpen, isProfileModalOpen, isSubscriptionModalOpen, isRouletteOpen, isShareModalOpen]);
 
   // Lock Body Scroll when Modal is Open
   useEffect(() => {
@@ -1123,7 +1131,7 @@ const App: React.FC = () => {
     });
     window.history.pushState({ modal: true }, '');
     setIsCartOpen(true);
-    setSelectedProduct(null);
+    navigate(activeTab === 'colecciones' ? '/colecciones' : '/catalogo');
     setSelectedVariant(null);
   };
 
@@ -1151,17 +1159,27 @@ const App: React.FC = () => {
     setActiveTab(id);
     setSelectedCollectionId(null);
     setIsMobileMenuOpen(false);
-    window.history.pushState({ tab: id }, '', `?tab=${id}`);
+    
+    // Map tabs to SEO URLs
+    const routes: Record<string, string> = {
+      'inicio': '/',
+      'figuras': '/catalogo',
+      'personalizacion': '/taller',
+      'colecciones': '/colecciones'
+    };
+    
+    navigate(routes[id] || '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCollectionClick = (id: number | null) => {
     setSelectedCollectionId(id);
     if (id) {
-      window.history.pushState({ tab: 'colecciones', collection: id }, '', `?tab=colecciones&collection=${id}`);
+       const collection = collections.find(c => c.id === id) || collectionsContent.find(c => c.id === id);
+       const slug = collection ? toSlug(collection.title) : id;
+       navigate(`/colecciones/${slug}`);
     } else {
-      // Return to collections root
-      window.history.pushState({ tab: 'colecciones' }, '', `?tab=colecciones`);
+       navigate(`/colecciones`);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1482,7 +1500,7 @@ const App: React.FC = () => {
                       product={product}
                       collectionName={collectionTitle}
                       onAddToCart={(p) => addToCart(p, 1)}
-                      onViewDetails={(p) => { setSelectedProduct(p); setDetailQuantity(1); }}
+                      onViewDetails={(p) => { navigate(`/producto/${toSlug(p.name)}`); setDetailQuantity(1); }}
                       isFavorite={favorites.includes(product.id)}
                       onToggleFavorite={() => toggleFavorite(product.id)}
                       onShare={(p) => { setProductToShare(p); setIsShareModalOpen(true); }}
@@ -1577,7 +1595,7 @@ const App: React.FC = () => {
                       product={product}
                       collectionName={collection?.title}
                       onAddToCart={(p) => addToCart(p, 1)}
-                      onViewDetails={(p) => { setSelectedProduct(p); setDetailQuantity(1); }}
+                      onViewDetails={(p) => { navigate(`/producto/${toSlug(p.name)}`); setDetailQuantity(1); }}
                       isFavorite={favorites.includes(product.id)}
                       onToggleFavorite={() => toggleFavorite(product.id)}
                       onShare={(p) => { setProductToShare(p); setIsShareModalOpen(true); }}
@@ -1646,10 +1664,20 @@ const App: React.FC = () => {
                     <Sparkles className="text-[#C14B3A] animate-pulse" size={18} />
                     <span className="text-[#3A332F] text-[10px] font-black uppercase tracking-[0.2em]">Boutique de Arte Anime</span>
                   </div>
-                  <h1 className="text-[2.6rem] sm:text-[4.5rem] lg:text-[7rem] font-ghibli-title text-[#3A332F] leading-[0.85] tracking-tighter uppercase mb-4">
+                  <div className="sr-only">
+                    <h1>Figuras de Anime y Coleccionables en Colombia</h1>
+                    <h2>Figuras de Anime Originales</h2>
+                    <h2>Coleccionables Exclusivos para Fans Otaku</h2>
+                    <h2>Personajes Icónicos del Anime en Figuras</h2>
+                    <h2>Compra Figuras de Anime en Colombia</h2>
+                    <h3>Figuras decorativas para colección</h3>
+                    <h3>Productos inspirados en la cultura japonesa</h3>
+                    <h3>Envíos a todo Colombia</h3>
+                  </div>
+                  <p className="text-[2.6rem] sm:text-[4.5rem] lg:text-[7rem] font-ghibli-title text-[#3A332F] leading-[0.85] tracking-tighter uppercase mb-4" role="heading" aria-level={1}>
                     Tesoros <br />
                     <span className="text-[#C14B3A]">Con Alma.</span>
-                  </h1>
+                  </p>
                   <p className="text-[#3A332F] text-xl md:text-2xl font-bold leading-relaxed max-w-xl mx-auto lg:mx-0 px-4 md:px-0">
                     Más que figuras, custodiamos historias. Piezas seleccionadas para coleccionistas que valoran la autenticidad y el detalle.
                   </p>
@@ -2165,7 +2193,7 @@ const App: React.FC = () => {
         selectedProduct && (
           <div
             className="fixed inset-0 z-[9999] bg-black/60 md:bg-[#3A332F]/90 backdrop-blur-sm md:backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer overflow-hidden"
-            onClick={() => { setSelectedProduct(null); setSelectedVariant(null); setShowMobileReviews(false); }}
+            onClick={() => { navigate(activeTab === 'colecciones' ? '/colecciones' : '/catalogo'); setSelectedVariant(null); setShowMobileReviews(false); }}
           >
             {/* Mobile "Window" Modal */}
             <div
@@ -2174,7 +2202,7 @@ const App: React.FC = () => {
             >
               {/* Close Button */}
               <button
-                onClick={() => { setSelectedProduct(null); setShowMobileReviews(false); }}
+                onClick={() => { navigate(activeTab === 'colecciones' ? '/colecciones' : '/catalogo'); setShowMobileReviews(false); }}
                 className="absolute top-3 right-3 md:top-6 md:right-6 z-50 p-2 bg-white/80 hover:bg-white text-[#3A332F] rounded-full shadow-lg transition-all border border-[#3A332F]/10"
               >
                 <X size={20} className="md:w-8 md:h-8" />
@@ -2415,7 +2443,7 @@ const App: React.FC = () => {
                       onClick={() => {
                         if (!user.isRegistered) {
                           setShowMobileReviews(false);
-                          setSelectedProduct(null);
+                          navigate(activeTab === 'colecciones' ? '/colecciones' : '/catalogo');
                           setIsAuthModalOpen(true);
                           window.history.pushState({ modal: true }, '');
                           return;

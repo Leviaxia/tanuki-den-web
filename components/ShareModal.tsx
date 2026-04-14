@@ -3,6 +3,8 @@ import React from 'react';
 import { X, Copy, CheckCircle2 } from 'lucide-react';
 import { Product } from '../types';
 
+import { toSlug } from '../src/lib/utils';
+
 interface ShareModalProps {
     product: Product;
     onClose: () => void;
@@ -12,7 +14,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ product, onClose }) => {
     const [copied, setCopied] = React.useState(false);
 
     // Base URL + Deep Link
-    const shareUrl = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
+    const shareUrl = `${window.location.origin}/producto/${toSlug(product.name)}`;
     const message = `Mira este increíble producto de Tanuki Den: ${product.name}`;
     const fullText = `${message} ${shareUrl}`;
 

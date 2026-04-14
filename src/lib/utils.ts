@@ -13,3 +13,13 @@ export const formatCurrency = (amount: number): string => {
         maximumFractionDigits: 0,
     }).format(displayAmount);
 };
+
+export const toSlug = (text: string) => {
+    return text
+        .toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '');
+};
