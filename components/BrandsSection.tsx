@@ -58,36 +58,20 @@ const BrandsSection: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+      <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
         {brands.map((brand) => (
           <a
             key={brand.id}
             href={brand.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative cursor-pointer outline-none"
+            className="grayscale opacity-40 hover:opacity-100 hover:grayscale-0 transition-all filter drop-shadow-sm p-4 flex items-center justify-center"
           >
-            <div className="absolute inset-0 bg-[#3A332F]/5 rounded-full translate-x-3 translate-y-3 -z-10 group-hover:translate-x-4 group-hover:translate-y-4 transition-transform duration-300"></div>
-            <div className="bg-white rounded-full w-full aspect-square border-4 border-[#3A332F] overflow-hidden flex flex-col items-center justify-center shadow-lg transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl relative">
-              
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-x-2 group-hover:translate-x-0">
-                 <ExternalLink size={20} className="text-[#C14B3A]" strokeWidth={2.5}/>
-              </div>
-
-              <div className="w-full h-full flex items-center justify-center">
-                <img 
-                  src={brand.logo} 
-                  alt={`Logo de ${brand.name}`} 
-                  className="w-full h-full object-cover filter transition-all duration-500 group-hover:scale-105"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.parentElement?.nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-                <h3 className="hidden font-ghibli-title text-2xl text-[#3A332F] uppercase text-center mt-2 group-hover:text-[#C14B3A] transition-colors">{brand.name}</h3>
-              </div>
-            </div>
+            <img 
+              src={brand.logo} 
+              alt={brand.name}
+              className="w-28 h-auto md:w-36 md:h-auto max-h-16 object-contain"
+            />
           </a>
         ))}
       </div>
