@@ -13,111 +13,83 @@ export const DebugEmail = () => {
 
     // Load vars from env (masking parts)
     const envService = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
-    const envTemplate = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
+    const envAdminTemplate = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
+    const envReceiptTemplate = import.meta.env.VITE_EMAILJS_RECEIPT_TEMPLATE_ID || '';
     const envKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
     const addLog = (msg: string) => setLog(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
 
-    const handleUploadTest = async () => {
-        if (!testFile) {
-            addLog('⚠️ Selecciona un archivo primero.');
-            return;
-        }
+    // ... (keep handleUploadTest same)
 
-        addLog(`📂 Iniciando prueba de subida: ${testFile.name} (${testFile.size} bytes)`);
-
-        if (!supabaseUrl || !supabaseKey) {
-            addLog('❌ ERROR CRÍTICO: Faltan variables de Supabase (URL o Key).');
-            return;
-        }
-
-        try {
-            const fileName = `debug_test_${Date.now()}_${testFile.name}`;
-            const { data, error } = await supabase.storage
-                .from('receipts')
-                .upload(fileName, testFile);
-
-            if (error) {
-                addLog('❌ ERROR SUBIDA: ' + error.message);
-                addLog('🔍 Detalles: ' + JSON.stringify(error));
-            } else {
-                addLog('✅ ÉXITO SUBIDA: Archivo guardado.');
-                const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(fileName);
-                addLog('🔗 URL Pública: ' + urlData.publicUrl);
-                setUploadedUrl(urlData.publicUrl); // Save for email test
-                addLog('👉 URL Guardada para la prueba de email.');
-            }
-        } catch (err: any) {
-            addLog('❌ EXCEPCIÓN: ' + (err.message || err));
-        }
-    };
-
-
-    const handleTest = async () => {
+    const handleTest = async (type: 'admin' | 'receipt') => {
         setStatus('sending');
-        addLog('Starting test...');
+        addLog(`Starting ${type} test...`);
 
-        if (!envService || !envTemplate || !envKey) {
-            addLog('❌ ERROR: Missing Environment Variables in Vercel.');
+        const templateId = type === 'admin' ? envAdminTemplate : envReceiptTemplate;
+
+        if (!envService || !templateId || !envKey) {
+            addLog(`❌ ERROR: Missing ${type} variables.`);
             setStatus('error');
             return;
         }
 
         addLog(`Service ID: ${envService.substring(0, 4)}...`);
-        addLog(`Template ID: ${envTemplate.substring(0, 4)}...`);
-        addLog(`Public Key: ${envKey.substring(0, 4)}...`);
-
-        const params = {
+        addLog(`Template ID: ${templateId.substring(0, 4)}...`);
+        
+        const params = type === 'admin' ? {
             to_name: "Admin Debug",
             from_name: "Test User",
-            order_id: "DEBUG-" + Math.random().toString(36).substr(2, 5),
-            message: "This is a clean debug message with image test.",
-            customer_email: "debug@test.com",
+            order_id: "DEBUG-ADMIN-" + Math.random().toString(36).substr(2, 5),
+            message: "Admin notification test",
+            customer_email: "admin@test.com",
             customer_phone: "123456789",
-            payment_proof: uploadedUrl || "NO_IMAGE_UPLOADED",
             total: "$100"
+        } : {
+            to_email: "comprador@debug.com",
+            customer_email: "comprador@debug.com",
+            customer_name: "Cliente Debug",
+            order_id: "DEBUG-RECEIPT-" + Math.random().toString(36).substr(2, 5),
+            items: "1x Tanuki Plush<br/>2x Stickers",
+            total_amount: "$150.000",
+            shipping_address: "Calle 123",
+            payment_method: "Nequi"
         };
 
-        addLog('Sending payload: ' + JSON.stringify(params));
-
         try {
-            await emailjs.send(envService, envTemplate, params, envKey);
-            addLog('✅ SUCCESS: Email sent to EmailJS API.');
+            await emailjs.send(envService, templateId, params as any, envKey);
+            addLog(`✅ SUCCESS: ${type} email sent.`);
             setStatus('success');
         } catch (e: any) {
-            addLog('❌ FAIL: ' + (e.text || e.message || JSON.stringify(e)));
-            console.error(e);
+            addLog(`❌ FAIL: ` + (e.text || e.message || JSON.stringify(e)));
             setStatus('error');
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#FDF5E6] p-8 font-sans">
+        <div className="min-h-screen bg-[#FDF5E6] p-8 font-sans text-[#3A332F]">
             <div className="max-w-2xl mx-auto space-y-8">
-                <h1 className="text-3xl font-bold text-[#3A332F]">Diagnóstico de Email 🕵️‍♂️</h1>
+                <h1 className="text-3xl font-bold">Diagnóstico de Email 🕵️‍♂️</h1>
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm border-2 border-[#3A332F]/10 space-y-4">
-                    <h2 className="font-bold text-xl">1. Variables de Entorno (Vercel)</h2>
+                    <h2 className="font-bold text-xl">1. Variables de Entorno</h2>
                     <div className="grid gap-2 text-sm font-mono">
                         <div className="flex justify-between p-2 bg-gray-100 rounded">
                             <span>SERVICE_ID:</span>
-                            <span className={envService ? "text-green-600" : "text-red-500"}>
-                                {envService ? `${envService.substring(0, 5)}...OK` : 'MISSING'}
-                            </span>
+                            <span className={envService ? "text-green-600" : "text-red-500"}>{envService ? `OK` : 'MISSING'}</span>
                         </div>
                         <div className="flex justify-between p-2 bg-gray-100 rounded">
-                            <span>TEMPLATE_ID:</span>
-                            <span className={envTemplate ? "text-green-600" : "text-red-500"}>
-                                {envTemplate ? `${envTemplate.substring(0, 5)}...OK` : 'MISSING'}
-                            </span>
+                            <span>ADMIN_TEMPLATE:</span>
+                            <span className={envAdminTemplate ? "text-green-600" : "text-red-500"}>{envAdminTemplate ? `OK` : 'MISSING'}</span>
+                        </div>
+                        <div className="flex justify-between p-2 bg-gray-100 rounded">
+                            <span>RECEIPT_TEMPLATE:</span>
+                            <span className={envReceiptTemplate ? "text-green-600" : "text-red-500"}>{envReceiptTemplate ? `OK` : 'MISSING'}</span>
                         </div>
                         <div className="flex justify-between p-2 bg-gray-100 rounded">
                             <span>PUBLIC_KEY:</span>
-                            <span className={envKey ? "text-green-600" : "text-red-500"}>
-                                {envKey ? `${envKey.substring(0, 5)}...OK` : 'MISSING'}
-                            </span>
+                            <span className={envKey ? "text-green-600" : "text-red-500"}>{envKey ? `OK` : 'MISSING'}</span>
                         </div>
                     </div>
                 </div>
@@ -155,18 +127,27 @@ export const DebugEmail = () => {
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm border-2 border-[#3A332F]/10 space-y-4">
-                    <h2 className="font-bold text-xl">3. Prueba de Email</h2>
-                    <button
-                        onClick={handleTest}
-                        disabled={status === 'sending'}
-                        className="w-full py-3 bg-[#3A332F] text-white rounded-xl font-bold hover:bg-[#C14B3A] transition-colors flex items-center justify-center gap-2"
-                    >
-                        {status === 'sending' ? 'Enviando...' : 'Enviar Email de Prueba'} <Send size={18} />
-                    </button>
+                    <h2 className="font-bold text-xl">3. Pruebas de Email</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button
+                            onClick={() => handleTest('admin')}
+                            disabled={status === 'sending'}
+                            className="py-3 bg-[#3A332F] text-white rounded-xl font-bold hover:bg-[#C14B3A] transition-colors flex items-center justify-center gap-2"
+                        >
+                            {status === 'sending' ? 'Enviando...' : 'Probar Notificación Administrador'} <Send size={18} />
+                        </button>
+                        <button
+                            onClick={() => handleTest('receipt')}
+                            disabled={status === 'sending'}
+                            className="py-3 bg-[#C14B3A] text-white rounded-xl font-bold hover:bg-[#3A332F] transition-colors flex items-center justify-center gap-2"
+                        >
+                            {status === 'sending' ? 'Enviando...' : 'Probar Recibo Cliente'} <CheckCircle2 size={18} />
+                        </button>
+                    </div>
 
                     {status === 'success' && (
                         <div className="p-4 bg-green-100 text-green-800 rounded-xl flex items-center gap-2">
-                            <CheckCircle2 size={20} /> ¡Éxito! Revisa tu bandeja de entrada.
+                            <CheckCircle2 size={20} /> ¡Éxito! Revisa EmailJS o tu bandeja.
                         </div>
                     )}
 
