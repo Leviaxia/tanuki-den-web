@@ -105,6 +105,7 @@ const App: React.FC = () => {
           isRegistered: true,
           photo: meta.avatar_url || '/assets/default_avatar.png',
           membership: meta.membership,
+          membershipExpiry: meta.membership_expiry,
           location: meta.location || '',
           birthDate: meta.birth_date || '',
           phone: meta.phone || '',
@@ -2125,6 +2126,7 @@ const App: React.FC = () => {
                 if (user.membership) {
                   // --- SUBSCRIBED VIEW ---
                   const currentPlan = PLANS.find(p => p.id === user.membership);
+                  const isExpired = user.membershipExpiry ? new Date(user.membershipExpiry) < new Date() : false;
                             return (
                       <div className="text-center space-y-12 py-8">
                         <div className="space-y-4">
