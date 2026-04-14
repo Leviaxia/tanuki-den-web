@@ -38,11 +38,11 @@ const BrandsSection: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-6 pt-10 pb-32 md:pb-24 section-reveal">
       <div className="text-center mb-16 relative">
-        <div className="inline-block bg-[#FFF8EB] text-[#3A332F] px-5 py-1.5 rounded-full font-bold text-[11px] md:text-xs tracking-[0.25em] uppercase mb-4 border border-[#E8DCC3]">
+        <div className="inline-block bg-[#FFF8EB] text-[#3A332F] px-5 py-1.5 rounded-full font-bold text-[11px] md:text-xs tracking-[0.25em] uppercase mb-0 border border-[#E8DCC3] relative z-20">
           ALIADOS TANUKI DEN
         </div>
         
-        <h2 className="text-5xl md:text-6xl font-ghibli-title text-[#3A332F] py-2 relative z-10 uppercase tracking-wider title-shadow mx-auto max-w-4xl px-4 md:px-0 leading-tight md:leading-normal mb-8">
+        <h2 className="text-5xl md:text-6xl font-ghibli-title text-[#3A332F] relative z-10 uppercase tracking-wider title-shadow mx-auto max-w-4xl px-4 md:px-0 leading-none mt-2 mb-6 md:mb-8">
           Nuestras <span className="text-[#C14B3A]">Marcas</span>
         </h2>
         
