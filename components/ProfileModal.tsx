@@ -427,8 +427,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-bold text-[#3A332F]">{user.location || 'Sin ubicación'}</span>
                                                 {user.shippingAddress && (
-                                                    <span className="text-[10px] text-[#3A332F]/60 font-medium">
-                                                        {user.shippingAddress}
+                                                    <span className="text-[10px] text-[#3A332F]/60 font-medium whitespace-pre-wrap">
+                                                        {user.shippingAddress.replace(/<br\/>/g, '\n')}
                                                     </span>
                                                 )}
                                             </div>

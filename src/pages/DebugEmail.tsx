@@ -51,7 +51,7 @@ export const DebugEmail = () => {
             customer_email: "comprador@debug.com",
             customer_name: "Cliente Debug",
             order_id: "DEBUG-RECEIPT-" + Math.random().toString(36).substr(2, 5),
-            items: "1x Tanuki Plush<br/>2x Stickers",
+            items: "1x Tanuki Plush\n2x Stickers",
             total_amount: "$150.000",
             shipping_address: "Calle 123",
             payment_method: "Nequi"
