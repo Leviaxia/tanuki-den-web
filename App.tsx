@@ -2187,10 +2187,10 @@ const App: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                       {PLANS.map((plan) => (
                         <div key={plan.id} 
-                          className={`relative bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border-4 space-y-5 flex flex-col transition-all hover:-translate-y-3 shadow-xl ${plan.featured ? 'ring-4 ring-[#C14B3A]/30 scale-100 md:scale-105 z-10' : ''}`}
-                          style={{ borderColor: plan.color }}
+                          className={`relative bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border-4 space-y-5 flex flex-col transition-all hover:-translate-y-3 shadow-xl ${plan.featured ? 'scale-100 md:scale-105 z-10' : ''}`}
+                          style={{ borderColor: plan.color, boxShadow: plan.featured ? `0 0 0 4px ${plan.color}4D, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)` : '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}
                         >
-                          {plan.featured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#C14B3A] text-white px-6 py-1 rounded-full text-[10px] font-ghibli-title uppercase tracking-widest shadow-lg whitespace-nowrap">🔥 Más Popular</div>}
+                          {plan.featured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-white px-6 py-1 rounded-full text-[10px] font-ghibli-title uppercase tracking-widest shadow-lg whitespace-nowrap" style={{ backgroundColor: plan.color }}>🔥 Más Popular</div>}
 
                           <div className="space-y-2 text-center">
                             <div 
@@ -2220,8 +2220,8 @@ const App: React.FC = () => {
                           <ul className="flex-grow space-y-2.5">
                             {plan.benefits.map((benefit, i) => (
                               <li key={i} className="flex items-start gap-2 text-left">
-                                <CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: plan.featured ? '#C14B3A' : '#4A6741' }} />
-                                <span className={`text-[11px] font-bold leading-tight ${benefit.includes('GRATIS') ? 'text-[#C14B3A] font-black' : 'text-[#3A332F]'}`}>{benefit}</span>
+                                <CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: plan.color }} />
+                                <span className="text-[11px] font-bold leading-tight text-[#3A332F]" style={benefit.includes('GRATIS') ? { color: plan.color, fontWeight: 900 } : {}}>{benefit}</span>
                               </li>
                             ))}
                           </ul>
@@ -2241,7 +2241,7 @@ const App: React.FC = () => {
                             setCart(prev => [...prev.filter(item => !item.id.startsWith('sub-')), { ...subProduct, quantity: 1 }]);
                             setIsSubscriptionModalOpen(false);
                             setIsCheckoutOpen(true);
-                          }} className={`w-full py-4 rounded-full font-ghibli-title text-sm transition-all shadow-md active:scale-95 ${plan.featured ? 'bg-[#C14B3A] text-white hover:bg-[#3A332F]' : 'bg-[#3A332F] text-white hover:bg-[#C14B3A]'}`}>
+                          }} className="w-full py-4 rounded-full font-ghibli-title text-sm transition-all shadow-md active:scale-95 text-white hover:opacity-90" style={{ backgroundColor: plan.color }}>
                             FORJAR PACTO
                           </button>
                         </div>
