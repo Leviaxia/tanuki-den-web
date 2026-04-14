@@ -125,6 +125,15 @@ export const CheckoutSuccess = () => {
                 localStorage.removeItem('tanuki_cart_guest');
                 if (userFn && userFn.id) {
                     localStorage.removeItem(`tanuki_cart_${userFn.id}`);
+                    
+                    // FALLBACK: Clear Database Cart if not already cleared by Modal
+                    if (userFn.id !== 'guest') {
+                        try {
+                            await supabase.from('profiles').update({ cart: [] }).eq('id', userFn.id);
+                        } catch (e) {
+                            console.error("Error Fallback DB clear:", e);
+                        }
+                    }
                 }
                 
                 // 3. Trigger App.tsx to clear its memory state

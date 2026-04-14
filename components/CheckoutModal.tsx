@@ -258,7 +258,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     customer_name: shipping.fullName || user.name || 'Viajero',
                     order_id: orderIdStr,
                     items: itemsForReceipt,
-                    total: formatCurrency(finalTotal),
+                    total_amount: formatCurrency(finalTotal),
                     shipping_address: shippingAddress,
                     payment_method: paymentLabel,
                 });
@@ -266,14 +266,29 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 console.warn("Error sending receipt email, continuing...", err);
             }
 
-            // REDIRECT TO SUCCESS PAGE to trigger Mission Logic
-            // 1. Save pending cart for Success page logic
+            // --- CRITICAL: CLEAR CART BEFORE REDIRECT ---
+            // This prevents App.tsx from reloading the old cart after window.location.href reloads the page
+            
+            // 1. Clear Database Cart (if registered)
+            if (user.id !== 'guest') {
+                try {
+                    await supabase.from('profiles').update({ cart: [] }).eq('id', user.id);
+                } catch (e) {
+                    console.error("Error clearing DB cart:", e);
+                }
+            }
+
+            // 2. Clear Local Storage Carts
+            localStorage.removeItem(`tanuki_cart_${user.id}`);
+            localStorage.removeItem('tanuki_cart_guest');
+
+            // 3. Save pending cart for Success page logic
             localStorage.setItem('tanuki_pending_cart', JSON.stringify(cart));
 
-            // SAFETY: Give the network a tiny bit more time to breathe before the heavy redirect
-            await new Promise(resolve => setTimeout(resolve, 800));
+            // 4. Trigger state update for current instance (prevents flash of items)
+            onSuccess(); 
 
-            // 2. Redirect
+            // 5. Redirect to Success Page
             window.location.href = `/checkout/success?session_id=manual_order_${orderIdStr}`;
             return;
 

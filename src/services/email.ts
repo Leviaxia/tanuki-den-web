@@ -17,7 +17,7 @@ export interface ReceiptEmailParams {
     customer_name: string;    // Buyer's name
     order_id: string;         // Order ID / timestamp
     items: string;            // List of purchased items
-    total: string;            // Total amount
+    total_amount: string;     // Total amount
     shipping_address: string; // Shipping address
     payment_method: string;   // Payment method label
 }
