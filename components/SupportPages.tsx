@@ -27,7 +27,7 @@ const SupportPages: React.FC<SupportPagesProps> = ({ activeSection, onBack }) =>
     },
     {
       q: "¿Son las figuras 100% originales?",
-      a: "Absolutamente. En el Clan Tanuki solo trabajamos con piezas auténticas y de alta calidad. Cada figura pasa por un portal de inspección antes de ser enviada para garantizar que recibes un tesoro digno de tu colección."
+      a: "No necesariamente. Sin embargo, en el Clan Tanuki solo trabajamos con piezas de alta calidad. Cada figura pasa por un portal de inspección antes de ser enviada para garantizar que recibes un tesoro digno de tu colección. Para nosotros es importante que lo que recibas sea justamente lo que esperas."
     },
     {
       q: "¿Qué métodos de pago aceptan?",
@@ -147,10 +147,10 @@ const SupportPages: React.FC<SupportPagesProps> = ({ activeSection, onBack }) =>
         <h3 className="font-ghibli-title text-3xl uppercase tracking-widest">¿Aún tienes dudas?</h3>
         <p className="font-bold opacity-80 uppercase tracking-widest text-xs">Nuestros mensajeros están listos para ayudarte</p>
         <button 
-          onClick={() => window.location.href = 'mailto:hola@tanukiden.co'}
+          onClick={() => window.open('https://wa.me/573114286263?text=Hola%2C+Clan+Tanuki.+Tengo+una+duda+sobre...', '_blank')}
           className="bg-[#D4AF37] text-[#3A332F] font-ghibli-title px-10 py-4 rounded-full text-lg shadow-xl hover:bg-white transition-all uppercase tracking-widest active:scale-95"
         >
-          Enviar Pergamino (Email)
+          Enviar Pergamino
         </button>
       </div>
     </div>
