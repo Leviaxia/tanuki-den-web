@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Mail, Lock, User, Phone, MapPin, Calendar, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Sparkles, Mail, Lock, User, Phone, MapPin, Calendar, ArrowRight, Loader2, CheckCircle2, Send, ShieldCheck } from 'lucide-react';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../src/lib/supabase';
 import { COLOMBIA_DATA } from '../src/data/colombia';
 
