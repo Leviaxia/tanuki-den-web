@@ -7,18 +7,20 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (user: any) => void;
+  initialStep?: 'login' | 'register' | 'forgot' | 'update-password';
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplete }) => {
-  const [step, setStep] = useState<'login' | 'register' | 'success'>('login');
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplete, initialStep }) => {
+  const [step, setStep] = useState<'login' | 'register' | 'success' | 'forgot' | 'update-password'>('login');
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [successData, setSuccessData] = useState<{ name: string; email: string; isAutoLogin: boolean } | null>(null);
+  const [successData, setSuccessData] = useState<{ name: string; email: string; isAutoLogin: boolean; type?: 'register' | 'forgot' } | null>(null);
 
   // Form States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   // Location State
@@ -32,14 +34,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
 
   // Reset to Login when closed
   React.useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      if (initialStep) setStep(initialStep);
+    } else {
       setStep('login');
       setError(null);
       setLoading(false);
       setPhoneError(null);
       setDateError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, initialStep]);
 
   // Validar fecha de nacimiento
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,10 +244,59 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
         throw new Error('No se recibió usuario del servidor.');
       }
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setStatusMsg('Enviando pergamino de recuperación...');
+
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/`,
+      });
+
+      if (resetError) throw resetError;
+
+      setSuccessData({
+        name: '',
+        email: email,
+        isAutoLogin: false,
+        type: 'forgot'
+      });
+      setStep('success');
     } catch (err: any) {
-      console.error('Register Error:', err);
-      setError(err.message || 'Error al registrarse');
+      console.error('Reset Password Error:', err);
+      setError(err.message || 'Error al enviar el correo');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setStatusMsg('Forjando nueva llave...');
+
+    try {
+      if (newPassword.length < 6) throw new Error('La contraseña debe tener al menos 6 caracteres');
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateError) throw updateError;
+
+      // Éxito - recargamos para que se aplique la sesión
+      setStatusMsg('¡Llave forjada con éxito! Entrando...');
+      setTimeout(() => {
+        window.location.hash = ''; // Limpiar el hash de recovery
+        window.location.reload();
+      }, 1500);
+
+    } catch (err: any) {
+      console.error('Update Password Error:', err);
+      setError(err.message || 'Error al actualizar contraseña');
       setLoading(false);
     }
   };
@@ -270,10 +323,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
             )}
           </div>
           <h2 className="text-3xl font-ghibli-title text-[#3A332F] uppercase">
-            {step === 'login' ? 'Regreso al Clan' : step === 'register' ? 'Únete a la Leyenda' : '¡Registro Exitoso!'}
+            {step === 'login' ? 'Regreso al Clan' 
+             : step === 'register' ? 'Únete a la Leyenda' 
+             : step === 'forgot' ? 'Recuperar Acceso' 
+             : step === 'update-password' ? 'Nueva Llave Secreta'
+             : '¡Registro Exitoso!'}
           </h2>
           <p className="text-[#8C8279] text-xs font-bold uppercase tracking-widest">
-            {step === 'login' ? 'Bienvenido de nuevo, viajero' : step === 'register' ? 'Comienza tu viaje en el Tanuki Den' : 'Tu leyenda comienza ahora'}
+            {step === 'login' ? 'Bienvenido de nuevo, viajero' 
+             : step === 'register' ? 'Comienza tu viaje en el Tanuki Den' 
+             : step === 'forgot' ? 'Enviaremos un pergamino de recuperación'
+             : step === 'update-password' ? 'Escribe tu nueva contraseña maestra'
+             : 'Tu leyenda comienza ahora'}
           </p>
         </div>
 
@@ -287,12 +348,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
           <div className="text-center space-y-6">
             <div className="bg-[#FDF5E6] p-6 rounded-[30px] border-2 border-[#E6D5B8] space-y-4">
               <p className="text-[#3A332F] font-bold text-lg">
-                ¡Bienvenido, <span className="text-[#C14B3A]">{successData?.name}</span>! 🍃
+                {successData?.type === 'forgot' ? '¡Pergamino Enviado! ✉️' : <>¡Bienvenido, <span className="text-[#C14B3A]">{successData?.name}</span>! 🍃</>}
               </p>
               <p className="text-[#8C8279] text-sm leading-relaxed">
-                {successData?.isAutoLogin
-                  ? "Tu cuenta ha sido creada y los espíritus te han reconocido. Ya eres parte del Tanuki Den."
-                  : `Hemos enviado un pergamino de confirmación a ${successData?.email}. Por favor revísalo para activar tu entrada.`}
+                {successData?.type === 'forgot' 
+                  ? `Revisa tu correo ${successData?.email}. Hemos enviado un enlace para que puedas forjar una nueva llave secreta.`
+                  : successData?.isAutoLogin
+                    ? "Tu cuenta ha sido creada y los espíritus te han reconocido. Ya eres parte del Tanuki Den."
+                    : `Hemos enviado un pergamino de confirmación a ${successData?.email}. Por favor revísalo para activar tu entrada.`}
               </p>
             </div>
 
@@ -324,9 +387,49 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
                 </div>
               ) : <>ENTRAR AL DEN <ArrowRight size={20} /></>}
             </button>
-            <p className="text-center text-xs font-bold text-[#8C8279] mt-4">
-              ¿Aún no tienes clan? <button type="button" onClick={() => setStep('register')} className="text-[#C14B3A] hover:underline uppercase tracking-wide">Iníciate aquí</button>
-            </p>
+            <div className="flex flex-col gap-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setStep('forgot')} 
+                className="text-[10px] font-black uppercase tracking-widest text-[#8C8279] hover:text-[#C14B3A] transition-colors"
+              >
+                ¿Olvidaste tu llave secreta?
+              </button>
+              <p className="text-center text-xs font-bold text-[#8C8279]">
+                ¿Aún no tienes clan? <button type="button" onClick={() => setStep('register')} className="text-[#C14B3A] hover:underline uppercase tracking-wide ml-1">Iníciate aquí</button>
+              </p>
+            </div>
+          </form>
+        ) : step === 'forgot' ? (
+          <form onSubmit={handleForgotPassword} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Tu Correo Ancestral</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3A332F]/40" size={18} />
+                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-full pl-12 pr-6 py-4 outline-none font-bold text-[#3A332F] transition-all" placeholder="tanuki@bosque.com" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <button disabled={loading} type="submit" className="w-full bg-[#C14B3A] text-white font-ghibli-title py-5 rounded-full text-base shadow-xl hover:bg-[#3A332F] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70">
+                {loading ? <Loader2 className="animate-spin" /> : <>ENVIAR RECUPERACIÓN <Send size={20} /></>}
+              </button>
+              <button type="button" onClick={() => setStep('login')} className="w-full text-[10px] font-black uppercase tracking-widest text-[#8C8279] hover:text-[#3A332F] py-2">
+                VOLVER AL INICIO
+              </button>
+            </div>
+          </form>
+        ) : step === 'update-password' ? (
+          <form onSubmit={handleUpdatePassword} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#3A332F] ml-2">Nueva Llave Secreta</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3A332F]/40" size={18} />
+                <input required type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-full pl-12 pr-6 py-4 outline-none font-bold text-[#3A332F] transition-all" placeholder="Nueva contraseña (min. 6)" minLength={6} />
+              </div>
+            </div>
+            <button disabled={loading} type="submit" className="w-full bg-[#81C784] text-white font-ghibli-title py-5 rounded-full text-base shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70">
+              {loading ? <Loader2 className="animate-spin" /> : <>RESTAURAR ACCESO <ShieldCheck size={20} /></>}
+            </button>
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-hide">

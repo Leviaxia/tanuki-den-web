@@ -139,6 +139,12 @@ const App: React.FC = () => {
   // FIX: Restore Supabase Session on Mount to ensure RLS works
   useEffect(() => {
     const restoreSession = async () => {
+      // 1. Check for recovery hash first
+      if (window.location.hash.includes('type=recovery')) {
+        setAuthInitialStep('update-password');
+        setIsAuthModalOpen(true);
+      }
+
       const savedLocal = localStorage.getItem('tanuki-auth-token');
       if (savedLocal) {
         try {
@@ -176,6 +182,7 @@ const App: React.FC = () => {
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authInitialStep, setAuthInitialStep] = useState<'login' | 'register' | 'forgot' | 'update-password'>('login');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1972,8 +1979,16 @@ const App: React.FC = () => {
       {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onComplete={handleAuthComplete}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthInitialStep('login');
+        }}
+        onComplete={(u) => {
+          handleAuthComplete(u);
+          setIsAuthModalOpen(false);
+          setAuthInitialStep('login');
+        }}
+        initialStep={authInitialStep}
       />
 
 
