@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { sendOrderEmail } from '../src/services/email';
+import { sendOrderEmail, sendReceiptEmail } from '../src/services/email';
 import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, Upload, Image as ImageIcon, Sparkles, ChevronDown } from 'lucide-react';
 import { CartItem, UserReward, Reward } from '../types';
 import { formatCurrency } from '../src/lib/utils';
@@ -237,8 +237,23 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 }
             }
 
-            // Send Email (After order creation, before redirect)
+            // Send admin notification email
             await sendOrderEmail(emailParams);
+
+            // Send receipt email to the customer
+            const paymentLabel = method === 'nequi' ? 'Nequi' : method === 'card' ? 'Tarjeta' : 'Bancolombia';
+            const itemsForReceipt = cart.map(item => `${item.quantity}x ${item.name}  —  $${formatCurrency(item.price * item.quantity)}`).join('\n');
+            const shippingAddress = `${shipping.address}\n${shipping.city}, ${shipping.department}\nTel: ${shipping.phone}`;
+
+            await sendReceiptEmail({
+                customer_email: user.email || '',
+                customer_name: shipping.fullName || user.name || 'Viajero',
+                order_id: orderIdStr,
+                items: itemsForReceipt,
+                total: formatCurrency(finalTotal),
+                shipping_address: shippingAddress,
+                payment_method: paymentLabel,
+            });
 
             // REDIRECT TO SUCCESS PAGE to trigger Mission Logic
             // 1. Save pending cart for Success page logic
