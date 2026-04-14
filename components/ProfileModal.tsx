@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Camera, Edit3, Mail, MapPin, Phone, Package, Heart, User as UserIcon, LogOut, ChevronRight, ExternalLink, Share2, Sparkles, Trophy, CheckCircle2, Lock, Flame, Gift, Ticket } from 'lucide-react';
+import { X, Camera, Edit3, Mail, MapPin, Phone, Package, Heart, User as UserIcon, LogOut, ChevronRight, ExternalLink, Share2, Sparkles, Trophy, CheckCircle2, Lock, Flame, Gift, Ticket, ChevronDown } from 'lucide-react';
 import { User, Product, Mission, UserMission, Reward, UserReward } from '../types';
 import { supabase } from '../src/lib/supabase';
 import ProductCard from './ProductCard'; // Assuming you have this or need to move logic
@@ -179,7 +179,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
             const { error } = await supabase
                 .from('profiles')
                 .update({
-                    display_name: editData.name,
+                    username: editData.name,
                     full_name: editData.realName,
                     email: editData.email,
                     phone: editData.phone,
@@ -190,7 +190,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                 })
                 .eq('id', user.id);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase Update Error:', error);
+                throw new Error(error.message || 'Error en la base de datos');
+            }
 
             setUser(prev => ({
                 ...prev,
@@ -208,7 +211,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
             alert('¡Perfil actualizado con éxito!');
         } catch (err: any) {
             console.error('Error updating profile:', err);
-            alert('No se pudo actualizar el perfil.');
+            alert(`No se pudo actualizar el perfil: ${err.message || ''}`);
         } finally {
             setSaving(false);
         }
@@ -343,30 +346,40 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1">
                                                 <label className="text-[10px] font-black text-[#3A332F]/40 uppercase tracking-widest">Departamento</label>
-                                                <select 
-                                                    className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A]"
-                                                    value={editData.shippingDepartment}
-                                                    onChange={e => setEditData({...editData, shippingDepartment: e.target.value, shippingCity: ''})}
-                                                >
-                                                    <option value="">Seleccionar...</option>
-                                                    {departments.map(dept => (
-                                                        <option key={dept} value={dept}>{dept}</option>
-                                                    ))}
-                                                </select>
+                                                <div className="relative group">
+                                                    <select 
+                                                        className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 pr-10 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A] appearance-none cursor-pointer"
+                                                        value={editData.shippingDepartment}
+                                                        onChange={e => setEditData({...editData, shippingDepartment: e.target.value, shippingCity: ''})}
+                                                    >
+                                                        <option value="">Seleccionar...</option>
+                                                        {departments.map(dept => (
+                                                            <option key={dept} value={dept}>{dept}</option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#3A332F]/30 group-focus-within:text-[#C14B3A]">
+                                                        <ChevronDown size={14} />
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="space-y-1">
                                                 <label className="text-[10px] font-black text-[#3A332F]/40 uppercase tracking-widest">Ciudad</label>
-                                                <select 
-                                                    className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A]"
-                                                    value={editData.shippingCity}
-                                                    onChange={e => setEditData({...editData, shippingCity: e.target.value})}
-                                                    disabled={!editData.shippingDepartment}
-                                                >
-                                                    <option value="">Seleccionar...</option>
-                                                    {editData.shippingDepartment && colombiaData[editData.shippingDepartment]?.map(city => (
-                                                        <option key={city} value={city}>{city}</option>
-                                                    ))}
-                                                </select>
+                                                <div className="relative group">
+                                                    <select 
+                                                        className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 pr-10 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A] appearance-none cursor-pointer"
+                                                        value={editData.shippingCity}
+                                                        onChange={e => setEditData({...editData, shippingCity: e.target.value})}
+                                                        disabled={!editData.shippingDepartment}
+                                                    >
+                                                        <option value="">Seleccionar...</option>
+                                                        {editData.shippingDepartment && colombiaData[editData.shippingDepartment]?.map(city => (
+                                                            <option key={city} value={city}>{city}</option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#3A332F]/30 group-focus-within:text-[#C14B3A]">
+                                                        <ChevronDown size={14} />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="space-y-1">

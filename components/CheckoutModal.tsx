@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { sendOrderEmail } from '../src/services/email';
-import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, Upload, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { X, Wallet, Landmark, CreditCard, Minus, Plus, Trash2, CheckCircle2, ArrowRight, MapPin, Truck, ShieldCheck, Lock, Upload, Image as ImageIcon, Sparkles, ChevronDown } from 'lucide-react';
 import { CartItem, UserReward, Reward } from '../types';
 import { formatCurrency } from '../src/lib/utils';
 import { supabase } from '../src/lib/supabase';
@@ -366,16 +366,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                         />
 
                                         <div className="grid grid-cols-2 gap-3">
-                                            <select
-                                                value={shipping.department}
-                                                onChange={e => setShipping({ ...shipping, department: e.target.value })}
-                                                className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] appearance-none ${shippingErrors.department ? 'border-red-400' : 'border-transparent'}`}
-                                            >
-                                                <option value="">Departamento</option>
-                                                {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                                            </select>
+                                            <div className="relative group">
+                                                <select
+                                                    value={shipping.department}
+                                                    onChange={e => setShipping({ ...shipping, department: e.target.value })}
+                                                    className={`w-full p-4 pr-10 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] appearance-none ${shippingErrors.department ? 'border-red-400' : 'border-transparent'} cursor-pointer`}
+                                                >
+                                                    <option value="">Departamento</option>
+                                                    {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#3A332F]/30 group-focus-within:text-[#C14B3A]">
+                                                    <ChevronDown size={16} />
+                                                </div>
+                                            </div>
 
-                                            <div className="relative">
+                                            <div className="relative group">
                                                 <input
                                                     value={shipping.city}
                                                     onChange={e => {
@@ -386,8 +391,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                                     onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)}
                                                     disabled={!shipping.department}
                                                     placeholder="Escribe tu Municipio"
-                                                    className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.city ? 'border-red-400' : 'border-transparent'} disabled:opacity-50`}
+                                                    className={`w-full p-4 pr-10 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.city ? 'border-red-400' : 'border-transparent'} disabled:opacity-50`}
                                                 />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#3A332F]/30 group-focus-within:text-[#C14B3A]">
+                                                    <ChevronDown size={16} />
+                                                </div>
                                                 {showCitySuggestions && shipping.department && (
                                                     <ul className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-[#3A332F]/5 max-h-[200px] overflow-y-auto">
                                                         {colombiaData[shipping.department]

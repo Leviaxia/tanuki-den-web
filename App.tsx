@@ -574,6 +574,7 @@ const App: React.FC = () => {
             // Update User Identity
             setUser(prev => ({
               ...prev,
+              name: profile.username || prev.name,
               membership: profile.membership || prev.membership,
               membershipExpiry: profile.membership_expiry || prev.membershipExpiry,
               photo: profile.avatar_url || prev.photo,
