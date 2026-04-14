@@ -385,6 +385,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3A332F]/40" size={18} />
                 <input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-[#FDF5E6] border-2 border-transparent focus:border-[#C14B3A] rounded-full pl-12 pr-6 py-4 outline-none font-bold text-[#3A332F] transition-all" placeholder="••••••••" />
               </div>
+              <div className="text-right pr-2 pt-1">
+                <button type="button" onClick={() => setStep('forgot')} className="text-xs font-black uppercase tracking-widest text-[#C14B3A] hover:underline transition-colors">
+                  ¿Olvidaste tu llave secreta?
+                </button>
+              </div>
             </div>
             <button disabled={loading} type="submit" className="w-full bg-[#C14B3A] text-white font-ghibli-title py-5 rounded-full text-base shadow-xl hover:bg-[#3A332F] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">
               {loading ? (
@@ -394,18 +399,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
                 </div>
               ) : <>ENTRAR AL DEN <ArrowRight size={20} /></>}
             </button>
-            <div className="flex flex-col gap-3 pt-2">
-              <button 
-                type="button" 
-                onClick={() => setStep('forgot')} 
-                className="text-[10px] font-black uppercase tracking-widest text-[#8C8279] hover:text-[#C14B3A] transition-colors"
-              >
-                ¿Olvidaste tu llave secreta?
-              </button>
-              <p className="text-center text-xs font-bold text-[#8C8279]">
-                ¿Aún no tienes clan? <button type="button" onClick={() => setStep('register')} className="text-[#C14B3A] hover:underline uppercase tracking-wide ml-1">Iníciate aquí</button>
-              </p>
-            </div>
+            <p className="text-center text-xs font-bold text-[#8C8279] pt-2">
+              ¿Aún no tienes clan? <button type="button" onClick={() => setStep('register')} className="text-[#C14B3A] hover:underline uppercase tracking-wide ml-1">Iníciate aquí</button>
+            </p>
           </form>
         ) : step === 'forgot' ? (
           <form onSubmit={handleForgotPassword} className="space-y-6">
