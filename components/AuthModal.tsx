@@ -355,7 +355,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
           <div className="text-center space-y-6">
             <div className="bg-[#FDF5E6] p-6 rounded-[30px] border-2 border-[#E6D5B8] space-y-4">
               <p className="text-[#3A332F] font-bold text-lg">
-                {successData?.type === 'forgot' ? '¡Pergamino Enviado! ✉️' : <>¡Bienvenido, <span className="text-[#C14B3A]">{successData?.name}</span>! 🍃</>}
+                {successData?.type === 'forgot' ? '¡Pergamino Enviado!' : <>¡Bienvenido, <span className="text-[#C14B3A]">{successData?.name}</span>!</>}
               </p>
               <p className="text-[#8C8279] text-sm leading-relaxed">
                 {successData?.type === 'forgot' 
