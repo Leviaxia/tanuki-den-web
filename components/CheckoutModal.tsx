@@ -29,7 +29,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const isAutoFilling = React.useRef(false);
 
     // Shipping State
-    const [shipping, setShipping] = useState({ fullName: '', department: '', city: '', address: '', phone: '' });
+    const [shipping, setShipping] = useState({ fullName: '', email: '', department: '', city: '', address: '', phone: '' });
     const [shippingErrors, setShippingErrors] = useState<any>({});
     const [showCitySuggestions, setShowCitySuggestions] = useState(false);
 
@@ -84,6 +84,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 isAutoFilling.current = true;
                 setShipping({
                     fullName: user.realName || user.name || '',
+                    email: user.email || '',
                     phone: user.phone || '',
                     address: user.shippingAddress || '',
                     department: user.shippingDepartment || '',
@@ -107,6 +108,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const validateShipping = () => {
         const errs: any = {};
         if (!shipping.fullName) errs.fullName = 'Requerido';
+        if (!shipping.email) errs.email = 'Requerido';
+        if (shipping.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shipping.email)) errs.email = 'Email inválido';
         if (!shipping.department) errs.department = 'Requerido';
         if (!shipping.city) errs.city = 'Requerido';
         if (!shipping.address) errs.address = 'Requerido';
@@ -246,7 +249,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             const shippingAddress = `${shipping.address}\n${shipping.city}, ${shipping.department}\nTel: ${shipping.phone}`;
 
             await sendReceiptEmail({
-                customer_email: user.email || '',
+                customer_email: shipping.email || user.email || '',
                 customer_name: shipping.fullName || user.name || 'Viajero',
                 order_id: orderIdStr,
                 items: itemsForReceipt,
@@ -371,6 +374,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                             onChange={e => setShipping({ ...shipping, fullName: e.target.value })}
                                             placeholder="Nombre Completo"
                                             className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.fullName ? 'border-red-400' : 'border-transparent'}`}
+                                        />
+                                        <input
+                                            value={shipping.email}
+                                            onChange={e => setShipping({ ...shipping, email: e.target.value })}
+                                            placeholder="Correo Electrónico (Para tu recibo)"
+                                            type="email"
+                                            className={`w-full p-4 bg-white rounded-2xl font-bold text-[#3A332F] text-sm outline-none border-2 focus:border-[#C14B3A] placeholder:text-[#3A332F]/30 ${shippingErrors.email ? 'border-red-400' : 'border-transparent'}`}
                                         />
                                         <input
                                             value={shipping.phone}
