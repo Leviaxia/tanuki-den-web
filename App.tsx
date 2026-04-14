@@ -1938,7 +1938,10 @@ const App: React.FC = () => {
         onLogout={() => {
           localStorage.removeItem('tanuki-auth-token');
           sessionStorage.removeItem('tanuki_user');
-          window.location.reload();
+          setIsProfileModalOpen(false);
+          navigate('/');
+          // Reload after navigation to fully reset auth state
+          setTimeout(() => window.location.reload(), 50);
         }}
         products={products}
         favorites={favorites}
