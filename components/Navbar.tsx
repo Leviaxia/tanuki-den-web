@@ -155,8 +155,8 @@ const Navbar: React.FC<NavbarProps> = ({
                   <img src="/assets/tanuki-logo.png" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform" alt="Tanuki Den Logo" />
                 </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xl md:text-4xl lg:text-5xl font-ghibli-title tracking-tighter text-[#3A332F] leading-none">TANUKI DEN</span>
+              <div className="flex flex-col justify-center">
+                <span className="text-xl md:text-[28px] lg:text-[34px] font-ghibli-title tracking-tighter text-[#3A332F] leading-none whitespace-nowrap">TANUKI DEN</span>
                 <span className="text-[8px] md:text-[10px] lg:text-xs font-black text-[#8C8279] tracking-[0.4em] uppercase hidden sm:block md:hidden">ESPÍRITU DE COLECCIÓN</span>
               </div>
             </div>
