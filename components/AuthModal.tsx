@@ -266,7 +266,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onComplet
             {step === 'success' ? (
               <CheckCircle2 className="text-[#81C784]" size={32} />
             ) : (
-              <img src="/assets/sesión.png" className="w-full h-full object-contain" alt="Sesión" />
+              <img src="/assets/sesion.png" className="w-full h-full object-contain" alt="Sesión" />
             )}
           </div>
           <h2 className="text-3xl font-ghibli-title text-[#3A332F] uppercase">
