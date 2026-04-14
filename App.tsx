@@ -1800,8 +1800,8 @@ const App: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="group bg-[#C14B3A] rounded-[60px] p-12 border-4 border-[#3A332F] transition-all duration-500 hover:shadow-[15px_15px_0px_0px_#3A332F] section-reveal flex flex-col justify-center min-h-[320px] relative overflow-hidden text-white">
                   <div className="relative z-10 space-y-6">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border-2 border-[#3A332F] shadow-sm animate-bounce-subtle overflow-hidden">
-                      <img src="/assets/variedad.png" alt="Variedad" className="w-full h-full object-cover" />
+                    <div className="w-16 h-16 rounded-2xl border-2 border-[#3A332F] shadow-sm animate-bounce-subtle overflow-hidden relative">
+                      <img src="/assets/variedad.png" alt="Variedad" className="absolute inset-0 w-full h-full object-cover" />
                     </div>
                     <h3 className="text-3xl font-ghibli-title uppercase tracking-tight">Gran Variedad</h3>
                     <p className="text-white/80 font-bold text-sm leading-relaxed max-w-sm">Desde estatuas a escala hasta accesorios de escritorio. Catálogo infinito para todo coleccionista.</p>
@@ -1809,8 +1809,8 @@ const App: React.FC = () => {
                 </div>
                 <div className="group bg-[#D4AF37] rounded-[60px] p-12 border-4 border-[#3A332F] transition-all duration-500 hover:shadow-[15px_15px_0px_0px_#C14B3A] section-reveal flex flex-col justify-center min-h-[320px] relative overflow-hidden text-[#3A332F]">
                   <div className="relative z-10 space-y-6">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border-2 border-[#3A332F] shadow-sm animate-float overflow-hidden">
-                      <img src="/assets/fidelidad.png" alt="Fidelidad" className="w-full h-full object-cover" />
+                    <div className="w-16 h-16 rounded-2xl border-2 border-[#3A332F] shadow-sm animate-float overflow-hidden relative">
+                      <img src="/assets/fidelidad.png" alt="Fidelidad" className="absolute inset-0 w-full h-full object-cover" />
                     </div>
                     <h3 className="text-3xl font-ghibli-title uppercase tracking-tight text-[#3A332F]">Alta Fidelidad</h3>
                     <p className="text-[#3A332F]/80 font-bold text-sm leading-relaxed max-w-sm">Acabados premium y estética legendaria para tus vitrinas.</p>
@@ -1818,8 +1818,8 @@ const App: React.FC = () => {
                 </div>
                 <div className="group bg-[#4A6741] rounded-[60px] p-12 border-4 border-[#3A332F] transition-all duration-500 hover:shadow-[15px_15px_0px_0px_#81C784] section-reveal flex flex-col justify-center min-h-[320px] relative overflow-hidden text-white">
                   <div className="relative z-10 space-y-6">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border-2 border-[#3A332F] shadow-sm animate-wiggle overflow-hidden">
-                      <img src="/assets/segura.png" alt="Compra Segura" className="w-full h-full object-cover" />
+                    <div className="w-16 h-16 rounded-2xl border-2 border-[#3A332F] shadow-sm animate-wiggle overflow-hidden relative">
+                      <img src="/assets/segura.png" alt="Compra Segura" className="absolute inset-0 w-full h-full object-cover" />
                     </div>
                     <h3 className="text-3xl font-ghibli-title uppercase tracking-tight">Compra Segura</h3>
                     <p className="text-white/80 font-bold text-sm leading-relaxed max-w-sm">Empaque reforzado y protección ancestral en cada envío.</p>
@@ -1827,8 +1827,8 @@ const App: React.FC = () => {
                 </div>
                 <div className="group bg-[#5D4037] rounded-[60px] p-12 border-4 border-[#3A332F] transition-all duration-500 hover:shadow-[15px_15px_0px_0px_#FFECB3] section-reveal flex flex-col justify-center min-h-[320px] relative overflow-hidden text-white">
                   <div className="relative z-10 space-y-6">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border-2 border-[#3A332F] shadow-sm animate-bounce-subtle overflow-hidden">
-                      <img src="/assets/taller.png" alt="Taller Mágico" className="w-full h-full object-cover" />
+                    <div className="w-16 h-16 rounded-2xl border-2 border-[#3A332F] shadow-sm animate-bounce-subtle overflow-hidden relative">
+                      <img src="/assets/taller.png" alt="Taller Mágico" className="absolute inset-0 w-full h-full object-cover" />
                     </div>
                     <h3 className="text-3xl font-ghibli-title uppercase tracking-tight">Taller Mágico</h3>
                     <p className="text-white/70 font-bold text-sm leading-relaxed max-w-sm">Personalización total y creaciones a medida del gremio.</p>
