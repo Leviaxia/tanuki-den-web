@@ -2117,7 +2117,7 @@ const App: React.FC = () => {
                       '1 figura premium mensual (escala / edición especial)',
                       '1 exclusivo no disponible para el público general',
                       'ENVÍOS GRATIS en todos los pedidos',
-                      'Sorteos de alto nivel y drops ocultos',
+                      'Obsequio especial en tu mes de cumpleaños',
                       'Carnet físico de miembro del clan',
                     ]
                   }
@@ -2131,7 +2131,7 @@ const App: React.FC = () => {
                       <div className="text-center space-y-12 py-8">
                         <div className="space-y-4">
                           <div 
-                            className="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center shadow-lg animate-bounce-subtle mb-6 overflow-hidden border-4"
+                            className="w-24 h-24 rounded-full mx-auto flex items-center justify-center shadow-lg animate-bounce-subtle mb-6 overflow-hidden border-4"
                             style={{ borderColor: currentPlan?.color || '#3A332F' }}
                           >
                             {currentPlan?.icon
@@ -2166,7 +2166,14 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="pt-4">
-                          <p className="text-[#3A332F]/60 text-xs font-bold uppercase tracking-widest mb-6">Tu membresía se renueva automáticamente cada mes</p>
+                          <p className="text-[#3A332F]/60 text-xs font-bold uppercase tracking-widest mb-6">
+                            Tu membresía se renueva automáticamente cada {(() => {
+                              if (currentPlan?.period === 'Mensual') return 'mes';
+                              if (currentPlan?.period === 'Trimestral') return 'trimestre';
+                              if (currentPlan?.period === 'Semestral') return 'semestre';
+                              return 'año';
+                            })()}
+                          </p>
                           <button 
                             onClick={() => setIsSubscriptionModalOpen(false)} 
                             className="bg-[#3A332F] text-white font-ghibli-title py-4 px-12 rounded-full text-lg shadow-lg transition-all uppercase tracking-widest hover:scale-105 active:scale-95"
