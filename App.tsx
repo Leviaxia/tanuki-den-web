@@ -13,6 +13,8 @@ import SharedWishlistModal from './components/SharedWishlistModal';
 import AuthModal from './components/AuthModal';
 import CheckoutModal from './components/CheckoutModal';
 import ShareModal from './components/ShareModal';
+import { createClient } from '@supabase/supabase-js';
+import BrandsSection from './components/BrandsSection';
 
 import { PRODUCTS, heroText, MISSIONS, collectionsContent } from './constants';
 import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission, Reward, UserReward, ProductVariant } from './types';
@@ -441,11 +443,16 @@ const App: React.FC = () => {
       }
     }
 
+    let newCartOpen = path === '/carrito';
+    let newProfileOpen = path === '/perfil';
+
     if (activeTab !== newActiveTab) setActiveTab(newActiveTab);
     if (selectedCollectionId !== newCollectionId) setSelectedCollectionId(newCollectionId);
     if (newSelectedProduct !== undefined && selectedProduct?.id !== newSelectedProduct?.id) {
        setSelectedProduct(newSelectedProduct);
     }
+    if (isCartOpen !== newCartOpen) setIsCartOpen(newCartOpen);
+    if (isProfileModalOpen !== newProfileOpen) setIsProfileModalOpen(newProfileOpen);
 
     const handlePopState = (event: PopStateEvent) => {
       // Modals (High Priority)
@@ -1654,6 +1661,8 @@ const App: React.FC = () => {
             </div>
           </div>
         );
+      case 'marcas':
+        return <BrandsSection />;
       default:
         return (
           <div className="space-y-24 pb-24">
@@ -1803,13 +1812,13 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-white selection:bg-[#C14B3A] selection:text-white flex flex-col pt-[102px] md:pt-[118px] relative overflow-x-hidden">
       <Navbar
         cartCount={cart.reduce((a, c) => a + c.quantity, 0)}
-        onOpenCart={() => setIsCartOpen(true)}
+        onOpenCart={() => navigate('/carrito')}
         activeTab={activeTab}
         setActiveTab={handleNavClick}
         user={user}
         onOpenProfile={() => {
           setProfileInitialTab('profile');
-          setIsProfileModalOpen(true);
+          navigate('/perfil');
         }}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenSubscription={handleSubscriptionClick}
@@ -1881,7 +1890,11 @@ const App: React.FC = () => {
 
       <ProfileModal
         isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
+        onClose={() => {
+          setIsProfileModalOpen(false);
+          const path = activeTab === 'inicio' ? '/' : `/${activeTab}`;
+          if (location.pathname !== path) navigate(path, { replace: true });
+        }}
         user={user}
         setUser={setUser}
         onLogout={() => {
@@ -2099,11 +2112,11 @@ const App: React.FC = () => {
 
       {
         isCartOpen && (
-          <div className="fixed inset-0 z-[2000] bg-[#3A332F]/80 backdrop-blur-sm flex justify-end" onClick={() => setIsCartOpen(false)}>
+          <div className="fixed inset-0 z-[2000] bg-[#3A332F]/80 backdrop-blur-sm flex justify-end" onClick={() => { setIsCartOpen(false); const p = activeTab === 'inicio' ? '/' : `/${activeTab}`; if (location.pathname !== p) navigate(p, { replace: true }); }}>
             <div className="w-[85vw] max-w-[360px] md:w-[500px] h-full bg-white shadow-2xl animate-slide-in flex flex-col border-l-4 md:border-l-8 border-[#D4AF37] rounded-l-[30px] md:rounded-l-none overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="p-6 md:p-8 border-b-4 border-[#FDF5E6] flex items-center justify-between">
                 <h2 className="text-2xl md:text-3xl font-ghibli-title text-[#3A332F] uppercase">Mi Carrito</h2>
-                <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-[#FDF5E6] rounded-full transition-all"><X size={24} className="md:w-7 md:h-7" /></button>
+                <button onClick={() => { setIsCartOpen(false); const p = activeTab === 'inicio' ? '/' : `/${activeTab}`; if (location.pathname !== p) navigate(p, { replace: true }); }} className="p-2 hover:bg-[#FDF5E6] rounded-full transition-all"><X size={24} className="md:w-7 md:h-7" /></button>
               </div>
               <div className="flex-grow overflow-y-auto p-4 md:p-8 space-y-4 md:space-y-6">
                 {cart.length === 0 ? (

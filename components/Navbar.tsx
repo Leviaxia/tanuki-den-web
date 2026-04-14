@@ -117,7 +117,8 @@ const Navbar: React.FC<NavbarProps> = ({
     { id: 'inicio', label: 'Inicio' },
     { id: 'figuras', label: 'Catálogo' },
     { id: 'colecciones', label: 'Colecciones' },
-    { id: 'personalizacion', label: 'Taller' }
+    { id: 'personalizacion', label: 'Taller' },
+    { id: 'marcas', label: 'Marcas' }
   ];
 
   const navigate = useNavigate();
@@ -129,7 +130,8 @@ const Navbar: React.FC<NavbarProps> = ({
       'inicio': '/',
       'figuras': '/catalogo',
       'colecciones': '/colecciones',
-      'personalizacion': '/taller'
+      'personalizacion': '/taller',
+      'marcas': '/marcas'
     };
     navigate(routes[id] || '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
