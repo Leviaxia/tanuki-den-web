@@ -2085,7 +2085,7 @@ const App: React.FC = () => {
                     period: 'Semestral',
                     billingPeriod: 'mes',
                     billingDetail: 'pagado semestral ($229.900)',
-                    color: '#C14B3A',
+                    color: '#D4AF37',
                     discountPct: 10,
                     featured: true,
                     benefits: [
@@ -2107,7 +2107,7 @@ const App: React.FC = () => {
                     period: 'Anual',
                     billingPeriod: 'mes',
                     billingDetail: 'pagado anual ($399.900)',
-                    color: '#D4AF37',
+                    color: '#C14B3A',
                     discountPct: 15,
                     featured: false,
                     benefits: [
