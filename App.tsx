@@ -1825,9 +1825,9 @@ const App: React.FC = () => {
                     <p className="text-white/80 font-bold text-sm leading-relaxed max-w-sm">Empaque reforzado y protección ancestral en cada envío.</p>
                   </div>
                 </div>
-                <div className="group bg-[#5D4037] rounded-[60px] p-12 border-4 border-[#3A332F] transition-all duration-500 hover:shadow-[15px_15px_0px_0px_#FDF5E6] section-reveal flex flex-col justify-center min-h-[320px] relative overflow-hidden text-white">
+                <div className="group bg-[#5D4037] rounded-[60px] p-12 border-4 border-[#3A332F] transition-all duration-500 hover:shadow-[15px_15px_0px_0px_#FFECB3] section-reveal flex flex-col justify-center min-h-[320px] relative overflow-hidden text-white">
                   <div className="relative z-10 space-y-6">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border-2 border-[#3A332F] shadow-sm animate-pulse overflow-hidden">
+                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border-2 border-[#3A332F] shadow-sm animate-bounce-subtle overflow-hidden">
                       <img src="/assets/taller.png" alt="Taller Mágico" className="w-full h-full object-cover" />
                     </div>
                     <h3 className="text-3xl font-ghibli-title uppercase tracking-tight">Taller Mágico</h3>
