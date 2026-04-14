@@ -140,7 +140,6 @@ export const CheckoutSuccess = () => {
                 window.dispatchEvent(new Event('tanuki_cart_clear'));
 
             } catch (error) {
-            } catch (error) {
                 console.error("Error procesando orden:", error);
             } finally {
                 setIsProcessing(false);
