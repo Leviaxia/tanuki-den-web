@@ -1998,7 +1998,10 @@ const App: React.FC = () => {
                     name: 'Semilla',
                     icon: '/assets/semilla.png',
                     price: 39900,
+                    displayPrice: "39.900",
                     period: 'Mensual',
+                    billingPeriod: 'mes',
+                    billingDetail: '',
                     color: '#4A6741',
                     discountPct: 5,
                     featured: false,
@@ -2015,7 +2018,10 @@ const App: React.FC = () => {
                     name: 'Brote',
                     icon: '/assets/brote.png',
                     price: 119900,
-                    period: 'Mensual',
+                    displayPrice: "39.900",
+                    period: 'Trimestral',
+                    billingPeriod: 'mes',
+                    billingDetail: 'pagado trimestral ($119.900)',
                     color: '#5D8A3C',
                     discountPct: 7,
                     featured: false,
@@ -2033,7 +2039,10 @@ const App: React.FC = () => {
                     name: 'Rama',
                     icon: '/assets/rama.png',
                     price: 229900,
-                    period: 'Mensual',
+                    displayPrice: "38.300",
+                    period: 'Semestral',
+                    billingPeriod: 'mes',
+                    billingDetail: 'pagado semestral ($229.900)',
                     color: '#C14B3A',
                     discountPct: 10,
                     featured: true,
@@ -2052,7 +2061,10 @@ const App: React.FC = () => {
                     name: 'Espíritu',
                     icon: '/assets/espiritu.png',
                     price: 399900,
-                    period: 'Mensual',
+                    displayPrice: "33.300",
+                    period: 'Anual',
+                    billingPeriod: 'mes',
+                    billingDetail: 'pagado anual ($399.900)',
                     color: '#D4AF37',
                     discountPct: 15,
                     featured: false,
@@ -2134,10 +2146,17 @@ const App: React.FC = () => {
                           </div>
 
                           <div className="text-center">
-                            <p className="text-3xl md:text-4xl font-ghibli-title tracking-tighter" style={{ color: plan.color }}>
-                              <span className="text-lg mr-1">$</span>{formatCurrency(plan.price)}
+                            <p className="text-3xl md:text-4xl font-ghibli-title tracking-tighter flex items-baseline justify-center" style={{ color: plan.color }}>
+                              <span className="text-lg mr-1">$</span>
+                              {plan.displayPrice}
+                              <span className="text-[10px] font-black text-[#8C8279] uppercase tracking-wider ml-1">/ {plan.billingPeriod}</span>
                             </p>
-                            <p className="text-xs font-black mt-1" style={{ color: plan.color }}>{plan.discountPct}% OFF permanente</p>
+                            {plan.billingDetail && (
+                              <p className="text-[10px] font-black text-[#8C8279] opacity-70 mt-1 normal-case leading-tight">
+                                {plan.billingDetail}
+                              </p>
+                            )}
+                            <p className="text-xs font-black mt-2" style={{ color: plan.color }}>{plan.discountPct}% OFF permanente</p>
                           </div>
 
                           <ul className="flex-grow space-y-2.5">

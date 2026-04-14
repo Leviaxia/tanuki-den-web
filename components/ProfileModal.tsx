@@ -215,7 +215,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 p-6 md:p-10 overflow-y-auto bg-[#FDF5E6] relative pb-24 md:pb-10">
+                <div className="flex-1 p-6 md:p-10 overflow-y-auto bg-[#FDF5E6] relative md:pb-10">
                     <button onClick={onClose} className="hidden md:block absolute top-6 right-6 p-2 bg-white hover:bg-[#3A332F] hover:text-white rounded-full transition-all shadow-sm">
                         <X size={24} />
                     </button>
@@ -759,30 +759,30 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                             </div>
                         </div>
                     )}
-
-                    {/* Mobile Bottom Navigation Bar */}
-                    <div className="md:hidden absolute bottom-0 left-0 right-0 bg-white border-t border-[#3A332F]/10 p-2 flex justify-around items-center z-30 pb- safe-area-bottom">
-                        {[
-                            { id: 'profile', label: 'Perfil', icon: UserIcon },
-                            { id: 'orders', label: 'Pedidos', icon: Package },
-                            { id: 'wishlist', label: 'Deseos', icon: Heart },
-                            { id: 'missions', label: 'Misiones', icon: Sparkles },
-                            { id: 'coupons', label: 'Cupones', icon: Ticket }, // [NEW]
-                        ].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
-                                className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-full ${activeTab === tab.id
-                                    ? 'text-[#C14B3A]'
-                                    : 'text-[#3A332F]/60'
-                                    }`}
-                            >
-                                <tab.icon size={20} className={activeTab === tab.id ? 'fill-current' : ''} />
-                                <span className="font-ghibli-title text-[10px] uppercase tracking-wider">{tab.label}</span>
-                            </button>
-                        ))}
-                    </div>
                 </div >
+
+                {/* Mobile Bottom Navigation Bar */}
+                <div className="md:hidden bg-white border-t border-[#3A332F]/10 p-2 flex justify-around items-center z-30 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pb-safe shrink-0">
+                    {[
+                        { id: 'profile', label: 'Perfil', icon: UserIcon },
+                        { id: 'orders', label: 'Pedidos', icon: Package },
+                        { id: 'wishlist', label: 'Deseos', icon: Heart },
+                        { id: 'missions', label: 'Misiones', icon: Sparkles },
+                        { id: 'coupons', label: 'Cupones', icon: Ticket },
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all w-full ${activeTab === tab.id
+                                ? 'text-[#C14B3A]'
+                                : 'text-[#3A332F]/60'
+                                }`}
+                        >
+                            <tab.icon size={20} className={activeTab === tab.id ? 'fill-current' : ''} />
+                            <span className="font-ghibli-title text-[10px] uppercase tracking-wider">{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
             </div >
         </div>
     );
