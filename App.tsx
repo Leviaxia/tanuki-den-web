@@ -734,6 +734,17 @@ const App: React.FC = () => {
     return () => window.removeEventListener('tanuki_user_update', handleUserUpdate);
   }, []);
 
+  // Listen for cart clear events (from CheckoutSuccess)
+  useEffect(() => {
+    const handleCartClear = () => {
+      console.log("⚡ Evento recibido: Vaciando carrito en App");
+      setCart([]);
+    };
+
+    window.addEventListener('tanuki_cart_clear', handleCartClear);
+    return () => window.removeEventListener('tanuki_cart_clear', handleCartClear);
+  }, []);
+
   useEffect(() => {
     sessionStorage.setItem('tanuki_user', JSON.stringify(user));
   }, [user]);

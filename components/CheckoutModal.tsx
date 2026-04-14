@@ -241,26 +241,37 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             }
 
             // Send admin notification email
-            await sendOrderEmail(emailParams);
-
+            try {
+                await sendOrderEmail(emailParams);
+            } catch (err) {
+                console.warn("Error sending admin email, continuing...", err);
+            }
+            
             // Send receipt email to the customer
             const paymentLabel = method === 'nequi' ? 'Nequi' : method === 'card' ? 'Tarjeta' : 'Bancolombia';
             const itemsForReceipt = cart.map(item => `${item.quantity}x ${item.name}  —  $${formatCurrency(item.price * item.quantity)}`).join('\n');
             const shippingAddress = `${shipping.address}\n${shipping.city}, ${shipping.department}\nTel: ${shipping.phone}`;
 
-            await sendReceiptEmail({
-                customer_email: shipping.email || user.email || '',
-                customer_name: shipping.fullName || user.name || 'Viajero',
-                order_id: orderIdStr,
-                items: itemsForReceipt,
-                total: formatCurrency(finalTotal),
-                shipping_address: shippingAddress,
-                payment_method: paymentLabel,
-            });
+            try {
+                await sendReceiptEmail({
+                    customer_email: shipping.email || user.email || '',
+                    customer_name: shipping.fullName || user.name || 'Viajero',
+                    order_id: orderIdStr,
+                    items: itemsForReceipt,
+                    total: formatCurrency(finalTotal),
+                    shipping_address: shippingAddress,
+                    payment_method: paymentLabel,
+                });
+            } catch (err) {
+                console.warn("Error sending receipt email, continuing...", err);
+            }
 
             // REDIRECT TO SUCCESS PAGE to trigger Mission Logic
             // 1. Save pending cart for Success page logic
             localStorage.setItem('tanuki_pending_cart', JSON.stringify(cart));
+
+            // SAFETY: Give the network a tiny bit more time to breathe before the heavy redirect
+            await new Promise(resolve => setTimeout(resolve, 800));
 
             // 2. Redirect
             window.location.href = `/checkout/success?session_id=manual_order_${orderIdStr}`;

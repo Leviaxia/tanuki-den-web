@@ -115,16 +115,22 @@ export const CheckoutSuccess = () => {
                     // Force App.tsx to reload user data
                     window.dispatchEvent(new Event('tanuki_user_update'));
 
-                    // CLEAR CART (Main Feature Fix)
-                    localStorage.removeItem('tanuki_pending_cart');
-                    // We also need to clear the main cart which might be persisted under 'tanuki_cart_USERID'
-                    localStorage.removeItem(`tanuki_cart_${userFn.id}`);
-                    // We trigger an event for App.tsx to clear its state
-                    window.dispatchEvent(new Event('tanuki_cart_clear'));
                 }
-
-                // 5. Clear pending cart (already cleared above, but safe to keep/ensure)
+                
+                // --- ALWAYS CLEAR CART AFTER PROCESSING ---
+                // 1. Clear pending cart
                 localStorage.removeItem('tanuki_pending_cart');
+                
+                // 2. Clear known cart keys (Guest and current user)
+                localStorage.removeItem('tanuki_cart_guest');
+                if (userFn && userFn.id) {
+                    localStorage.removeItem(`tanuki_cart_${userFn.id}`);
+                }
+                
+                // 3. Trigger App.tsx to clear its memory state
+                window.dispatchEvent(new Event('tanuki_cart_clear'));
+
+            } catch (error) {
             } catch (error) {
                 console.error("Error procesando orden:", error);
             } finally {
