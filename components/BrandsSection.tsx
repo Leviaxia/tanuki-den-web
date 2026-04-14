@@ -38,8 +38,8 @@ const BrandsSection: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-6 pt-10 pb-32 md:pb-24 section-reveal">
       <div className="text-center mb-16 relative">
-        <div className="inline-block bg-[#FDF5E6] text-[#3A332F] px-6 py-2 rounded-full font-black text-sm tracking-[0.2em] uppercase mb-6 shadow-sm border border-[#3A332F]/10">
-          Aliados Tanuki Den
+        <div className="inline-block bg-[#FFF8EB] text-[#3A332F] px-5 py-1.5 rounded-full font-bold text-[11px] md:text-xs tracking-[0.25em] uppercase mb-4 border border-[#E8DCC3]">
+          ALIADOS TANUKI DEN
         </div>
         
         <h2 className="text-5xl md:text-6xl font-ghibli-title text-[#3A332F] py-2 relative z-10 uppercase tracking-wider title-shadow mx-auto max-w-4xl px-4 md:px-0 leading-tight md:leading-normal mb-8">

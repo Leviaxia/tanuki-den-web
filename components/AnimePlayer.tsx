@@ -31,7 +31,7 @@ const AnimePlayer: React.FC<AnimePlayerProps> = ({
         ? `right-full mr-3 ${showControls ? 'translate-x-0' : 'translate-x-4'}`
         : direction === 'right' 
         ? `left-full ml-3 ${showControls ? 'translate-x-0' : '-translate-x-4'}`
-        : `top-full right-0 mt-3 md:mt-4 ${showControls ? 'translate-y-0' : '-translate-y-4'}`; // direction === 'down'
+        : `top-full right-0 mt-1.5 md:mt-2 ${showControls ? 'translate-y-0' : '-translate-y-4'}`; // direction === 'down'
 
     return (
         // Removed 'relative' from here. It must be passed in className if needed (e.g. for static/flex parents).
