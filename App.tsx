@@ -580,7 +580,10 @@ const App: React.FC = () => {
               location: profile.location || prev.location,
               birthDate: profile.birth_date || prev.birthDate,
               phone: profile.phone || prev.phone,
-              realName: profile.full_name || prev.realName
+              realName: profile.full_name || prev.realName,
+              shippingAddress: profile.shipping_address || prev.shippingAddress,
+              shippingCity: profile.shipping_city || prev.shippingCity,
+              shippingDepartment: profile.shipping_department || prev.shippingDepartment
             }));
 
             // CLOUD SYNC: Restore cross-device data from DB

@@ -20,6 +20,9 @@ export interface User {
   productsViewed?: number;
   productsFavorited?: number;
   productsShared?: number;
+  shippingAddress?: string;
+  shippingCity?: string;
+  shippingDepartment?: string;
 }
 
 export interface Review {

@@ -4,6 +4,7 @@ import { User, Product, Mission, UserMission, Reward, UserReward } from '../type
 import { supabase } from '../src/lib/supabase';
 import ProductCard from './ProductCard'; // Assuming you have this or need to move logic
 import { formatCurrency } from '../src/lib/utils'; // You might need to move utils or duplicate formatCurrency
+import { departments, colombiaData } from '../src/data/colombia';
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -45,10 +46,31 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     initialTab = 'profile', missions, userMissions, userCoins, onClaimReward, hasUnclaimedMissions = false,
     rewards, userRewards, onPurchaseReward, selectedCoupon, onSelectCoupon
 }) => {
-    const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'missions' | 'coupons'>('profile');
-    const [missionSubTab, setMissionSubTab] = useState<'challenges' | 'store'>('challenges');
     const [orders, setOrders] = useState<any[]>([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [editData, setEditData] = useState({
+        name: user.name,
+        realName: user.realName || '',
+        email: user.email,
+        phone: user.phone || '',
+        shippingAddress: user.shippingAddress || '',
+        shippingCity: user.shippingCity || '',
+        shippingDepartment: user.shippingDepartment || ''
+    });
+
+    useEffect(() => {
+        setEditData({
+            name: user.name,
+            realName: user.realName || '',
+            email: user.email,
+            phone: user.phone || '',
+            shippingAddress: user.shippingAddress || '',
+            shippingCity: user.shippingCity || '',
+            shippingDepartment: user.shippingDepartment || ''
+        });
+    }, [user]);
 
     // Wishlist Selection State
     const [selectedWishlistItems, setSelectedWishlistItems] = useState<Set<string>>(new Set());
@@ -146,6 +168,47 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
         } catch (err: any) {
             console.error('Error uploading photo:', err);
             alert('No se pudo subir la foto.');
+        }
+    };
+
+    const handleSaveProfile = async () => {
+        setSaving(true);
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    display_name: editData.name,
+                    full_name: editData.realName,
+                    email: editData.email,
+                    phone: editData.phone,
+                    shipping_address: editData.shippingAddress,
+                    shipping_city: editData.shippingCity,
+                    shipping_department: editData.shippingDepartment,
+                    location: `${editData.shippingCity}, ${editData.shippingDepartment}`
+                })
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            setUser(prev => ({
+                ...prev,
+                name: editData.name,
+                realName: editData.realName,
+                email: editData.email,
+                phone: editData.phone,
+                shippingAddress: editData.shippingAddress,
+                shippingCity: editData.shippingCity,
+                shippingDepartment: editData.shippingDepartment,
+                location: `${editData.shippingCity}, ${editData.shippingDepartment}`
+            }));
+
+            setIsEditing(false);
+            alert('¡Perfil actualizado con éxito!');
+        } catch (err: any) {
+            console.error('Error updating profile:', err);
+            alert('No se pudo actualizar el perfil.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -256,23 +319,128 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                             </div>
 
                             <div className="bg-white p-6 rounded-[30px] text-left space-y-4 border-2 border-[#E6D5B8] shadow-sm">
-                                <div className="flex items-center gap-3">
-                                    <Mail size={18} className="text-[#C14B3A]" />
-                                    <span className="text-sm font-bold text-[#3A332F]">{user.email || 'No registrado'}</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <MapPin size={18} className="text-[#C14B3A]" />
-                                    <span className="text-sm font-bold text-[#3A332F]">{user.location || 'Sin ubicación'}</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <Phone size={18} className="text-[#C14B3A]" />
-                                    <span className="text-sm font-bold text-[#3A332F]">{user.phone || 'Sin teléfono'}</span>
-                                </div>
+                                {isEditing ? (
+                                    <div className="space-y-4 animate-fade-in">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black text-[#3A332F]/40 uppercase tracking-widest">Nombre de Usuario (Clan)</label>
+                                            <input 
+                                                className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A]"
+                                                value={editData.name}
+                                                onChange={e => setEditData({...editData, name: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black text-[#3A332F]/40 uppercase tracking-widest">Nombre Real</label>
+                                            <input 
+                                                className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A]"
+                                                value={editData.realName}
+                                                onChange={e => setEditData({...editData, realName: e.target.value})}
+                                                placeholder="Tu nombre completo"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black text-[#3A332F]/40 uppercase tracking-widest">Departamento</label>
+                                                <select 
+                                                    className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A]"
+                                                    value={editData.shippingDepartment}
+                                                    onChange={e => setEditData({...editData, shippingDepartment: e.target.value, shippingCity: ''})}
+                                                >
+                                                    <option value="">Seleccionar...</option>
+                                                    {departments.map(dept => (
+                                                        <option key={dept} value={dept}>{dept}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black text-[#3A332F]/40 uppercase tracking-widest">Ciudad</label>
+                                                <select 
+                                                    className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A]"
+                                                    value={editData.shippingCity}
+                                                    onChange={e => setEditData({...editData, shippingCity: e.target.value})}
+                                                    disabled={!editData.shippingDepartment}
+                                                >
+                                                    <option value="">Seleccionar...</option>
+                                                    {editData.shippingDepartment && colombiaData[editData.shippingDepartment]?.map(city => (
+                                                        <option key={city} value={city}>{city}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black text-[#3A332F]/40 uppercase tracking-widest">Dirección de Envío</label>
+                                            <textarea 
+                                                className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A] min-h-[80px]"
+                                                value={editData.shippingAddress}
+                                                onChange={e => setEditData({...editData, shippingAddress: e.target.value})}
+                                                placeholder="Calle, Carrera, Edificio, Apto..."
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black text-[#3A332F]/40 uppercase tracking-widest">Teléfono</label>
+                                            <input 
+                                                className="w-full bg-[#FDF6E3] border-2 border-[#E6D5B8] rounded-xl px-4 py-2 text-sm font-bold text-[#3A332F] focus:outline-none focus:border-[#C14B3A]"
+                                                value={editData.phone}
+                                                onChange={e => setEditData({...editData, phone: e.target.value})}
+                                                placeholder="Tu número celular"
+                                            />
+                                        </div>
+                                        <div className="flex gap-3 pt-2">
+                                            <button 
+                                                onClick={handleSaveProfile}
+                                                disabled={saving}
+                                                className={`flex-1 ${saving ? 'bg-[#3A332F]/50 cursor-not-allowed' : 'bg-[#C14B3A] hover:bg-[#A13A2C]'} text-white font-ghibli-title py-3 rounded-full shadow-md transition-all uppercase tracking-widest text-xs`}
+                                            >
+                                                {saving ? 'Guardando...' : 'Guardar'}
+                                            </button>
+                                            <button 
+                                                onClick={() => setIsEditing(false)}
+                                                className="flex-1 bg-transparent border-2 border-[#3A332F]/10 text-[#3A332F]/60 font-ghibli-title py-3 rounded-full hover:bg-white transition-all uppercase tracking-widest text-xs"
+                                            >
+                                                Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-3">
+                                            <Mail size={18} className="text-[#C14B3A]" />
+                                            <span className="text-sm font-bold text-[#3A332F]">{user.email || 'No registrado'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <MapPin size={18} className="text-[#C14B3A]" />
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-[#3A332F]">{user.location || 'Sin ubicación'}</span>
+                                                {user.shippingAddress && (
+                                                    <span className="text-[10px] text-[#3A332F]/60 font-medium">
+                                                        {user.shippingAddress}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Phone size={18} className="text-[#C14B3A]" />
+                                            <span className="text-sm font-bold text-[#3A332F]">{user.phone || 'Sin teléfono'}</span>
+                                        </div>
+                                        {user.realName && (
+                                            <div className="flex items-center gap-3">
+                                                <UserIcon size={18} className="text-[#C14B3A]" />
+                                                <span className="text-sm font-bold text-[#3A332F]">{user.realName}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
 
                             <div className="space-y-3">
                                 <button onClick={onOpenSubscription} className="w-full bg-[#3A332F] text-white font-ghibli-title py-4 md:py-5 rounded-full shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest text-xs md:text-sm">
                                     ESTATUS DEL CLAN
+                                </button>
+                                <button 
+                                    onClick={() => setIsEditing(true)} 
+                                    className="w-full bg-white border-2 border-[#3A332F] text-[#3A332F] font-ghibli-title py-4 md:py-5 rounded-full shadow-md hover:bg-[#FDF6E3] transition-all uppercase tracking-widest text-xs md:text-sm"
+                                >
+                                    Editar datos personales
                                 </button>
                                 <button onClick={onLogout} className="md:hidden w-full bg-transparent border-2 border-[#3A332F]/10 text-[#3A332F]/60 font-ghibli-title py-4 rounded-full hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all uppercase tracking-widest text-[10px]">
                                     CERRAR SESIÓN

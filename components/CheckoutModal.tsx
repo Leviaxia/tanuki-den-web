@@ -26,6 +26,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const [step, setStep] = useState<'summary' | 'shipping' | 'payment'>('summary');
     const [isProcessing, setIsProcessing] = useState(false);
     const [success, setSuccess] = useState(false);
+    const isAutoFilling = React.useRef(false);
 
     // Shipping State
     const [shipping, setShipping] = useState({ fullName: '', department: '', city: '', address: '', phone: '' });
@@ -77,12 +78,28 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             setStep('summary');
             setSuccess(false);
             setIsProcessing(false);
-        }
-    }, [isOpen]);
 
-    // Reset city when department changes
+            // Auto-fill from user profile
+            if (user) {
+                isAutoFilling.current = true;
+                setShipping({
+                    fullName: user.realName || user.name || '',
+                    phone: user.phone || '',
+                    address: user.shippingAddress || '',
+                    department: user.shippingDepartment || '',
+                    city: user.shippingCity || ''
+                });
+                // Small timeout to let the department effect check the ref
+                setTimeout(() => { isAutoFilling.current = false; }, 100);
+            }
+        }
+    }, [isOpen, user]);
+
+    // Reset city when department changes - skip if auto-filling or if city is already set (initial load)
     useEffect(() => {
-        setShipping(prev => ({ ...prev, city: '' }));
+        if (!isAutoFilling.current) {
+            setShipping(prev => ({ ...prev, city: '' }));
+        }
     }, [shipping.department]);
 
     if (!isOpen) return null;
