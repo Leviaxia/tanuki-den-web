@@ -146,11 +146,11 @@ const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       <nav className="fixed md:absolute xl:fixed top-0 left-0 right-0 z-[1000] bg-white/95 backdrop-blur-xl border-b-[6px] border-[#FDF5E6] shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10">
+        <div className="max-w-7xl mx-auto px-4 md:px-4 lg:px-6">
           <div className="flex justify-between items-center h-24 md:h-28">
 
-            <div className="flex items-center gap-4 md:gap-5 cursor-pointer group relative z-[1001]" onClick={() => handleNavClick('inicio')}>
-              <div className="relative w-14 h-14 md:w-16 md:h-16 flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-4 md:gap-3 cursor-pointer group relative z-[1001]" onClick={() => handleNavClick('inicio')}>
+              <div className="relative w-14 h-14 md:w-14 md:h-14 flex items-center justify-center shrink-0">
                 <div className="w-full h-full bg-[#C14B3A] rounded-full flex items-center justify-center border-2 border-white shadow-md overflow-hidden">
                   <img src="/assets/tanuki-logo.png" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform" alt="Tanuki Den Logo" />
                 </div>
