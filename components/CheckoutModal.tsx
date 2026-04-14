@@ -40,19 +40,28 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const [showFullQr, setShowFullQr] = useState(false);
 
     // Calculation Logic
-    // const baseShipping = 15000; // Removed per user request
     const rewardInfo = coupon ? rewards.find(r => r.id === coupon.reward_id) : null;
     const couponValue = rewardInfo ? (rewardInfo.value as any) : {};
 
-    // 1. apply roulette discount to products
-    const subtotalAfterRoulette = total - (total * (discount / 100));
+    // 0. calculate membership discount
+    const MEMBERSHIP_DISCOUNTS: Record<string, number> = {
+        bronze: 5,
+        silver: 7,
+        gold: 10,
+        founder: 15,
+    };
+    const membershipDiscount = MEMBERSHIP_DISCOUNTS[user?.membership] || 0;
 
-    // 2. apply coupon discount (product based)
+    // 1. apply percentage discounts (Roulette + Membership stack)
+    const totalPercentageDiscount = (discount || 0) + membershipDiscount;
+    const subtotalAfterPercentage = total - (total * (totalPercentageDiscount / 100));
+
+    // 2. apply coupon discount (Flat amount or restricted percent)
     let couponDiscountAmount = 0;
     if (couponValue.discount) { // Flat discount
         couponDiscountAmount = couponValue.discount;
     } else if (couponValue.discount_percent) { // Percent discount
-        couponDiscountAmount = subtotalAfterRoulette * (couponValue.discount_percent / 100);
+        couponDiscountAmount = subtotalAfterPercentage * (couponValue.discount_percent / 100);
     }
 
     // Check min purchase for coupon
@@ -60,7 +69,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
         couponDiscountAmount = 0; // Requirement not met
     }
 
-    const subtotalAfterCoupon = Math.max(0, subtotalAfterRoulette - couponDiscountAmount);
+    const subtotalAfterCoupon = Math.max(0, subtotalAfterPercentage - couponDiscountAmount);
 
     // 3. calculate shipping
     // User requested no fixed shipping cost, and remove 50% off. Only Free Shipping works.
@@ -237,6 +246,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         // Clear selected coupon
                         localStorage.removeItem(`tanuki_selected_coupon_${user.id}`);
                     }
+
+                    // --- CONSUME ROULETTE DISCOUNT ---
+                    // This ensures the discount is single-use as requested
+                    if (discount > 0) {
+                        // 1. Clear from Supabase to prevent multi-device reuse
+                        const { error: discError } = await supabase.from('profiles')
+                            .update({ discount: 0 })
+                            .eq('id', user.id);
+                        
+                        if (discError) console.error("Error clearing roulette discount in DB:", discError);
+
+                        // 2. Clear from LocalStorage
+                        localStorage.removeItem(`tanuki_discount_${user.id}`);
+                        console.log("[Checkout] Roulette discount consumed.");
+                    }
                 }
             }
 
@@ -358,6 +382,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                                                 <span>Subtotal</span>
                                                 <span>${formatCurrency(total)}</span>
                                             </div>
+
+                                            {membershipDiscount > 0 && (
+                                                <div className="flex justify-between w-full text-sm text-[#D4AF37] font-bold">
+                                                    <span className="flex items-center gap-1"><ShieldCheck size={12} /> Beneficio {user?.membership} (-{membershipDiscount}%)</span>
+                                                    <span>-${formatCurrency(total * (membershipDiscount / 100))}</span>
+                                                </div>
+                                            )}
 
                                             {discount > 0 && (
                                                 <div className="flex justify-between w-full text-sm text-[#C14B3A]">

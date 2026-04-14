@@ -605,16 +605,13 @@ const App: React.FC = () => {
             }
             // Only overwrite local if DB has valid data for other fields
             if (profile.cart && Array.isArray(profile.cart)) setCart(profile.cart);
-            // Apply membership discount OR normal discount (handle expiry logic on init)
+            // Apply ONLY roulette discount (handle expiry logic on init if needed)
             let finalDiscount = profile.discount || 0;
-            if (profile.membership && profile.membership_expiry) {
-               const now = new Date();
-               const isExpired = new Date(profile.membership_expiry) < now;
-               if (isExpired) {
-                 finalDiscount = 0; // Strip discount back if expired
-                 console.log("[BG] Membership expired! Disabling discount.");
-               }
-            }
+            
+            // If the discount in the profile was actually a membership discount from the old version, 
+            // and it doesn't match a roulette win, we might want to clear it.
+            // But for now, we'll just treat 'discount' as the roulette-only field moving forward.
+            
             setAppliedDiscount(finalDiscount);
             if (typeof profile.has_spun === 'boolean') setHasSpunFirst(profile.has_spun);
           }
@@ -2402,24 +2399,60 @@ const App: React.FC = () => {
               </div>
               {cart.length > 0 && (
                 <div className="p-6 md:p-8 bg-[#FDF5E6] space-y-4 md:space-y-6">
-                  {appliedDiscount > 0 ? (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm md:text-base font-bold text-[#8C8279]">
-                        <span>Subtotal</span>
-                        <span className="line-through">${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span>
-                      </div>
-                      <div className="flex justify-between text-sm md:text-base font-black text-[#C14B3A] animate-pulse">
-                        <span>Descuento ({appliedDiscount}%)</span>
-                        <span>-${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0) * (appliedDiscount / 100))}</span>
-                      </div>
-                      <div className="flex justify-between text-xl md:text-2xl font-ghibli-title pt-2 border-t border-[#3A332F]/10">
+                  {(() => {
+                    const subtotal = cart.reduce((a, c) => a + (c.price * c.quantity), 0);
+                    const MEMBERSHIP_DISCOUNTS: Record<string, number> = {
+                      bronze: 5,
+                      silver: 7,
+                      gold: 10,
+                      founder: 15,
+                    };
+                    const mDiscount = MEMBERSHIP_DISCOUNTS[user?.membership as string] || 0;
+                    const rDiscount = appliedDiscount || 0;
+                    const totalPct = mDiscount + rDiscount;
+                    const totalDiscountAmount = subtotal * (totalPct / 100);
+                    const finalTotal = subtotal - totalDiscountAmount;
+
+                    if (totalPct > 0) {
+                      return (
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm md:text-base font-bold text-[#8C8279]">
+                            <span>Subtotal</span>
+                            <span className="line-through">${formatCurrency(subtotal)}</span>
+                          </div>
+                          {mDiscount > 0 && (
+                            <div className="flex justify-between text-sm md:text-base font-bold text-[#D4AF37]">
+                              <span>Beneficio {user.membership}</span>
+                              <span>-{mDiscount}%</span>
+                            </div>
+                          )}
+                          {rDiscount > 0 && (
+                            <div className="flex justify-between text-sm md:text-base font-bold text-[#C14B3A]">
+                              <span>Descuento Ruleta</span>
+                              <span>-{rDiscount}%</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-xl md:text-2xl font-ghibli-title pt-2 border-t border-[#3A332F]/10">
+                            <span>TOTAL</span>
+                            <span className="text-[#C14B3A]">
+                              <span className="text-[#C14B3A]">$</span>{formatCurrency(finalTotal)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="flex justify-between text-xl md:text-2xl font-ghibli-title">
                         <span>TOTAL</span>
-                        <span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0) * (1 - appliedDiscount / 100))}</span>
+                        <div className="text-right">
+                          <span className="text-[#C14B3A]">
+                            <span className="text-[#C14B3A]">$</span>{formatCurrency(subtotal)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="flex justify-between text-xl md:text-2xl font-ghibli-title"><span>TOTAL</span><div className="text-right"><span className="text-[#C14B3A]"><span className="text-[#C14B3A]">$</span>{formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span></div></div>
-                  )}
+                    );
+                  })()}
                   <button onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }} className="w-full bg-[#3A332F] text-white font-ghibli-title py-4 md:py-6 rounded-full text-base md:text-lg shadow-xl hover:bg-[#C14B3A] transition-all uppercase tracking-widest">FINALIZAR PEDIDO</button>
                 </div>
               )}
@@ -2466,15 +2499,14 @@ const App: React.FC = () => {
               isRegistered: true,
             }));
 
-            // Apply the membership discount (replaces any roulette discount)
-            setAppliedDiscount(discountPct);
+            // Apply the membership change (but DO NOT overwrite appliedDiscount anymore)
+            // Membership discount will be calculated dynamically in CheckoutModal and cart displays
             setHasSpunFirst(false); // allow the wheel again after next purchase
 
-            // Persist membership + expiry + discount to Supabase profile
+            // Persist membership + expiry to Supabase profile (removed 'discount' update)
             supabase.from('profiles').update({
               membership: planId,
-              membership_expiry: expiryISO,
-              discount: discountPct,
+              membership_expiry: expiryISO
             }).eq('id', user.id).then(({ error }) => {
               if (error) console.error('Error saving membership to DB:', error);
             });
@@ -2482,8 +2514,7 @@ const App: React.FC = () => {
             // Regular purchase: reset roulette cycle
             if (appliedDiscount > 0 || hasSpunFirst) {
               setHasSpunFirst(false);
-              // Only clear discount if it was from the wheel, not from membership
-              if (!user.membership) setAppliedDiscount(0);
+              // We'll clear appliedDiscount in CheckoutModal now to ensure it's single use
             }
           }
 
