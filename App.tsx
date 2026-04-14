@@ -139,12 +139,6 @@ const App: React.FC = () => {
   // FIX: Restore Supabase Session on Mount to ensure RLS works
   useEffect(() => {
     const restoreSession = async () => {
-      // 1. Check for recovery hash first
-      if (window.location.hash.includes('type=recovery')) {
-        setAuthInitialStep('update-password');
-        setIsAuthModalOpen(true);
-      }
-
       const savedLocal = localStorage.getItem('tanuki-auth-token');
       if (savedLocal) {
         try {
@@ -156,10 +150,8 @@ const App: React.FC = () => {
             });
             if (error) {
               console.error("Error restoring session:", error);
-              // Clear invalid session data to prevent RLS errors
               localStorage.removeItem('tanuki-auth-token');
               sessionStorage.removeItem('tanuki_user');
-              // Force reload to reset state cleanly
               window.location.reload();
             } else {
               console.log("Session restored for RLS.");
@@ -169,9 +161,19 @@ const App: React.FC = () => {
           console.error("Error parsing session for restore", e);
         }
       }
-      setIsSessionReady(true); // [NEW] Signal that session (or lack thereof) is ready
+      setIsSessionReady(true);
     };
     restoreSession();
+
+    // Listen for PASSWORD_RECOVERY event (triggered when user clicks the reset link in their email)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setAuthInitialStep('update-password');
+        setIsAuthModalOpen(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const [favorites, setFavorites] = useState<string[]>(() => {
