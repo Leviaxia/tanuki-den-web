@@ -118,6 +118,7 @@ export const CheckoutSuccess = () => {
                     // CLEAR CART (Main Feature Fix)
                     localStorage.removeItem('tanuki_pending_cart');
                     // We also need to clear the main cart which might be persisted under 'tanuki_cart_USERID'
+                    localStorage.removeItem(`tanuki_cart_${userFn.id}`);
                     // We trigger an event for App.tsx to clear its state
                     window.dispatchEvent(new Event('tanuki_cart_clear'));
                 }

@@ -2398,7 +2398,7 @@ const App: React.FC = () => {
                         <span className="line-through">${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0))}</span>
                       </div>
                       <div className="flex justify-between text-sm md:text-base font-black text-[#C14B3A] animate-pulse">
-                        <span>🎉 Descuento ({appliedDiscount}%)</span>
+                        <span>Descuento ({appliedDiscount}%)</span>
                         <span>-${formatCurrency(cart.reduce((a, c) => a + (c.price * c.quantity), 0) * (appliedDiscount / 100))}</span>
                       </div>
                       <div className="flex justify-between text-xl md:text-2xl font-ghibli-title pt-2 border-t border-[#3A332F]/10">
