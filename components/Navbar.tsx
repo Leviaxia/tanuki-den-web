@@ -156,7 +156,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
               <div className="flex flex-col justify-center">
-                <span className="text-xl md:text-[28px] lg:text-[34px] font-ghibli-title tracking-tighter text-[#3A332F] leading-none whitespace-nowrap">TANUKI DEN</span>
+                <span className="text-xl md:text-[24px] lg:text-[28px] font-ghibli-title tracking-tighter text-[#3A332F] leading-none whitespace-nowrap">TANUKI DEN</span>
                 <span className="text-[8px] md:text-[10px] lg:text-xs font-black text-[#8C8279] tracking-[0.4em] uppercase hidden sm:block md:hidden">ESPÍRITU DE COLECCIÓN</span>
               </div>
             </div>
