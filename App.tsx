@@ -15,6 +15,8 @@ import CheckoutModal from './components/CheckoutModal';
 import ShareModal from './components/ShareModal';
 import { createClient } from '@supabase/supabase-js';
 import BrandsSection from './components/BrandsSection';
+import SupportPages from './components/SupportPages';
+
 
 import { PRODUCTS, heroText, MISSIONS, collectionsContent } from './constants';
 import { Product, CartItem, UserMessage, Review, User as UserType, Collection, Mission, UserMission, Reward, UserReward, ProductVariant } from './types';
@@ -442,6 +444,18 @@ const App: React.FC = () => {
       newSelectedProduct = null;
     } else if (path === '/colecciones') {
       newActiveTab = 'colecciones';
+      newSelectedProduct = null;
+    } else if (path === '/rastreo') {
+      newActiveTab = 'rastreo';
+      newSelectedProduct = null;
+    } else if (path === '/faq') {
+      newActiveTab = 'faq';
+      newSelectedProduct = null;
+    } else if (path === '/terminos-ancestrales') {
+      newActiveTab = 'terminos';
+      newSelectedProduct = null;
+    } else if (path === '/privacidad-del-clan') {
+      newActiveTab = 'privacidad';
       newSelectedProduct = null;
     } else if (path.startsWith('/colecciones/')) {
       newActiveTab = 'colecciones';
@@ -1235,7 +1249,11 @@ const App: React.FC = () => {
       'inicio': '/',
       'figuras': '/catalogo',
       'personalizacion': '/taller',
-      'colecciones': '/colecciones'
+      'colecciones': '/colecciones',
+      'rastreo': '/rastreo',
+      'faq': '/faq',
+      'terminos': '/terminos-ancestrales',
+      'privacidad': '/privacidad-del-clan'
     };
     
     navigate(routes[id] || '/');
@@ -1726,6 +1744,11 @@ const App: React.FC = () => {
         );
       case 'marcas':
         return <BrandsSection />;
+      case 'rastreo':
+      case 'faq':
+      case 'terminos':
+      case 'privacidad':
+        return <SupportPages activeSection={activeTab as any} onBack={() => handleNavClick('inicio')} />;
       default:
         return (
           <div className="space-y-24 pb-24">
@@ -2770,10 +2793,10 @@ const App: React.FC = () => {
             <div className="hidden md:block space-y-8">
               <h4 className="font-ghibli-title text-2xl text-[#D4AF37] uppercase tracking-widest">Soporte</h4>
               <ul className="space-y-5 font-bold text-[10px] uppercase tracking-[0.2em] text-white/60">
-                <li className="hover:text-white cursor-pointer transition-colors">Seguir Tesoro</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Preguntas Frecuentes</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Términos Ancestrales</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Privacidad del Clan</li>
+                <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('rastreo')}>Seguir Tesoro</li>
+                <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('faq')}>Preguntas Frecuentes</li>
+                <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('terminos')}>Términos Ancestrales</li>
+                <li className="hover:text-white cursor-pointer transition-colors" onClick={() => handleNavClick('privacidad')}>Privacidad del Clan</li>
               </ul>
             </div>
 
