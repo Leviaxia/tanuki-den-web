@@ -39,9 +39,7 @@ export const sendOrderEmail = async (params: EmailParams) => {
             return;
         }
 
-        // Initialize SDK
-        emailjs.init(publicKey);
-
+        // Passing publicKey as 4th argument handles initialization per-call
         const response = await emailjs.send(serviceId, adminTemplateId, params as any, publicKey);
         console.log('Admin email sent!', response.status, response.text);
         return response;
@@ -57,25 +55,24 @@ export const sendReceiptEmail = async (params: ReceiptEmailParams) => {
         const { serviceId, receiptTemplateId, publicKey } = getKeys();
 
         if (!serviceId || !receiptTemplateId || !publicKey) {
-            console.warn('EmailJS receipt keys are missing. Skipping receipt email.');
+            console.warn('EmailJS receipt keys are missing or VITE_EMAILJS_RECEIPT_TEMPLATE_ID is not set.');
             return;
         }
 
-        // Initialize SDK to ensure the public key is set globally
-        emailjs.init(publicKey);
-
         // Map internal params to common EmailJS variable names to ensure delivery
-        // Many templates use to_email/to_name by default.
         const templateParams = {
             ...params,
             to_email: params.customer_email,
-            user_email: params.customer_email, // Another common default
+            user_email: params.customer_email,
             to_name: params.customer_name,
-            customer_name: params.customer_name,
-            reply_to: params.customer_email
+            reply_to: params.customer_email,
+            // Include raw total for templates that use {{total}} instead of {{total_amount}}
+            total: params.total_amount 
         };
 
         const response = await emailjs.send(serviceId, receiptTemplateId, templateParams, publicKey);
+        console.log('Receipt email sent to customer!', response.status, response.text);
+        return response;
     } catch (error) {
         console.error('Failed to send receipt email:', error);
         // Don't throw — receipt failure should not block the order completion

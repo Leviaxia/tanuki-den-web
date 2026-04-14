@@ -246,6 +246,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             } catch (err) {
                 console.warn("Error sending admin email, continuing...", err);
             }
+
+            // Small delay to ensure browser dispatches both requests separately
+            await new Promise(resolve => setTimeout(resolve, 500));
             
             // Send receipt email to the customer
             const paymentLabel = method === 'nequi' ? 'Nequi' : method === 'card' ? 'Tarjeta' : 'Bancolombia';
