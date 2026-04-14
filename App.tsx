@@ -546,6 +546,7 @@ const App: React.FC = () => {
             setUser(prev => ({
               ...prev,
               membership: profile.membership || prev.membership,
+              membershipExpiry: profile.membership_expiry || prev.membershipExpiry,
               photo: profile.avatar_url || prev.photo,
               location: profile.location || prev.location,
               birthDate: profile.birth_date || prev.birthDate,
@@ -561,7 +562,17 @@ const App: React.FC = () => {
             }
             // Only overwrite local if DB has valid data for other fields
             if (profile.cart && Array.isArray(profile.cart)) setCart(profile.cart);
-            if (typeof profile.discount === 'number') setAppliedDiscount(profile.discount);
+            // Apply membership discount OR normal discount (handle expiry logic on init)
+            let finalDiscount = profile.discount || 0;
+            if (profile.membership && profile.membership_expiry) {
+               const now = new Date();
+               const isExpired = new Date(profile.membership_expiry) < now;
+               if (isExpired) {
+                 finalDiscount = 0; // Strip discount back if expired
+                 console.log("[BG] Membership expired! Disabling discount.");
+               }
+            }
+            setAppliedDiscount(finalDiscount);
             if (typeof profile.has_spun === 'boolean') setHasSpunFirst(profile.has_spun);
           }
         }
@@ -574,7 +585,6 @@ const App: React.FC = () => {
 
     refreshProfile();
 
-    // 3. Realtime Subscription (Instant Sync across devices)
     // 3. Realtime Subscription (Instant Sync across devices)
     if (user.id !== 'guest') {
       const profileChannel = supabase.channel(`public:profiles:id=eq.${user.id}`)
@@ -1980,25 +1990,104 @@ const App: React.FC = () => {
             <div className="bg-[#FDF5E6] w-full max-w-6xl rounded-[40px] md:rounded-[60px] p-6 md:p-10 relative animate-pop border-4 md:border-4 border-white shadow-2xl my-8">
               <button onClick={() => setIsSubscriptionModalOpen(false)} className="absolute top-4 right-4 md:top-8 md:right-8 hover:rotate-90 transition-transform bg-white/80 p-2 rounded-full shadow-lg z-50 text-[#3A332F]"><X className="w-6 h-6 md:w-8 md:h-8" /></button>
 
-              {user.membership ? (
-                /* Vista de Usuario Suscrito */
-                (() => {
-                  const plans = [
-                    { name: 'Semilla', price: '40000', period: 'Mensual', color: '#4A6741', id: 'bronze', benefits: ['Insignia del Clan', 'Chat Exclusivo', 'Soporte Prioritario', 'Preventas 24h'] },
-                    { name: 'Brote', price: '100000', period: 'Trimestral', color: '#5D4037', id: 'silver', benefits: ['Todo lo Mensual', '5% OFF Base', 'Acceso al Taller Mágico', 'Sticker Pack Digital'] },
-                    { name: 'Rama', price: '180000', period: 'Semestral', color: '#C14B3A', id: 'gold', benefits: ['Todo lo Trimestral', 'Regalo de Cumpleaños', 'Sorteos Exclusivos', 'Unboxing VIP'] },
-                    { name: 'Espíritu', price: '320000', period: 'Anual', color: '#D4AF37', id: 'founder', featured: true, benefits: ['ENVÍOS GRATIS SIEMPRE', 'Todo lo Semestral', 'Carnet Físico Clan', 'Rango Leyenda VIP'] }
-                  ];
-                  const currentPlan = plans.find(p => p.id === user.membership);
+              {(() => {
+                // Centralized plan definitions — single source of truth
+                const PLANS = [
+                  {
+                    id: 'bronze',
+                    name: 'Semilla',
+                    icon: '/assets/semilla.png',
+                    price: 39900,
+                    period: 'Mensual',
+                    color: '#4A6741',
+                    discountPct: 5,
+                    featured: false,
+                    benefits: [
+                      '5% de descuento permanente en toda la tienda',
+                      'Acceso anticipado a preventas (24h antes)',
+                      'Prioridad en productos de stock limitado',
+                      'Acceso a sorteos exclusivos para miembros',
+                      'Asegura unidades antes de agotarse',
+                    ]
+                  },
+                  {
+                    id: 'silver',
+                    name: 'Brote',
+                    icon: '/assets/brote.png',
+                    price: 84900,
+                    period: 'Mensual',
+                    color: '#5D8A3C',
+                    discountPct: 7,
+                    featured: false,
+                    benefits: [
+                      '7% de descuento permanente en toda la tienda',
+                      'Acceso anticipado a preventas y lanzamientos',
+                      '🎁 1 artículo físico mensual garantizado',
+                      'Posibilidad de variante rara dentro del artículo',
+                      'Participación en sorteos exclusivos para miembros',
+                      'Acceso preferencial a reposiciones',
+                    ]
+                  },
+                  {
+                    id: 'gold',
+                    name: 'Rama',
+                    icon: '/assets/rama.png',
+                    price: 159900,
+                    period: 'Mensual',
+                    color: '#C14B3A',
+                    discountPct: 10,
+                    featured: true,
+                    benefits: [
+                      '10% de descuento permanente en la tienda',
+                      'Acceso anticipado a todos los drops limitados',
+                      '🎁 1 figura principal mensual (valor ≥ precio del plan)',
+                      '🎁 1 artículo adicional coleccionable',
+                      'Participación en sorteos premium',
+                      '🎂 Obsequio especial en tu mes de cumpleaños',
+                      'Prioridad absoluta en productos de alta rotación',
+                    ]
+                  },
+                  {
+                    id: 'founder',
+                    name: 'Espíritu',
+                    icon: '/assets/espiritu.png',
+                    price: 309900,
+                    period: 'Mensual',
+                    color: '#D4AF37',
+                    discountPct: 15,
+                    featured: false,
+                    benefits: [
+                      '15% de descuento permanente en la tienda',
+                      'Acceso total a todos los lanzamientos y piezas limitadas',
+                      '🎁 1 figura premium mensual (escala / edición especial)',
+                      '🎁 1 exclusivo no disponible para el público general',
+                      '🚚 ENVÍOS GRATIS en todos los pedidos',
+                      '🎟 Sorteos de alto nivel y drops ocultos',
+                      '🧾 Carnet físico de miembro del clan',
+                    ]
+                  }
+                ];
+
+                if (user.membership) {
+                  // --- SUBSCRIBED VIEW ---
+                  const currentPlan = PLANS.find(p => p.id === user.membership);
+                  const isExpired = user.membershipExpiry ? new Date(user.membershipExpiry) < new Date() : false;
 
                   return (
                     <div className="text-center space-y-12 py-8">
                       <div className="space-y-4">
-                        <div className="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center border-4 border-[#3A332F] shadow-lg animate-bounce-subtle mb-6">
-                          <Crown style={{ color: currentPlan?.color || '#3A332F' }} size={40} />
+                        <div className="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center border-4 border-[#3A332F] shadow-lg animate-bounce-subtle mb-6 overflow-hidden">
+                          {currentPlan?.icon
+                            ? <img src={currentPlan.icon} alt={currentPlan.name} className="w-16 h-16 object-contain" />
+                            : <Crown style={{ color: currentPlan?.color || '#3A332F' }} size={40} />}
                         </div>
-                        <h2 className="text-4xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">Mi Pacto <span style={{ color: currentPlan?.color || '#C14B3A' }}>{currentPlan?.name}</span></h2>
-                        <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Eres parte de la leyenda del bosque</p>
+                        <h2 className="text-4xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">
+                          Mi Pacto <span style={{ color: currentPlan?.color || '#C14B3A' }}>{currentPlan?.name}</span>
+                        </h2>
+                        {isExpired
+                          ? <p className="text-[#C14B3A] font-black uppercase tracking-[0.3em] text-xs">⚠ Tu membresía ha expirado — renueva para recuperar tu descuento</p>
+                          : <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Eres parte de la leyenda del bosque · {currentPlan?.discountPct}% OFF activo</p>
+                        }
                       </div>
 
                       <div className="max-w-2xl mx-auto bg-white p-10 rounded-[50px] border-4 border-[#3A332F] shadow-xl relative overflow-hidden">
@@ -2007,73 +2096,83 @@ const App: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
                           {currentPlan?.benefits.map((benefit, i) => (
                             <div key={i} className="flex items-center gap-4 group">
-                              <div className="w-10 h-10 rounded-full bg-[#FDF5E6] flex items-center justify-center text-[#C14B3A] group-hover:scale-110 transition-transform">
+                              <div className="w-10 h-10 rounded-full bg-[#FDF5E6] flex items-center justify-center text-[#C14B3A] group-hover:scale-110 transition-transform shrink-0">
                                 <CheckCircle2 size={20} />
                               </div>
-                              <span className="font-bold text-[#3A332F] text-sm md:text-base">{benefit}</span>
+                              <span className={`font-bold text-sm md:text-base ${benefit.includes('GRATIS') ? 'text-[#C14B3A] font-black' : 'text-[#3A332F]'}`}>{benefit}</span>
                             </div>
                           ))}
                         </div>
                       </div>
 
                       <div className="pt-4">
-                        <p className="text-[#3A332F]/60 text-xs font-bold uppercase tracking-widest mb-6">Tu membresía se renueva automáticamente</p>
+                        <p className="text-[#3A332F]/60 text-xs font-bold uppercase tracking-widest mb-6">Tu membresía se renueva automáticamente cada mes</p>
                         <button onClick={() => setIsSubscriptionModalOpen(false)} className="bg-[#3A332F] text-white font-ghibli-title py-4 px-12 rounded-full text-lg shadow-lg hover:bg-[#C14B3A] transition-all uppercase tracking-widest">VOLVER AL BOSQUE</button>
                       </div>
                     </div>
                   );
-                })()
-              ) : (
-                /* Vista de Selección de Planes (Original) */
-                <div className="text-center space-y-12">
-                  <div className="space-y-4">
-                    <h2 className="text-5xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">Gremio <span className="text-[#C14B3A]">Tanuki</span></h2>
-                    <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Forja tu destino con el Clan más exclusivo de coleccionistas</p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-                    {[
-                      { name: 'Semilla', price: '40000', period: 'Mensual', color: '#4A6741', id: 'bronze', benefits: ['Insignia del Clan', 'Chat Exclusivo', 'Soporte Prioritario', 'Preventas 24h'] },
-                      { name: 'Brote', price: '100000', period: 'Trimestral', color: '#5D4037', id: 'silver', benefits: ['Todo lo Mensual', '5% OFF Base', 'Acceso al Taller Mágico', 'Sticker Pack Digital'] },
-                      { name: 'Rama', price: '180000', period: 'Semestral', color: '#C14B3A', id: 'gold', benefits: ['Todo lo Trimestral', 'Regalo de Cumpleaños', 'Sorteos Exclusivos', 'Unboxing VIP'] },
-                      { name: 'Espíritu', price: '320000', period: 'Anual', color: '#D4AF37', id: 'founder', featured: true, benefits: ['ENVÍOS GRATIS SIEMPRE', 'Todo lo Semestral', 'Carnet Físico Clan', 'Rango Leyenda VIP'] }
-                    ].map((plan) => (
-                      <div key={plan.id} className={`relative bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border-4 border-[#3A332F] space-y-6 md:space-y-8 flex flex-col transition-all hover:-translate-y-4 shadow-xl ${plan.featured ? 'ring-4 ring-[#C14B3A]/20 scale-100 md:scale-105 z-10' : ''}`}>
-                        {plan.featured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#C14B3A] text-white px-6 py-1 rounded-full text-[10px] font-ghibli-title uppercase tracking-widest shadow-lg">Más Popular</div>}
-                        <div className="space-y-2 text-center">
-                          <div className="w-16 h-16 bg-[#FDF5E6] rounded-2xl mx-auto flex items-center justify-center border-2 border-[#3A332F] shadow-sm"><Crown style={{ color: plan.color }} size={28} /></div>
-                          <h3 className="font-ghibli-title text-2xl uppercase text-[#3A332F] pt-2">{plan.name}</h3>
-                          <p className="text-[10px] font-black uppercase text-[#8C8279] tracking-widest">{plan.period}</p>
+                }
+
+                // --- PLAN SELECTION VIEW ---
+                return (
+                  <div className="text-center space-y-12">
+                    <div className="space-y-4">
+                      <h2 className="text-5xl md:text-6xl font-ghibli-title text-[#3A332F] uppercase tracking-tighter">Gremio <span className="text-[#C14B3A]">Tanuki</span></h2>
+                      <p className="text-[#8C8279] font-black uppercase tracking-[0.3em] text-xs">Forja tu destino con el Clan más exclusivo de coleccionistas</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                      {PLANS.map((plan) => (
+                        <div key={plan.id} className={`relative bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border-4 border-[#3A332F] space-y-5 flex flex-col transition-all hover:-translate-y-3 shadow-xl ${plan.featured ? 'ring-4 ring-[#C14B3A]/30 scale-100 md:scale-105 z-10' : ''}`}>
+                          {plan.featured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#C14B3A] text-white px-6 py-1 rounded-full text-[10px] font-ghibli-title uppercase tracking-widest shadow-lg whitespace-nowrap">🔥 Más Popular</div>}
+
+                          <div className="space-y-2 text-center">
+                            <div className="w-16 h-16 bg-[#FDF5E6] rounded-2xl mx-auto flex items-center justify-center border-2 border-[#3A332F] shadow-sm overflow-hidden">
+                              <img src={plan.icon} alt={plan.name} className="w-12 h-12 object-contain" onError={e => { (e.target as HTMLImageElement).style.display='none'; }} />
+                            </div>
+                            <h3 className="font-ghibli-title text-2xl uppercase text-[#3A332F] pt-2">{plan.name}</h3>
+                            <p className="text-[10px] font-black uppercase text-[#8C8279] tracking-widest">{plan.period}</p>
+                          </div>
+
+                          <div className="text-center">
+                            <p className="text-3xl md:text-4xl font-ghibli-title tracking-tighter" style={{ color: plan.color }}>
+                              <span className="text-lg mr-1">$</span>{formatCurrency(plan.price)}
+                            </p>
+                            <p className="text-xs font-black mt-1" style={{ color: plan.color }}>{plan.discountPct}% OFF permanente</p>
+                          </div>
+
+                          <ul className="flex-grow space-y-2.5">
+                            {plan.benefits.map((benefit, i) => (
+                              <li key={i} className="flex items-start gap-2 text-left">
+                                <CheckCircle2 size={15} className="mt-0.5 shrink-0" style={{ color: plan.featured ? '#C14B3A' : '#4A6741' }} />
+                                <span className={`text-[11px] font-bold leading-tight ${benefit.includes('GRATIS') ? 'text-[#C14B3A] font-black' : 'text-[#3A332F]'}`}>{benefit}</span>
+                              </li>
+                            ))}
+                          </ul>
+
+                          <button onClick={() => {
+                            const subProduct: Product = {
+                              id: `sub-${plan.id}`,
+                              name: `Membresía ${plan.name} — ${plan.discountPct}% OFF (${plan.period})`,
+                              category: 'Limited',
+                              price: plan.price,
+                              description: `Acceso y privilegios del Clan Tanuki - Nivel ${plan.name}. Incluye ${plan.discountPct}% de descuento permanente en toda la tienda.`,
+                              image: plan.icon,
+                              stock: 999,
+                              rating: 5,
+                              benefits: plan.benefits,
+                            };
+                            setCart(prev => [...prev.filter(item => !item.id.startsWith('sub-')), { ...subProduct, quantity: 1 }]);
+                            setIsSubscriptionModalOpen(false);
+                            setIsCheckoutOpen(true);
+                          }} className={`w-full py-4 rounded-full font-ghibli-title text-sm transition-all shadow-md active:scale-95 ${plan.featured ? 'bg-[#C14B3A] text-white hover:bg-[#3A332F]' : 'bg-[#3A332F] text-white hover:bg-[#C14B3A]'}`}>
+                            FORJAR PACTO
+                          </button>
                         </div>
-                        <div className="text-center"><p className="text-3xl md:text-4xl font-ghibli-title text-[#C14B3A] tracking-tighter"><span className="text-lg mr-1">$</span>{formatCurrency(Number(plan.price))}</p></div>
-                        <ul className="flex-grow space-y-3">
-                          {plan.benefits.map((benefit, i) => (
-                            <li key={i} className="flex items-center gap-3 text-left">
-                              <CheckCircle2 size={16} className={plan.featured ? "text-[#C14B3A]" : "text-[#81C784]"} />
-                              <span className={`text-[11px] font-bold ${benefit.includes('GRATIS') ? 'text-[#C14B3A] font-black underline decoration-2' : 'text-[#3A332F]'}`}>{benefit}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        <button onClick={() => {
-                          const subProduct: Product = {
-                            id: `sub-${plan.id}`,
-                            name: `Membresía ${plan.name} (${plan.period})`,
-                            category: 'Limited',
-                            price: parseFloat(plan.price),
-                            description: `Acceso y privilegios del Clan Tanuki - Nivel ${plan.name}`,
-                            image: 'https://cdn-icons-png.flaticon.com/512/2589/2589175.png',
-                            stock: 999,
-                            rating: 5,
-                            benefits: plan.benefits
-                          };
-                          setCart(prev => [...prev.filter(item => !item.id.startsWith('sub-')), { ...subProduct, quantity: 1 }]);
-                          setIsSubscriptionModalOpen(false);
-                          setIsCheckoutOpen(true);
-                        }} className={`w-full py-4 rounded-full font-ghibli-title text-sm transition-all shadow-md active:scale-95 ${plan.featured ? 'bg-[#C14B3A] text-white hover:bg-[#3A332F]' : 'bg-[#3A332F] text-white hover:bg-[#C14B3A]'}`}>FORJAR PACTO</button>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
         )
@@ -2229,17 +2328,53 @@ const App: React.FC = () => {
         onSuccess={() => {
           const subItem = cart.find(item => item.id.startsWith('sub-'));
           if (subItem) {
-            const planId = subItem.id.replace('sub-', '');
-            setUser(prev => ({ ...prev, membership: planId as any, isRegistered: true }));
+            const planId = subItem.id.replace('sub-', '') as 'bronze' | 'silver' | 'gold' | 'founder';
+
+            // Map plan IDs to their discount percentages
+            const MEMBERSHIP_DISCOUNTS: Record<string, number> = {
+              bronze: 5,
+              silver: 7,
+              gold: 10,
+              founder: 15,
+            };
+
+            const discountPct = MEMBERSHIP_DISCOUNTS[planId] || 0;
+
+            // Membership expires 30 days from now
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + 30);
+            const expiryISO = expiry.toISOString();
+
+            setUser(prev => ({
+              ...prev,
+              membership: planId,
+              membershipExpiry: expiryISO,
+              isRegistered: true,
+            }));
+
+            // Apply the membership discount (replaces any roulette discount)
+            setAppliedDiscount(discountPct);
+            setHasSpunFirst(false); // allow the wheel again after next purchase
+
+            // Persist membership + expiry + discount to Supabase profile
+            supabase.from('profiles').update({
+              membership: planId,
+              membership_expiry: expiryISO,
+              discount: discountPct,
+            }).eq('id', user.id).then(({ error }) => {
+              if (error) console.error('Error saving membership to DB:', error);
+            });
+          } else {
+            // Regular purchase: reset roulette cycle
+            if (appliedDiscount > 0 || hasSpunFirst) {
+              setHasSpunFirst(false);
+              // Only clear discount if it was from the wheel, not from membership
+              if (!user.membership) setAppliedDiscount(0);
+            }
           }
+
           setCart([]);
           setIsCheckoutOpen(false);
-
-          // RESET ROULETTE CYCLE
-          if (appliedDiscount > 0 || hasSpunFirst) {
-            setAppliedDiscount(0);
-            setHasSpunFirst(false); // Enable spin again for next purchase
-          }
         }}
       />
 

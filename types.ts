@@ -10,6 +10,7 @@ export interface User {
   location?: string;
   isRegistered: boolean;
   membership?: 'bronze' | 'silver' | 'gold' | 'founder';
+  membershipExpiry?: string; // ISO date string — discount expires when this passes
   // New Stats for Missions
   totalSpent?: number;
   totalOrders?: number;
