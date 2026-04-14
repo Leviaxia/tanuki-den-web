@@ -6,31 +6,31 @@ const brands = [
     id: 'tanukiden',
     name: 'Tanuki Den',
     logo: '/assets/Tanuki Den LOGO.png',
-    url: 'https://tanukiden.co',
+    url: 'https://www.tanukiden.co/',
   },
   {
     id: 'kimezu',
     name: 'Kimezu',
     logo: '/assets/KIMEZU LOGO.png',
-    url: 'https://kimezu.com',
+    url: 'https://kimezu.co/',
   },
   {
     id: 'emedical',
     name: 'eMedical',
     logo: '/assets/EMEDICAL LOGO.png',
-    url: 'https://emedical.com.co',
+    url: 'https://emedical.me/',
   },
   {
     id: 'zonarunning',
     name: 'Zona Running',
     logo: '/assets/Zonarunning logo.png',
-    url: 'https://zonarunning.co',
+    url: 'https://www.athosrun.co/zona-running',
   },
   {
     id: 'athos',
     name: 'Athos',
     logo: '/assets/ATHOSLOGO1.png',
-    url: 'https://athosrun.com',
+    url: 'https://www.athosrun.co/',
   }
 ];
 

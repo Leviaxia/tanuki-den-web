@@ -409,6 +409,21 @@ const App: React.FC = () => {
     window.history.pushState({ modal: true }, '');
   };
 
+  const handleCloseProduct = () => {
+    if (selectedProduct && selectedProduct.collectionId && activeTab === 'colecciones') {
+      const coll = collections.find(c => c.id === selectedProduct.collectionId) || collectionsContent.find(c => c.id === selectedProduct.collectionId);
+      if (coll) {
+        navigate(`/colecciones/${toSlug(coll.title)}`);
+      } else {
+        navigate('/colecciones');
+      }
+    } else {
+      navigate(activeTab === 'colecciones' ? '/colecciones' : '/catalogo');
+    }
+    setSelectedVariant(null);
+    setShowMobileReviews(false);
+  };
+
   // HISTORY MANAGEMENT: Sync URL with Navigation State & Modals
   useEffect(() => {
     const path = location.pathname;
@@ -2401,7 +2416,7 @@ const App: React.FC = () => {
         selectedProduct && (
           <div
             className="fixed inset-0 z-[9999] bg-black/60 md:bg-[#3A332F]/90 backdrop-blur-sm md:backdrop-blur-md flex items-center justify-center p-4 md:p-8 cursor-pointer overflow-hidden"
-            onClick={() => { navigate(activeTab === 'colecciones' ? '/colecciones' : '/catalogo'); setSelectedVariant(null); setShowMobileReviews(false); }}
+            onClick={handleCloseProduct}
           >
             {/* Mobile "Window" Modal */}
             <div
@@ -2410,7 +2425,7 @@ const App: React.FC = () => {
             >
               {/* Close Button */}
               <button
-                onClick={() => { navigate(activeTab === 'colecciones' ? '/colecciones' : '/catalogo'); setShowMobileReviews(false); }}
+                onClick={handleCloseProduct}
                 className="absolute top-3 right-3 md:top-6 md:right-6 z-50 p-2 bg-white/80 hover:bg-white text-[#3A332F] rounded-full shadow-lg transition-all border border-[#3A332F]/10"
               >
                 <X size={20} className="md:w-8 md:h-8" />
