@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tanukiden.co/sitemap.xml
+Sitemap: https://www.tanukiden.co/sitemap.xml
