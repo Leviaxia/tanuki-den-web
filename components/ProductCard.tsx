@@ -15,9 +15,21 @@ interface ProductCardProps {
   onShare: (p: Product) => void;
 }
 
+const getProxyUrl = (url: string, width = 480) => {
+  if (!url) return url;
+  // Solo aplicamos el proxy a imágenes HTTP/HTTPS (no a relativas ni base64)
+  if (url.startsWith('http')) {
+    // wsrv.nl requiere la url sin el protocolo http:// o https://
+    const urlWithoutProtocol = url.replace(/^https?:\/\//, '');
+    return `https://wsrv.nl/?url=${encodeURIComponent(urlWithoutProtocol)}&w=${width}&output=webp&q=80`;
+  }
+  return url;
+};
+
 const LazyImage = ({ src, alt, className }: { src: string, alt: string, className: string }) => {
   const [isIntersecting, setIntersecting] = React.useState(false);
   const [loaded, setLoaded] = React.useState(false);
+  const [error, setError] = React.useState(false);
   const imgRef = React.useRef<HTMLImageElement>(null);
 
   React.useEffect(() => {
@@ -35,6 +47,9 @@ const LazyImage = ({ src, alt, className }: { src: string, alt: string, classNam
     return () => observer.disconnect();
   }, []);
 
+  // Si la optimización falla, cae de vuelta a la original
+  const finalSrc = error ? src : getProxyUrl(src);
+
   return (
     <>
       {!loaded && (
@@ -45,12 +60,16 @@ const LazyImage = ({ src, alt, className }: { src: string, alt: string, classNam
       )}
       <img
         ref={imgRef}
-        src={isIntersecting ? src : ''}
+        src={isIntersecting ? finalSrc : ''}
         alt={alt}
         className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (!error) setError(true);
+          setLoaded(true);
+        }}
       />
     </>
   );
