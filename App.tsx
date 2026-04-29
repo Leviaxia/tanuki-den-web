@@ -1804,7 +1804,7 @@ const App: React.FC = () => {
                 </div>
                 <div className="relative group animate-float hidden lg:block">
                   <div className="relative w-full aspect-square rounded-[100px] overflow-hidden border-[15px] border-white shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-1000">
-                    <img src="/assets/Tanuki_Hero_Ref.jpg" className="w-full h-full object-cover object-center" alt="Hero" />
+                    <img src="/assets/Tanuki_Hero_Ref.jpg" className="w-full h-full object-cover object-center" alt="Hero" fetchPriority="high" loading="eager" decoding="async" />
                   </div>
                 </div>
               </div>

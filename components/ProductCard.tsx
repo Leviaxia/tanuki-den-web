@@ -58,9 +58,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
 
       {/* Product Image Area */}
       <div className="relative aspect-square md:aspect-[4/5] m-2 md:m-4 rounded-[15px] md:rounded-[30px] overflow-hidden bg-[#FDF5E6] border md:border-2 border-[#F0E6D2] z-10">
-        <img
+        <OptimizedImage
           src={product.image}
           alt={product.name}
+          width={480}
           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
         />
 
@@ -76,12 +77,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
       <div className="px-3 pb-3 md:px-8 md:pb-8 md:pt-2 space-y-2 md:space-y-3 flex-grow flex flex-col">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {/* Unified Rating Style: Star + specific Number for both desktop and mobile */}
             <div className="flex items-center gap-1 bg-[#FDF5E6] px-2 py-1 rounded-full border border-[#F0E6D2]">
               <Star size={12} className="md:w-[14px] md:h-[14px] text-[#C14B3A] fill-[#C14B3A]" />
               <span className="text-[10px] md:text-xs font-bold text-[#3A332F]">{Number(product.rating).toFixed(1)}</span>
             </div>
-            {/* Collection Name Tag */}
             {collectionName && (
               <span className="text-[8px] md:text-[10px] uppercase font-ghibli-title md:font-ghibli-title text-[#8C8279] tracking-wider truncate max-w-[80px] md:max-w-none">
                 {collectionName}
@@ -110,6 +109,72 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+// ─── Optimized Image Component ────────────────────────────────────────────────
+// Features:
+//   • loading="lazy"  → browser only downloads when near viewport
+//   • decoding="async" → image decoding off the main thread
+//   • Skeleton shimmer → smooth UX while loading
+//   • Error fallback  → falls back to original URL if optimized fails
+//   • Supabase transform → requests WebP at the exact display size
+//     Original URL:  /storage/v1/object/public/bucket/path
+//     Optimized URL: /storage/v1/render/image/public/bucket/path?width=W&quality=Q&format=webp
+
+export interface OptimizedImageProps {
+  src: string;
+  alt: string;
+  width: number;
+  quality?: number;
+  className?: string;
+  eager?: boolean;
+}
+
+export function getOptimizedUrl(src: string, width: number, quality: number): string {
+  if (!src) return src;
+  const supabasePattern = /\/storage\/v1\/object\/public\//;
+  if (supabasePattern.test(src)) {
+    const transformed = src.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+    return `${transformed}?width=${width}&quality=${quality}&format=webp`;
+  }
+  return src;
+}
+
+export const OptimizedImage: React.FC<OptimizedImageProps> = ({
+  src,
+  alt,
+  width,
+  quality = 80,
+  className = '',
+  eager = false,
+}) => {
+  const [loaded, setLoaded] = React.useState(false);
+  const [error, setError] = React.useState(false);
+
+  const optimizedSrc = error ? src : getOptimizedUrl(src, width, quality);
+
+  return (
+    <div className="relative w-full h-full">
+      {!loaded && (
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-[#F0E6D2] via-[#FDF5E6] to-[#F0E6D2]"
+          style={{ backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }}
+        />
+      )}
+      <img
+        src={optimizedSrc}
+        alt={alt}
+        className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (!error) setError(true);
+          setLoaded(true);
+        }}
+      />
     </div>
   );
 };
