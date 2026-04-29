@@ -28,7 +28,6 @@ const getProxyUrl = (url: string, width = 480) => {
 
 const LazyImage = ({ src, alt, className }: { src: string, alt: string, className: string }) => {
   const [isIntersecting, setIntersecting] = React.useState(false);
-  const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState(false);
   const imgRef = React.useRef<HTMLImageElement>(null);
 
@@ -40,38 +39,27 @@ const LazyImage = ({ src, alt, className }: { src: string, alt: string, classNam
           observer.disconnect();
         }
       },
-      { rootMargin: '200px' } // Start loading when it's 200px away
+      { rootMargin: '200px' }
     );
 
     if (imgRef.current) observer.observe(imgRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // Si la optimización falla, cae de vuelta a la original
   const finalSrc = error ? src : getProxyUrl(src);
 
   return (
-    <>
-      {!loaded && (
-        <div
-          className="absolute inset-0 z-10 bg-gradient-to-r from-[#F0E6D2] via-[#FDF5E6] to-[#F0E6D2]"
-          style={{ backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }}
-        />
-      )}
-      <img
-        ref={imgRef}
-        src={isIntersecting ? finalSrc : ''}
-        alt={alt}
-        className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-        loading="lazy"
-        decoding="async"
-        onLoad={() => setLoaded(true)}
-        onError={() => {
-          if (!error) setError(true);
-          setLoaded(true);
-        }}
-      />
-    </>
+    <img
+      ref={imgRef}
+      src={isIntersecting ? finalSrc : ''}
+      alt={alt}
+      className={`${className} transition-opacity duration-300 ${isIntersecting ? 'opacity-100' : 'opacity-0'}`}
+      loading="lazy"
+      decoding="async"
+      onError={() => {
+        if (!error) setError(true);
+      }}
+    />
   );
 };
 
