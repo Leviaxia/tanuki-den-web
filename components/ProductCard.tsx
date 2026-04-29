@@ -15,6 +15,47 @@ interface ProductCardProps {
   onShare: (p: Product) => void;
 }
 
+const LazyImage = ({ src, alt, className }: { src: string, alt: string, className: string }) => {
+  const [isIntersecting, setIntersecting] = React.useState(false);
+  const [loaded, setLoaded] = React.useState(false);
+  const imgRef = React.useRef<HTMLImageElement>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIntersecting(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' } // Start loading when it's 200px away
+    );
+
+    if (imgRef.current) observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <>
+      {!loaded && (
+        <div
+          className="absolute inset-0 z-10 bg-gradient-to-r from-[#F0E6D2] via-[#FDF5E6] to-[#F0E6D2]"
+          style={{ backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }}
+        />
+      )}
+      <img
+        ref={imgRef}
+        src={isIntersecting ? src : ''}
+        alt={alt}
+        className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+      />
+    </>
+  );
+};
+
 const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAddToCart, onViewDetails, isFavorite, onToggleFavorite, onShare }) => {
   return (
     <div
@@ -58,12 +99,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
 
       {/* Product Image Area */}
       <div className="relative aspect-square md:aspect-[4/5] m-2 md:m-4 rounded-[15px] md:rounded-[30px] overflow-hidden bg-[#FDF5E6] border md:border-2 border-[#F0E6D2] z-10">
-        <img
+        <LazyImage
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-          loading="lazy"
-          decoding="async"
         />
 
         {/* Badge de Categoría */}
