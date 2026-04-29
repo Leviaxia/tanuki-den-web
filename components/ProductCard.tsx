@@ -113,8 +113,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
         />
 
         {/* Badge de Categoría */}
-        <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20">
-          <span className="bg-[#3A332F]/90 backdrop-blur-sm text-white text-[8px] md:text-[9px] font-bold md:font-ghibli-title px-2 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-wider shadow-sm border border-white/10">
+        <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20 max-w-[60%] md:max-w-none">
+          <span className="inline-block bg-[#3A332F]/90 backdrop-blur-sm text-white text-[7px] md:text-[9px] font-bold md:font-ghibli-title px-1.5 py-0.5 md:px-4 md:py-1.5 rounded-full uppercase tracking-wider shadow-sm border border-white/10 truncate w-full text-center">
             {product.category}
           </span>
         </div>

@@ -149,15 +149,15 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="max-w-7xl mx-auto px-4 md:px-4 lg:px-6">
           <div className="flex justify-between items-center h-24 md:h-28">
 
-            <div className="flex items-center gap-4 md:gap-3 cursor-pointer group relative z-[1001]" onClick={() => handleNavClick('inicio')}>
-              <div className="relative w-14 h-14 md:w-14 md:h-14 flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-2 sm:gap-4 md:gap-3 cursor-pointer group relative z-[1001]" onClick={() => handleNavClick('inicio')}>
+              <div className="relative w-10 h-10 sm:w-14 sm:h-14 md:w-14 md:h-14 flex items-center justify-center shrink-0">
                 <div className="w-full h-full bg-[#C14B3A] rounded-full flex items-center justify-center border-2 border-white shadow-md overflow-hidden">
                   <img src="/assets/tanuki-logo.png" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform" alt="Tanuki Den Logo" />
                 </div>
               </div>
               <div className="flex flex-col justify-center">
-                <span className="text-xl md:text-[24px] lg:text-[28px] font-ghibli-title tracking-tighter text-[#3A332F] leading-none whitespace-nowrap">TANUKI DEN</span>
-                <span className="text-[8px] md:text-[10px] lg:text-xs font-black text-[#8C8279] tracking-[0.4em] uppercase hidden sm:block md:hidden">ESPÍRITU DE COLECCIÓN</span>
+                <span className="text-base sm:text-xl md:text-[24px] lg:text-[28px] font-ghibli-title tracking-tighter text-[#3A332F] leading-none whitespace-nowrap">TANUKI DEN</span>
+                <span className="text-[7px] sm:text-[8px] md:text-[10px] lg:text-xs font-black text-[#8C8279] tracking-[0.4em] uppercase hidden sm:block md:hidden">ESPÍRITU DE COLECCIÓN</span>
               </div>
             </div>
 
@@ -197,7 +197,7 @@ const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4">
               {/* Desktop AnimePlayer */}
               <AnimePlayer
                 className="hidden lg:block mr-2 relative"
@@ -223,11 +223,11 @@ const Navbar: React.FC<NavbarProps> = ({
 
               <button
                 onClick={onOpenCart}
-                className="relative p-3 bg-[#FDF5E6] rounded-full text-[#3A332F] hover:bg-[#C14B3A] hover:text-white transition-all border-2 border-[#E6D5B8]"
+                className="relative p-2 md:p-3 bg-[#FDF5E6] rounded-full text-[#3A332F] hover:bg-[#C14B3A] hover:text-white transition-all border-2 border-[#E6D5B8]"
               >
-                <ShoppingBag size={20} />
+                <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#C14B3A] text-white text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center border-2 border-white animate-pop">
+                  <span className="absolute -top-1 -right-1 bg-[#C14B3A] text-white text-[8px] md:text-[10px] font-bold w-4 h-4 md:w-6 md:h-6 rounded-full flex items-center justify-center border-2 border-white animate-pop">
                     {cartCount}
                   </span>
                 )}
@@ -236,7 +236,7 @@ const Navbar: React.FC<NavbarProps> = ({
               {user.isRegistered ? (
                 <div className="relative group">
                   <div
-                    className="w-10 h-10 rounded-full border-2 overflow-hidden cursor-pointer transition-transform active:scale-95 shadow-md flex items-center justify-center bg-[#FDF5E6]"
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 overflow-hidden cursor-pointer transition-transform active:scale-95 shadow-md flex items-center justify-center bg-[#FDF5E6]"
                     style={{ borderColor: user.membership === 'gold' ? '#C14B3A' : user.membership === 'founder' ? '#D4AF37' : '#3A332F' }}
                     onClick={onOpenProfile}
                   >
@@ -244,7 +244,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   {/* Notification Dot */}
                   {hasUnclaimedMissions && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse pointer-events-none"></span>
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 md:w-3 md:h-3 bg-red-500 rounded-full border-2 border-white animate-pulse pointer-events-none"></span>
                   )}
                 </div>
               ) : (
@@ -252,15 +252,15 @@ const Navbar: React.FC<NavbarProps> = ({
                   onClick={onOpenAuth}
                   className="relative p-1 rounded-full transition-all duration-500 group"
                 >
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-[#3A332F] rounded-full flex items-center justify-center text-white overflow-hidden border-2 border-white relative z-0">
-                    <UserIcon size={24} />
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-[#3A332F] rounded-full flex items-center justify-center text-white overflow-hidden border-2 border-white relative z-0">
+                    <UserIcon className="w-4 h-4 md:w-6 md:h-6" />
                   </div>
                 </button>
               )}
 
 
-              <button className="lg:hidden p-2 text-[#3A332F]" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+              <button className="lg:hidden p-1.5 md:p-2 text-[#3A332F]" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                {isMenuOpen ? <X className="w-6 h-6 md:w-7 md:h-7" /> : <Menu className="w-6 h-6 md:w-7 md:h-7" />}
               </button>
             </div>
           </div>
