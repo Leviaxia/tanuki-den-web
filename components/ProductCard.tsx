@@ -152,18 +152,28 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 }) => {
   const [loaded, setLoaded] = React.useState(false);
   const [error, setError] = React.useState(false);
+  const imgRef = React.useRef<HTMLImageElement>(null);
+
+  // Handle cached images where onLoad doesn't fire
+  React.useEffect(() => {
+    if (imgRef.current?.complete) {
+      setLoaded(true);
+    }
+  }, []);
 
   const optimizedSrc = error ? src : getOptimizedUrl(src, width, quality);
 
   return (
-    <div className="relative w-full h-full">
+    <>
+      {/* Skeleton — absolutely positioned relative to the parent (which is already relative+overflow-hidden) */}
       {!loaded && (
         <div
-          className="absolute inset-0 bg-gradient-to-r from-[#F0E6D2] via-[#FDF5E6] to-[#F0E6D2]"
+          className="absolute inset-0 z-10 bg-gradient-to-r from-[#F0E6D2] via-[#FDF5E6] to-[#F0E6D2]"
           style={{ backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }}
         />
       )}
       <img
+        ref={imgRef}
         src={optimizedSrc}
         alt={alt}
         className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
@@ -175,8 +185,9 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
           setLoaded(true);
         }}
       />
-    </div>
+    </>
   );
 };
 
 export default ProductCard;
+
