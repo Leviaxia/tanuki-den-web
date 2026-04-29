@@ -58,11 +58,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
 
       {/* Product Image Area */}
       <div className="relative aspect-square md:aspect-[4/5] m-2 md:m-4 rounded-[15px] md:rounded-[30px] overflow-hidden bg-[#FDF5E6] border md:border-2 border-[#F0E6D2] z-10">
-        <OptimizedImage
+        <img
           src={product.image}
           alt={product.name}
-          width={480}
           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+          loading="lazy"
+          decoding="async"
         />
 
         {/* Badge de Categoría */}
@@ -113,81 +114,4 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, collectionName, onAd
   );
 };
 
-// ─── Optimized Image Component ────────────────────────────────────────────────
-// Features:
-//   • loading="lazy"  → browser only downloads when near viewport
-//   • decoding="async" → image decoding off the main thread
-//   • Skeleton shimmer → smooth UX while loading
-//   • Error fallback  → falls back to original URL if optimized fails
-//   • Supabase transform → requests WebP at the exact display size
-//     Original URL:  /storage/v1/object/public/bucket/path
-//     Optimized URL: /storage/v1/render/image/public/bucket/path?width=W&quality=Q&format=webp
-
-export interface OptimizedImageProps {
-  src: string;
-  alt: string;
-  width: number;
-  quality?: number;
-  className?: string;
-  eager?: boolean;
-}
-
-export function getOptimizedUrl(src: string, width: number, quality: number): string {
-  if (!src) return src;
-  const supabasePattern = /\/storage\/v1\/object\/public\//;
-  if (supabasePattern.test(src)) {
-    const transformed = src.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-    return `${transformed}?width=${width}&quality=${quality}&format=webp`;
-  }
-  return src;
-}
-
-export const OptimizedImage: React.FC<OptimizedImageProps> = ({
-  src,
-  alt,
-  width,
-  quality = 80,
-  className = '',
-  eager = false,
-}) => {
-  const [loaded, setLoaded] = React.useState(false);
-  const [error, setError] = React.useState(false);
-  const imgRef = React.useRef<HTMLImageElement>(null);
-
-  // Handle cached images where onLoad doesn't fire
-  React.useEffect(() => {
-    if (imgRef.current?.complete) {
-      setLoaded(true);
-    }
-  }, []);
-
-  const optimizedSrc = error ? src : getOptimizedUrl(src, width, quality);
-
-  return (
-    <>
-      {/* Skeleton — absolutely positioned relative to the parent (which is already relative+overflow-hidden) */}
-      {!loaded && (
-        <div
-          className="absolute inset-0 z-10 bg-gradient-to-r from-[#F0E6D2] via-[#FDF5E6] to-[#F0E6D2]"
-          style={{ backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }}
-        />
-      )}
-      <img
-        ref={imgRef}
-        src={optimizedSrc}
-        alt={alt}
-        className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-        loading={eager ? 'eager' : 'lazy'}
-        decoding="async"
-        onLoad={() => setLoaded(true)}
-        onError={() => {
-          if (!error) setError(true);
-          setLoaded(true);
-        }}
-      />
-    </>
-  );
-};
-
 export default ProductCard;
-
